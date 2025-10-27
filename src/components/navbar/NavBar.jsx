@@ -1,9 +1,12 @@
 import React from 'react';
 import "./Navbar.css";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FaRegBell } from "react-icons/fa6";
 
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+
+import { FaSearch } from "react-icons/fa";
+
+
+import { FaRegUserCircle } from "react-icons/fa";
 
 
 function Navbar() {
@@ -17,7 +20,7 @@ function Navbar() {
                 <ul className="nav">
                     <li>Home</li>
                    <li>
-                       Services <FontAwesomeIcon icon={faChevronDown} className="arrow-icon" />
+                       Services 
                        </li>
 
                     <li>Blog</li>
@@ -27,8 +30,10 @@ function Navbar() {
             </div>
 
             <div className="right">
-             <FontAwesomeIcon icon={faSearch} className="search-icon" />
-
+              
+             <FaSearch  className='icons'/>
+             <FaRegBell className='icons'/>
+             <FaRegUserCircle className='icons'/>
 
              
             </div>
