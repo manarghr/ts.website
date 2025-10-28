@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@keyframes fadeLine {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeLine {
+  animation: fadeLine 0.8s ease forwards;
+}
