@@ -5,6 +5,7 @@ import { Plus, Minus } from "lucide-react";
 
 export default function CustomFAQ() {
   const [openItem, setOpenItem] = useState(null);
+  const [email, setEmail] = useState("");
 
   const toggleItem = (id) => {
     setOpenItem(openItem === id ? null : id);
@@ -75,7 +76,7 @@ export default function CustomFAQ() {
             <div key={item.id} className="border-b border-gray-100">
               <button
                 onClick={() => toggleItem(item.id)}
-                className="flex justify-between items-center w-full py-6 text-left bg-[#4a6e72ed] hover:bg-[#84A98C] rounded-t-lg px-4"
+                className="flex justify-between items-center w-full py-6 text-left bg-[#4a6e72ed] rounded-t-lg px-4"
               >
                 <span className="text-[#ffff] font-semibold">
                   {item.question}
@@ -102,6 +103,32 @@ export default function CustomFAQ() {
           ))}
         </div>
       </div>
+      <div className="w-full bg-[#C8CDC5] py-16 px-4">
+        <div className="max-w-2xl mx-auto text-center">
+          <h3 className="text-4xl font-bold text-[#2F3E46] mb-3">
+            Join Our <span className="text-[#6B8B85]">Fitness Community</span>
+          </h3>
+          <p className="text-[#2F3E46] mb-8 font-medium">
+            Receive expert insights and exclusive fitness content every week
+          </p>
+
+          <div className="max-w-md mx-auto">
+            {/* Outer white frame to match design */}
+            <div className="flex items-center bg-white rounded-2xl p-1.5 shadow-md ring-1 ring-gray-100">
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 bg-transparent px-6 py-4 rounded-l-xl text-[#2F3E46] placeholder-gray-400 focus:outline-none"
+              />
+              <button className="bg-[#2F3E46] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#354F52] transition-colors">
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
-}
+} 
