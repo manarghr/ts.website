@@ -59,7 +59,7 @@ export default function CustomFAQ() {
   ];
 
   return (
-    <section className=" w-full">
+    <section className=" w-full bg-[#C8CDC5]/30">
       <div className="w-full max-w-4xl mx-auto py-16 px-4">
         <div className="text-center mb-12 ">
           <h2 className="text-3xl md:text-6xl font-extrabold text-[#2F3E46] mb-3">
@@ -76,9 +76,9 @@ export default function CustomFAQ() {
             <div key={item.id} className="border-b border-gray-100">
               <button
                 onClick={() => toggleItem(item.id)}
-                className="flex justify-between items-center w-full py-6 text-left bg-[#4a6e72ed] rounded-t-lg px-4"
+                className="flex justify-between items-center w-full py-6 text-left bg-[#ffffff] hover:bg-[#C8CDC5] rounded-t-lg px-4"
               >
-                <span className="text-[#ffff] font-semibold">
+                <span className="text-[#030303] font-semibold">
                   {item.question}
                 </span>
                 <span className="text-[#ffffff] ml-2">
