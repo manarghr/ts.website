@@ -3,6 +3,9 @@ import React from 'react';
 import "./globals.css";
 import Head from '@/components/head/Head';
 import AIHome from '@/components/AiHome/AIHome';
+
+
+
 import Services from '@/components/Services/Services';
 
 import Footer from '@/components/footer/Footer';
@@ -15,11 +18,11 @@ export default function Home() {
     <div>
      
      <Head/>
-     <AIHome />
+
+     <AIHome/>
      <Services/>
      <FAQ/>
-     <Footer/>
-
+     <Footer />
     </div>
   );
 }

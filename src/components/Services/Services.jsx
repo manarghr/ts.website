@@ -20,11 +20,12 @@ export default function Services() {
     { title: "UI/UX Design", para: "Creating user-friendly and modern interfaces." },
   ];
 
+  // Handle scroll buttons
   const scroll = (direction) => {
     const container = scrollRef.current;
     if (!container) return;
 
-    const cardWidth = container.children[0].offsetWidth + 40; // Card width + gap
+    const cardWidth = container.children[0].offsetWidth + 40;
     let newIndex =
       direction === "left"
         ? Math.max(currentIndex - 1, 0)
@@ -37,18 +38,29 @@ export default function Services() {
     });
   };
 
+  // Update current index when user scrolls manually
+  const handleScroll = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const scrollLeft = container.scrollLeft;
+    const cardWidth = container.children[0].offsetWidth + 40;
+    const index = Math.round(scrollLeft / cardWidth);
+    setCurrentIndex(index);
+  };
+
   useEffect(() => {
     const container = scrollRef.current;
-    if (container) {
-      container.scrollTo({
-        left: currentIndex * (container.children[0].offsetWidth + 40),
-        behavior: "smooth",
-      });
-    }
-  }, [currentIndex]);
+    if (!container) return;
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
+
     <section className="py-20  bg-[#C8CDC5]/30 text-center relative overflow-hidden">
+
       <h2 className="text-4xl font-bold mb-12">
         <span className="text-[#354F52]">Our</span>{" "}
         <span className="text-[#52796F]">Services</span>
@@ -63,22 +75,18 @@ export default function Services() {
           {services.map((service, index) => (
             <div
               key={index}
-              className={`snap-center transition-all duration-500 ease-in-out p-2 rounded-2xl shadow-md ${
+              className={`snap-center transition-all duration-500 ease-in-out p-2 rounded-2xl shadow-md min-w-[300px] ${
                 currentIndex === index
                   ? "scale-105 bg-[#52796F] text-white"
                   : "opacity-70 bg-[#CAD2C5] text-black"
               }`}
             >
-              <Card
-                image={picture}
-                title={service.title}
-                para={service.para}
-              />
+              <Card image={picture} title={service.title} para={service.para} />
             </div>
           ))}
         </div>
 
-        {/* Bottom Arrows */}
+        {/* Navigation Arrows */}
         <div className="flex justify-center gap-8 mt-12">
           <button
             onClick={() => scroll("left")}
