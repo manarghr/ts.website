@@ -103,7 +103,7 @@ export default function CustomFAQ() {
           ))}
         </div>
       </div>
-      <div className="w-full bg-[#C8CDC5] py-16 px-4">
+      <div className="w-full  bg-[#C8CDC5]/30 py-16 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <h3 className="text-4xl font-bold text-[#2F3E46] mb-3">
             Join Our <span className="text-[#6B8B85]">Fitness Community</span>

@@ -48,7 +48,7 @@ export default function Services() {
   }, [currentIndex]);
 
   return (
-    <section className="py-20 bg-[#DADDD8] text-center relative overflow-hidden">
+    <section className="py-20  bg-[#C8CDC5]/30 text-center relative overflow-hidden">
       <h2 className="text-4xl font-bold mb-12">
         <span className="text-[#354F52]">Our</span>{" "}
         <span className="text-[#52796F]">Services</span>
