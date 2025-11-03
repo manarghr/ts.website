@@ -2,16 +2,20 @@
 
 import Image from "next/image";
 import picture from "../assets/picture.png";
-import { IoMdCheckmark } from "react-icons/io";
+import { MdCheckBox } from "react-icons/md";
 
 export default function AIHome() {
+   const framePadding = "p-12" 
+   const frameInnerPadding = "p-16" 
   return (
+
     <main className="bg-[#DADDD8] min-h-screen flex items-center justify-center">
     <section className="bg-[#354F52] w-[85%] mx-auto h-[800px] p-[10vh] rounded-2xl relative bottom-30 overflow-hidden">
       <div className="flex flex-col justify-center items-center scale-100 relative top-7 text-center">
         <h1 className="text-white text-4xl font-bold mb-5 max-w-2xl">
           Real-Time AI Coaching That Perfects Every Move You Make
         </h1>
+
 
         <p className="text-white text-lg mb-8 leading-relaxed max-w-xl">
           TrainSight tracks your posture in real time and gives instant feedback

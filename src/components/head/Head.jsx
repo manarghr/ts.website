@@ -10,7 +10,6 @@ export default function Head() {
         playsInline
       >
         <source src="/videos/videos.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
       </video>
 
       {/* Glass Overlay Box */}
@@ -35,5 +34,8 @@ export default function Head() {
         </div>
       </div>
     </section>
+
+     
+
   );
 }
