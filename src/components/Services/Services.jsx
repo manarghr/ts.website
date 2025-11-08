@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import Card from "./Card";
 import {
@@ -18,9 +18,11 @@ export default function Services() {
     { title: "Digital Marketing", para: "Promoting your brand effectively online." },
     { title: "SEO Optimization", para: "Improving search rankings and reach." },
     { title: "UI/UX Design", para: "Creating user-friendly and modern interfaces." },
+     { title: "UI/UX Design", para: "Creating user-friendly and modern interfaces." },
+      { title: "UI/UX Design", para: "Creating user-friendly and modern interfaces." },
   ];
 
-  // Handle scroll buttons
+  // --- Fonction de défilement manuel ---
   const scroll = (direction) => {
     const container = scrollRef.current;
     if (!container) return;
@@ -38,7 +40,7 @@ export default function Services() {
     });
   };
 
-  // Update current index when user scrolls manually
+  // --- Mettre à jour l'index quand on scroll manuellement ---
   const handleScroll = () => {
     const container = scrollRef.current;
     if (!container) return;
@@ -49,18 +51,33 @@ export default function Services() {
     setCurrentIndex(index);
   };
 
+  // --- Slider automatique ---
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
 
+    const autoScroll = setInterval(() => {
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % services.length;
+        container.scrollTo({
+          left: nextIndex * (container.children[0].offsetWidth + 40),
+          behavior: "smooth",
+        });
+        return nextIndex;
+      });
+    }, 3000); // toutes les 3 secondes
+
     container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, []);
 
+    return () => {
+      clearInterval(autoScroll);
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [services.length]);
+
+  // --- Render ---
   return (
-
-    <section className="py-20  bg-[#C8CDC5]/30 text-center relative overflow-hidden">
-
+    <section className="py-20 bg-[#C8CDC5]/30 text-center relative overflow-hidden">
       <h2 className="text-4xl font-bold mb-12">
         <span className="text-[#354F52]">Our</span>{" "}
         <span className="text-[#52796F]">Services</span>
@@ -75,13 +92,18 @@ export default function Services() {
           {services.map((service, index) => (
             <div
               key={index}
-              className={`snap-center transition-all duration-500 ease-in-out p-2 rounded-2xl shadow-md min-w-[300px] ${
+              className={`snap-center transition-all duration-500 ease-in-out p-2 rounded-2xl shadow-md min-w-[200px] ${
                 currentIndex === index
                   ? "scale-105 bg-[#52796F] text-white"
                   : "opacity-70 bg-[#CAD2C5] text-black"
               }`}
             >
-              <Card image={picture} title={service.title} para={service.para} />
+              <Card
+                image={picture}
+                title={service.title}
+                para={service.para}
+                isActive={currentIndex === index}
+              />
             </div>
           ))}
         </div>
@@ -91,7 +113,7 @@ export default function Services() {
           <button
             onClick={() => scroll("left")}
             aria-label="Scroll left"
-            className="p-2 rounded-full"
+            className="p-2 rounded-full hover:scale-110 transition-transform"
           >
             <PiArrowSquareLeftDuotone size={36} className="text-[#354F52]" />
           </button>
@@ -99,7 +121,7 @@ export default function Services() {
           <button
             onClick={() => scroll("right")}
             aria-label="Scroll right"
-            className="p-2 rounded-full"
+            className="p-2 rounded-full hover:scale-110 transition-transform"
           >
             <PiArrowSquareRightDuotone size={36} className="text-[#354F52]" />
           </button>
