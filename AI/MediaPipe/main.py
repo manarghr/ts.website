@@ -5,9 +5,10 @@ from exercises.squat import analyse_squat
 from exercises.pushup import analyse_pushup
 from exercises.deadlift import analyse_deadlift
 from exercises.lunge import analyse_lunge
+from exercises.pullup import analyse_pullup
 
-EXO = "lunge"  
-VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/lunge.mp4"
+EXO = "pullup" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
+VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/pullup.mp4"
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -28,7 +29,7 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
         if results.pose_landmarks:
             landmarks = results.pose_landmarks.landmark
 
-            # Analyse selon l'exercice
+            
             if EXO == "squat":
                 feedback = analyse_squat(landmarks, mp_pose)
             elif EXO == "pushup":
@@ -36,9 +37,12 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
             elif EXO == "deadlift":
                 feedback = analyse_deadlift(landmarks, mp_pose)
             elif EXO == "lunge":
-                feedback = analyse_lunge(landmarks, mp_pose)    
+                feedback = analyse_lunge(landmarks, mp_pose) 
+            elif EXO == "pullup":
+                    feedback = analyse_pullup(landmarks, mp_pose)         
             else:
                 feedback = ["Exercice inconnu."]
+              
 
             # Dessine le squelette
             mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
@@ -46,8 +50,8 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
             # Affiche le feedback sur la vidéo
             y0, dy = 30, 30
             for i, f in enumerate(feedback):
-                y = y0 + i*dy
-                cv2.putText(frame, f, (30, y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
+                y = y0 + i * dy
+                cv2.putText(frame, f, (30, y), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
 
         cv2.imshow("Analyse Posture", frame)
         if cv2.waitKey(5) & 0xFF == 27:  # touche Échap pour quitter
