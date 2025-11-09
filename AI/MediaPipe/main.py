@@ -4,10 +4,10 @@ import numpy as np
 from exercises.squat import analyse_squat
 from exercises.pushup import analyse_pushup
 from exercises.deadlift import analyse_deadlift
+from exercises.lunge import analyse_lunge
 
-
-EXO = "deadlift"  
-VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/deadlift.mp4"
+EXO = "lunge"  
+VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/lunge.mp4"
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -35,6 +35,8 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
                 feedback = analyse_pushup(landmarks, mp_pose)
             elif EXO == "deadlift":
                 feedback = analyse_deadlift(landmarks, mp_pose)
+            elif EXO == "lunge":
+                feedback = analyse_lunge(landmarks, mp_pose)    
             else:
                 feedback = ["Exercice inconnu."]
 
