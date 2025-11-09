@@ -7,7 +7,7 @@ from exercises.deadlift import analyse_deadlift
 
 
 EXO = "squat"  
-VIDEO_PATH = "AI/MediaPipe/videos/squat.mp4"
+VIDEO_PATH = "C:\Users\zine\Documents\NIT\genie logiciel\projet\ts.website\AI\MediaPipe\videos\squat.mp4"
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
