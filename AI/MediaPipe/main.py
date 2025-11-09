@@ -6,8 +6,8 @@ from exercises.pushup import analyse_pushup
 from exercises.deadlift import analyse_deadlift
 
 
-EXO = "pushup"  
-VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/pushup.mp4"
+EXO = "deadlift"  
+VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/deadlift.mp4"
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
