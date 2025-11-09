@@ -5,38 +5,6 @@ import numpy as np
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-# Ouvre la vidéo
-cap = cv2.VideoCapture("squat.mp4")
-
-# Initialiser le modèle
-with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
-    while cap.isOpened():
-        success, frame = cap.read()
-        if not success:
-            break
-
-        # Conversion en RGB
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = pose.process(image)
-
-        # Si des poses ont été détectées
-        if results.pose_landmarks:
-            # Dessine les points sur la vidéo
-            mp_drawing.draw_landmarks(
-                frame,
-                results.pose_landmarks,
-                mp_pose.POSE_CONNECTIONS,
-                mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
-                mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2)
-            )
-
-        cv2.imshow("Analyse posture", frame)
-        if cv2.waitKey(5) & 0xFF == 27:
-            break
-
-cap.release()
-cv2.destroyAllWindows()
-
 def calculate_angle(a, b, c):
     """ Calcule l'angle entre trois points (ex: hanche, genou, cheville) """
     a = np.array(a)
@@ -50,25 +18,78 @@ def calculate_angle(a, b, c):
         angle = 360 - angle
     return angle
 
+# Charge la vidéo
+cap = cv2.VideoCapture("squat.mp4")
 
-if results.pose_landmarks:
-    landmarks = results.pose_landmarks.landmark
+# Vérifie que la vidéo s'ouvre correctement
+if not cap.isOpened():
+    print("⚠️ Erreur : impossible d’ouvrir la vidéo squat.mp4")
+    exit()
 
-    # Points pour la jambe droite
-    hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,
-           landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
-    knee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x,
-            landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
-    ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x,
-             landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
+# Initialise MediaPipe
+with mp_pose.Pose(static_image_mode=False, 
+                  min_detection_confidence=0.5, 
+                  min_tracking_confidence=0.5) as pose:
 
-    angle = calculate_angle(hip, knee, ankle)
-    print(f"Angle du genou droit : {angle:.2f}")
+    while cap.isOpened():
+        success, frame = cap.read()
+        if not success:
+            break
 
-    # Exemple de feedback
-    if angle < 90:
-        print("⚠️ Squat trop bas - risque pour les genoux")
-    elif angle > 140:
-        print("⬆️ Descends un peu plus pour un meilleur squat")
-    else:
-        print("✅ Bonne position de squat")
+        # Conversion BGR → RGB
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        image.flags.writeable = False
+
+        # Détection de la pose
+        results = pose.process(image)
+
+        # Reconvertit en BGR pour affichage
+        image.flags.writeable = True
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+        # Si on a détecté une pose
+        if results.pose_landmarks:
+            landmarks = results.pose_landmarks.landmark
+
+            # Points de la jambe droite
+            hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,
+                   landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+            knee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x,
+                    landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
+            ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x,
+                     landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
+
+            # Calcule l’angle du genou
+            angle = calculate_angle(hip, knee, ankle)
+
+            # Feedback
+            if angle < 90:
+                feedback = "⚠️ Trop bas - risque pour les genoux"
+            elif angle > 140:
+                feedback = "⬆️ Descends un peu plus"
+            else:
+                feedback = "✅ Bonne position"
+
+            # Affiche l’angle sur la vidéo
+            cv2.putText(image, f'Angle genou: {int(angle)}°', 
+                        (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2, cv2.LINE_AA)
+            cv2.putText(image, feedback, 
+                        (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+
+            # Dessine les points du squelette
+            mp_drawing.draw_landmarks(
+                image,
+                results.pose_landmarks,
+                mp_pose.POSE_CONNECTIONS,
+                mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
+                mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2)
+            )
+
+        cv2.imshow("Analyse de posture", image)
+
+        # Appuie sur 'Esc' pour quitter
+        if cv2.waitKey(10) & 0xFF == 27:
+            break
+
+cap.release()
+cv2.destroyAllWindows()
