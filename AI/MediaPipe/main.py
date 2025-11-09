@@ -7,7 +7,7 @@ from exercises.deadlift import analyse_deadlift
 
 
 EXO = "squat"  
-VIDEO_PATH = "C:\Users\zine\Documents\NIT\genie logiciel\projet\ts.website\AI\MediaPipe\videos\squat.mp4"
+VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/squat.mp4"
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -20,12 +20,15 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
         if not success:
             break
 
-        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = pose.process(image)
+        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(image_rgb)
+
+        feedback = []
 
         if results.pose_landmarks:
             landmarks = results.pose_landmarks.landmark
 
+            # Analyse selon l'exercice
             if EXO == "squat":
                 feedback = analyse_squat(landmarks, mp_pose)
             elif EXO == "pushup":
@@ -35,14 +38,17 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
             else:
                 feedback = ["Exercice inconnu."]
 
-            for f in feedback:
-                print(f)
+            # Dessine le squelette
+            mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-            mp_drawing.draw_landmarks(
-                frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+            # Affiche le feedback sur la vidéo
+            y0, dy = 30, 30
+            for i, f in enumerate(feedback):
+                y = y0 + i*dy
+                cv2.putText(frame, f, (30, y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
 
         cv2.imshow("Analyse Posture", frame)
-        if cv2.waitKey(5) & 0xFF == 27:
+        if cv2.waitKey(5) & 0xFF == 27:  # touche Échap pour quitter
             break
 
 cap.release()
