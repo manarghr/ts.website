@@ -49,3 +49,26 @@ def calculate_angle(a, b, c):
     if angle > 180.0:
         angle = 360 - angle
     return angle
+
+
+if results.pose_landmarks:
+    landmarks = results.pose_landmarks.landmark
+
+    # Points pour la jambe droite
+    hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,
+           landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+    knee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x,
+            landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
+    ankle = [landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].x,
+             landmarks[mp_pose.PoseLandmark.RIGHT_ANKLE.value].y]
+
+    angle = calculate_angle(hip, knee, ankle)
+    print(f"Angle du genou droit : {angle:.2f}")
+
+    # Exemple de feedback
+    if angle < 90:
+        print("⚠️ Squat trop bas - risque pour les genoux")
+    elif angle > 140:
+        print("⬆️ Descends un peu plus pour un meilleur squat")
+    else:
+        print("✅ Bonne position de squat")
