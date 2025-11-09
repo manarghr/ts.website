@@ -6,9 +6,10 @@ from exercises.pushup import analyse_pushup
 from exercises.deadlift import analyse_deadlift
 from exercises.lunge import analyse_lunge
 from exercises.pullup import analyse_pullup
+from exercises.plank import analyse_plank
 
-EXO = "pullup" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
-VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/pullup.mp4"
+EXO = "plank" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
+VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/plank.mp4"
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -39,7 +40,9 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
             elif EXO == "lunge":
                 feedback = analyse_lunge(landmarks, mp_pose) 
             elif EXO == "pullup":
-                    feedback = analyse_pullup(landmarks, mp_pose)         
+                    feedback = analyse_pullup(landmarks, mp_pose) 
+            elif EXO == "plank":
+                feedback = analyse_plank(landmarks, mp_pose)                
             else:
                 feedback = ["Exercice inconnu."]
               
