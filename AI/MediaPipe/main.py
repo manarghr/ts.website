@@ -7,9 +7,10 @@ from exercises.deadlift import analyse_deadlift
 from exercises.lunge import analyse_lunge
 from exercises.pullup import analyse_pullup
 from exercises.plank import analyse_plank
+from exercises.shoulder_press import analyse_shoulder_press
 
-EXO = "plank" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
-VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/plank.mp4"
+EXO = "shoulder_press" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
+VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/shoulder_press.mp4"
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -42,7 +43,9 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
             elif EXO == "pullup":
                     feedback = analyse_pullup(landmarks, mp_pose) 
             elif EXO == "plank":
-                feedback = analyse_plank(landmarks, mp_pose)                
+                feedback = analyse_plank(landmarks, mp_pose)   
+            elif EXO == "shoulder_press":
+                feedback = analyse_shoulder_press(landmarks, mp_pose)                 
             else:
                 feedback = ["Exercice inconnu."]
               
@@ -54,7 +57,7 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
             y0, dy = 30, 30
             for i, f in enumerate(feedback):
                 y = y0 + i * dy
-                cv2.putText(frame, f, (30, y), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
+                cv2.putText(frame, f, (30, y), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2, cv2.LINE_AA)
 
         cv2.imshow("Analyse Posture", frame)
         if cv2.waitKey(5) & 0xFF == 27:  # touche Échap pour quitter
