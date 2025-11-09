@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import numpy as np
 from exercises.squat import analyse_squat
 from exercises.pushup import analyse_pushup
 from exercises.deadlift import analyse_deadlift
