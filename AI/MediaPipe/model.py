@@ -19,7 +19,7 @@ def calculate_angle(a, b, c):
     return angle
 
 # Charge la vidéo
-cap = cv2.VideoCapture("squat.mp4")
+cap = cv2.VideoCapture("C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/squat.mp4")
 
 # Vérifie que la vidéo s'ouvre correctement
 if not cap.isOpened():
