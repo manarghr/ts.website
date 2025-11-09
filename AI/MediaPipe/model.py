@@ -23,7 +23,7 @@ cap = cv2.VideoCapture("C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.web
 
 # Vérifie que la vidéo s'ouvre correctement
 if not cap.isOpened():
-    print("⚠️ Erreur : impossible d’ouvrir la vidéo squat.mp4")
+    print(" Erreur : impossible d’ouvrir la vidéo squat.mp4")
     exit()
 
 # Initialise MediaPipe
@@ -64,11 +64,11 @@ with mp_pose.Pose(static_image_mode=False,
 
             # Feedback
             if angle < 90:
-                feedback = "⚠️ Trop bas - risque pour les genoux"
+                feedback = " Trop bas - risque pour les genoux"
             elif angle > 140:
-                feedback = "⬆️ Descends un peu plus"
+                feedback = "⬆ Descends un peu plus"
             else:
-                feedback = "✅ Bonne position"
+                feedback = " Bonne position"
 
             # Affiche l’angle sur la vidéo
             cv2.putText(image, f'Angle genou: {int(angle)}°', 
