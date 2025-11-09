@@ -36,3 +36,16 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
 
 cap.release()
 cv2.destroyAllWindows()
+
+def calculate_angle(a, b, c):
+    """ Calcule l'angle entre trois points (ex: hanche, genou, cheville) """
+    a = np.array(a)
+    b = np.array(b)
+    c = np.array(c)
+
+    radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
+    angle = np.abs(radians*180.0/np.pi)
+
+    if angle > 180.0:
+        angle = 360 - angle
+    return angle
