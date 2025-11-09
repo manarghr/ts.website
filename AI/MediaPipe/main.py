@@ -9,9 +9,11 @@ from exercises.pullup import analyse_pullup
 from exercises.plank import analyse_plank
 from exercises.shoulder_press import analyse_shoulder_press
 from exercises.biceps_curl import analyse_biceps_curl
+from exercises.dips import analyse_dips
+from exercises.hip_thrust import analyse_hip_thrust
 
-EXO = "biceps_curl" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
-VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/biceps_curl.mp4"
+EXO = "hip_thrust" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
+VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/hip_thrust.mp4"
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -48,7 +50,11 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
             elif EXO == "shoulder_press":
                 feedback = analyse_shoulder_press(landmarks, mp_pose) 
             elif EXO == "biceps_curl":
-                feedback = analyse_biceps_curl(landmarks, mp_pose)                
+                feedback = analyse_biceps_curl(landmarks, mp_pose)  
+            elif EXO == "dips":
+                feedback = analyse_dips(landmarks, mp_pose)  
+            elif EXO == "hip_thrust":
+                feedback = analyse_hip_thrust(landmarks, mp_pose)                    
             else:
                 feedback = ["Exercice inconnu."]
               
