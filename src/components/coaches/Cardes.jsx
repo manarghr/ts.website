@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function Cardes({ image, title, para, className = "" }) {
   return (
     <div
-      className={`relative bottom-30 w-[260px] h-[460px]  overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-2xl ${className}`}
+      className={`relative bottom-30 w-[260px] h-[460px]  overflow-hidden shadow-lg transition-transform duration-300  ${className}`}
     >
       {/* Background image */}
       <Image

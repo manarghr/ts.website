@@ -12,8 +12,10 @@ from exercises.biceps_curl import analyse_biceps_curl
 from exercises.dips import analyse_dips
 from exercises.hip_thrust import analyse_hip_thrust
 
-EXO = "hip_thrust" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
-VIDEO_PATH = "C:/Users/zine/Documents/NIT/genie logiciel/projet/ts.website/AI/MediaPipe/videos/hip_thrust.mp4"
+EXO = "lunge" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
+VIDEO_PATH ="C:\\Users\\admin\\website\\ts.website\\AI\\MediaPipe\\videos\\lunge.mp4"
+
+
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils

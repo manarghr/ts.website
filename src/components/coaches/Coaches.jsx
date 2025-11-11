@@ -52,7 +52,7 @@ export default function Coaches() {
   };
 
   return (
-    <section className="p-10 text-center bg-[#C8CDC5]/30 relative overflow-hidden">
+    <section className=" text-center bg-[#C8CDC5]/30 relative overflow-hidden">
       <h1 className="text-4xl font-bold text-[#354F52] mb-7">Our Coaches</h1>
       <p className="text-lg text-gray-600">
         Meet our team of professional trainers dedicated to your success.
@@ -76,7 +76,7 @@ export default function Coaches() {
       </div>
 
       {/* Zone des cartes */}
-      <div className="relative bg-[#354F52] h-[590px] mt-20 flex items-center justify-center rounded-3xl overflow-visible">
+      <div className="relative bg-[#354F52] h-[590px] mt-20 flex items-center justify-center  overflow-visible">
         <Image
           src={background}
           alt="Coaches background"

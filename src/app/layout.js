@@ -8,7 +8,7 @@ export default function RootLayout({ children }) {
       <body>
         <Navbar />
         <main className="pt-[60px]">{children}</main> {/* space for fixed navbar */}
-        
+        <Footer/>
       </body>
     </html>
   );

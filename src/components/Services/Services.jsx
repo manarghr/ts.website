@@ -3,9 +3,9 @@ import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import Card from "./Card";
 import {
-  PiArrowSquareLeftDuotone,
-  PiArrowSquareRightDuotone,
-} from "react-icons/pi";
+  IoIosArrowBack,
+  IoIosArrowForward,
+} from "react-icons/io";
 import picture from "../assets/elements.png";
 
 export default function Services() {
@@ -113,17 +113,17 @@ export default function Services() {
           <button
             onClick={() => scroll("left")}
             aria-label="Scroll left"
-            className="p-2 rounded-full hover:scale-110 transition-transform"
+            className="relative right-165 bottom-50 rounded-full hover:scale-110 transition-transform"
           >
-            <PiArrowSquareLeftDuotone size={36} className="text-[#354F52]" />
+            <IoIosArrowBack size={36} className="text-[#354F52]" />
           </button>
 
           <button
             onClick={() => scroll("right")}
             aria-label="Scroll right"
-            className="p-2 rounded-full hover:scale-110 transition-transform"
+            className="relative left-165 bottom-50 rounded-full hover:scale-110 transition-transform"
           >
-            <PiArrowSquareRightDuotone size={36} className="text-[#354F52]" />
+            <IoIosArrowForward  size={36} className="text-[#354F52]" />
           </button>
         </div>
       </div>
