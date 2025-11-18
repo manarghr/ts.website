@@ -24,18 +24,8 @@ export default function CustomFAQ() {
       answer:
         "Nope! All you need is a device with a camera—like your phone or laptop. TrainSight uses computer vision to track your movements and offer insights without any extra gear.",
     },
-    {
-      id: "faq-3",
-      question: "Can I use TrainSight if I’m a beginner?",
-      answer:
-        "Absolutely. TrainSight is designed to support all fitness levels. Whether you're just starting out or refining your form, the AI adapts to your pace and goals.",
-    },
-    {
-      id: "faq-4",
-      question: " Can I train with a coach or just solo?",
-      answer:
-        "You can do both! TrainSight works great for solo sessions, but it also integrates with coaching workflows, allowing trainers to monitor progress and give feedback remotely.",
-    },
+
+   
     {
       id: "faq-5",
       question: "Are the workouts personalized?",

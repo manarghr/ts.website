@@ -31,10 +31,10 @@ export default function Achievement() {
   }, []);
 
   return (
-    <section className="bg-[#DADDD8] h-145 py-5 px-5 flex md:flex-row items-center justify-between gap-15">
+    <section className="bg-[#DADDD8] h-[550px] py-5 px-5 flex md:flex-row items-center justify-between gap-15 ">
 
       {/* Left side - Text and Stats */}
-      <div className="flex-1 relative bottom- left-35">
+      <div className="flex-1 relative bottom- left-[100px] ">
         <h2 className="text-6xl font-bold text-[#84A98C] mb-4">
           <span className="text-black">Our</span>{" "}
           <span className="bg-[52796F]">Achievement</span>
@@ -44,44 +44,45 @@ export default function Achievement() {
         </p>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-25">
+        <div className="grid grid-cols-2 gap-[40px]">
           {/* Stat 1 */}
           <div className="flex items-center md:items-start text-center md:text-left">
             <Image src={picture1} alt="Icon" width={63} height={40} />
             <h3 className="text-3xl font-bold mt-1 ml-3">{users.toLocaleString()}+</h3>
-            <p className="text-2xl text-black-500 relative top-10 right-25">Active Users</p>
+            <p className="text-2xl text-black-500 relative top-[35px] right-[100px]">Active Users</p>
           </div>
 
           {/* Stat 2 */}
           <div className="flex items-center md:items-start text-center md:text-left">
             <Image src={picture1} alt="Icon" width={63} height={40} />
             <h3 className="text-3xl font-bold mt-1 ml-3">{coaches}+</h3>
-            <p className="text-[22px] text-black-500 relative top-10 right-15">Certified Coaches</p>
+            <p className="text-[22px] text-black-500 relative top-[35px] right-[55px]">Certified Coaches</p>
           </div>
 
           {/* Stat 3 */}
           <div className="flex items-center md:items-start text-center md:text-left">
             <Image src={picture1} alt="Icon" width={63} height={40} />
             <h3 className="text-3xl font-bold mt-1 ml-3">{videos}+</h3>
-            <p className=" text-[20px] text-black-500 relative top-10 right-18">Video Workouts</p>
+            <p className=" text-[20px] text-black-500 relative top-[35px] right-[75px]">Video Workouts</p>
           </div>
 
           {/* Stat 4 */}
           <div className="flex items-center md:items-start text-center md:text-left">
             <Image src={picture1} alt="Icon" width={63} height={40} />
             <h3 className="text-3xl font-bold mt-1 ml-3">{satisfaction}%</h3>
-            <p className=" text-[20px] text-black-500 relative top-10 right-15">User Satisfaction</p>
+            <p className=" text-[20px] text-black-500 relative top-[35px] right-[60px]">User Satisfaction</p>
           </div>
         </div>
       </div>
 
       {/* Right side - Hero Image */}
-      <div className="flex-1 flex justify-center relative top-10 left-20">
+    <div className="flex-1 flex justify-center relative translate-y-[40px] left-5 ">
+
         <Image
           src={hero}
           alt="Achievement Hero"
-          className="object-cover  h-full"
-          width={650}
+          className="object-cover h-full relative left-10"
+          width={630}
           height={300}
         />
       </div>

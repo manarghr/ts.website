@@ -12,8 +12,8 @@ from exercises.biceps_curl import analyse_biceps_curl
 from exercises.dips import analyse_dips
 from exercises.hip_thrust import analyse_hip_thrust
 
-EXO = "lunge" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
-VIDEO_PATH ="C:\\Users\\admin\\website\\ts.website\\AI\\MediaPipe\\videos\\lunge.mp4"
+EXO = "biceps_curl" # Choisissez l'exercice: "squat", "pushup", "deadlift", "lunge", "pullup"  
+VIDEO_PATH ="C:\\Users\\admin\\website\\ts.website\\AI\\MediaPipe\\videos\\biceps_curl.mp4"
 
 
 

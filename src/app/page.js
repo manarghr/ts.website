@@ -12,6 +12,7 @@ import Footer from '@/components/footer/Footer';
 import FAQ from '@/components/faq/FAQ';
 import Coaches from '@/components/coaches/Coaches';
 import Achievement from "@/components/achievement/Achievement";
+import TestimonialSection from "@/components/Testimonials/Testimonials";
 
 
 export default function Home() {
@@ -24,6 +25,7 @@ export default function Home() {
      <Services/>
       <Coaches/>
       <Achievement/>
+      <TestimonialSection/>
      <FAQ/>
     </div>
   );
