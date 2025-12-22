@@ -76,7 +76,7 @@ export default function Achievement() {
       </div>
 
       {/* Right side - Hero Image */}
-    <div className="flex-1 flex justify-center relative translate-y-[40px] left-5 ">
+    <div className="flex-1 flex justify-center relative translate-y-[40px] left-4 "> 
 
         <Image
           src={hero}

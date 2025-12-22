@@ -2,9 +2,9 @@ import Image from "next/image";
 
 export default function Card({ image, title, para, isActive }) {
   return (
-    <div className="shadow-md overflow-hidden w-[180px] transition-transform duration-300 hover:shadow-xl bg-transparent rounded-xl">
+    <div className=" overflow-hidden w-[190px] transition-transform duration-300  bg-transparent ">
       {/* Image */}
-      <div className="relative w-full h-[80px] flex justify-center items-center mt-2">
+      <div className="relative w-full h-[100px] flex justify-center items-center mt-2">
         <Image
           src={image}
           alt={title}
@@ -32,7 +32,7 @@ export default function Card({ image, title, para, isActive }) {
           {para}
         </p>
         <button
-          className={`text-xs py-1 px-3 rounded-md border transition-colors ${
+          className={`text-xs py-1 px-3 border transition-colors ${
             isActive
               ? "border-white text-white hover:bg-white hover:text-[#52796F]"
               : "border-[#354F52] text-[#354F52] hover:bg-[#354F52] hover:text-white"
