@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Lightbulb, Users, Award, Target, Zap, Shield, TrendingUp, Clock, Heart } from "lucide-react";
+import AuthModal from "@/components/auth/AuthModal";
 
 export default function AboutHero() {
   const [isVisible, setIsVisible] = useState({});
   const sectionRefs = useRef({});
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     const observers = Object.keys(sectionRefs.current).map((key) => {
@@ -58,7 +60,7 @@ export default function AboutHero() {
       {/* Hero Section with Parallax Effect */}
       <section className="relative w-full h-[500px] md:h-[600px] overflow-hidden">
         <div 
-          className="absolute inset-0 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] bg-cover bg-center bg-fixed"
+          className="absolute inset-0 bg-linear-to-r from-[#354F52] via-[#52796F] to-[#354F52] bg-cover bg-center bg-fixed"
           style={{
             backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1400')",
             backgroundSize: "cover",
@@ -85,7 +87,7 @@ export default function AboutHero() {
       </section>
 
       {/* Mission Statement Section */}
-      <section className="bg-gradient-to-b from-white to-[#C8CDC5]/20 py-20 px-8 md:px-16">
+      <section className="bg-linear-to-b from-white to-[#C8CDC5]/20 py-20 px-8 md:px-16">
         <div className="max-w-6xl mx-auto">
           <div 
             ref={(el) => (sectionRefs.current["mission"] = el)}
@@ -97,7 +99,7 @@ export default function AboutHero() {
               </h2>
               <div className="w-32 h-1 bg-[#52796F] mx-auto mb-8" />
             </div>
-            <div className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-2xl p-8 md:p-12 shadow-2xl text-white relative overflow-hidden">
+            <div className="bg-linear-to-br from-[#354F52] to-[#52796F] rounded-2xl p-8 md:p-12 shadow-2xl text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full -ml-32 -mb-32" />
               <div className="relative z-10">
@@ -159,7 +161,7 @@ export default function AboutHero() {
       </section>
 
       {/* Stats Section */}
-      <section className="bg-gradient-to-r from-[#354F52] to-[#52796F] py-20 px-8 md:px-16 text-white relative overflow-hidden">
+      <section className="bg-linear-to-r from-[#354F52] to-[#52796F] py-20 px-8 md:px-16 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -ml-48 -mt-48" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full -mr-48 -mb-48" />
@@ -226,7 +228,7 @@ export default function AboutHero() {
               </div>
             </div>
             <div className={`relative transition-all duration-1000 ${isVisible["tech"] ? "opacity-100 translate-x-0" : "opacity-0 translate-x-10"}`}>
-              <div className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+              <div className="bg-linear-to-br from-[#354F52] to-[#52796F] rounded-2xl p-8 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
                 <div 
                   className="w-full h-80 bg-slate-900/50 rounded-lg flex items-center justify-center relative"
@@ -346,7 +348,7 @@ export default function AboutHero() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] py-20 px-8 md:px-16 text-white relative overflow-hidden">
+      <section className="bg-linear-to-r from-[#354F52] via-[#52796F] to-[#354F52] py-20 px-8 md:px-16 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -ml-32 -mt-32" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-white rounded-full -mr-32 -mb-32" />
@@ -361,11 +363,15 @@ export default function AboutHero() {
           <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto">
             Join thousands of athletes and fitness enthusiasts who are already using TrainSight to perfect their form and prevent injuries.
           </p>
-          <button className="bg-white text-[#354F52] font-bold py-4 px-10 rounded-lg text-lg hover:bg-[#C8CDC5] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+          <button 
+            onClick={() => setIsAuthModalOpen(true)}
+            className="bg-white text-[#354F52] font-bold py-4 px-10 rounded-lg text-lg hover:bg-[#C8CDC5] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          >
             Get Started Today
           </button>
         </div>
       </section>
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
   );
 }
