@@ -1,4 +1,4 @@
-export default function Robot() {
+export default function AboutDescription() {
   return (
    <section className="bg-[#354F52] w-full h-full text-white p-[20vh]">
     <div className="bg-[#52796F]/80 w-[550px] h-[450px] p-20 rounded-lg shadow-lg text-[1.5rem]  tracking-wide mb-4 ">

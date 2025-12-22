@@ -1,11 +1,11 @@
-import Header from "@/components2/Header/Header";
-import Robot from "@/components2/Robot/Robot";
+import AboutHero from "@/components/about/AboutHero";
+import AboutDescription from "@/components/about/AboutDescription";
 
 export default function About() {
   return (
     <div>
-        <Header/>
-        <Robot/>
+        <AboutHero/>
+        <AboutDescription/>
       
     </div>
   );
