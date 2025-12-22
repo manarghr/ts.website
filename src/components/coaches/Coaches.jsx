@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Card from "./Cardes";
 import { Afacad } from "next/font/google";
 import Image from "next/image";
@@ -13,6 +13,32 @@ import picture3 from "../assets/picture3.png";
 const afacad = Afacad({ subsets: ["latin"], weight: ["400", "600", "700"] });
 
 export default function Coaches() {
+  const sectionRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
   // --- Données des catégories ---
   const categories = {
     Strength: [
@@ -52,51 +78,71 @@ export default function Coaches() {
   };
 
   return (
-    <section className=" text-center bg-[#C8CDC5]/30 relative overflow-hidden">
-      <h1 className="text-4xl font-bold text-[#354F52] mb-7">Our Coaches</h1>
-      <p className="text-lg text-gray-600">
-        Meet our team of professional trainers dedicated to your success.
-      </p>
+    <section ref={sectionRef} className="text-center bg-gradient-to-b from-white to-[#C8CDC5]/30 py-20 md:py-28 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 bg-pattern-dots opacity-15"></div>
+      <div className="absolute top-20 left-20 w-72 h-72 bg-[#52796F]/8 rounded-full blur-3xl animate-float"></div>
+      <div className="absolute bottom-20 right-20 w-64 h-64 bg-[#354F52]/8 rounded-full blur-3xl animate-float" style={{ animationDelay: '2.5s' }}></div>
+      
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
+        {/* Section Header */}
+        <div className={`mb-12 fade-in-on-scroll ${isVisible ? 'visible' : ''}`}>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <span className="text-[#354F52]">Our Expert</span>{" "}
+            <span className="text-[#52796F]">Coaches</span>
+          </h1>
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+            Meet our team of professional trainers dedicated to helping you achieve your fitness goals.
+          </p>
+        </div>
 
-      {/* Boutons de filtre */}
-      <div className={`flex justify-center gap-6 mt-6 flex-wrap ${afacad.className}`}>
-        {Object.keys(categories).map((category) => (
-          <button
-            key={category}
-            onClick={() => handleCategoryChange(category)}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 
-              ${activeCategory === category
-                ? "bg-[#354F52] text-white scale-105"
-                : "bg-[#CAD2C5] text-[#2F3E46] hover:bg-[#354F52] hover:text-white"
-              }`}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
-
-      {/* Zone des cartes */}
-      <div className="relative bg-[#354F52] h-[590px] mt-20 flex items-center justify-center  overflow-visible">
-        <Image
-          src={background}
-          alt="Coaches background"
-          fill
-          className="object-cover opacity-80 rounded-3xl"
-        />
-
-        <div
-          className={`flex justify-center gap-30 relative flex-wrap z-10 transition-all duration-500 
-          ${isChanging ? "opacity-0 translate-y-5" : "opacity-100 translate-y-0"}`}
-        >
-          {categories[activeCategory].map((coach, i) => (
-            <Card
-              key={i}
-              className={`relative ${i === 1 ? "bottom-10" : "bottom-0"}`}
-              image={coach.image}
-              title={coach.title}
-              para={coach.para}
-            />
+        {/* Category Filter Buttons */}
+        <div className={`flex justify-center gap-4 mb-16 flex-wrap ${afacad.className} fade-in-on-scroll ${isVisible ? 'visible' : ''}`} style={{ transitionDelay: '0.2s' }}>
+          {Object.keys(categories).map((category) => (
+            <button
+              key={category}
+              onClick={() => handleCategoryChange(category)}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:scale-110
+                ${activeCategory === category
+                  ? "bg-[#354F52] text-white scale-105 shadow-xl"
+                  : "bg-white text-[#354F52] hover:bg-[#52796F] hover:text-white border border-[#C8CDC5]"
+                }`}
+            >
+              {category}
+            </button>
           ))}
+        </div>
+
+        {/* Coaches Cards Container */}
+        <div className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-3xl p-8 md:p-12 min-h-[600px] flex items-center justify-center overflow-hidden shadow-2xl">
+          {/* Background Image with Overlay */}
+          <div className="absolute inset-0">
+            <Image
+              src={background}
+              alt="Coaches background"
+              fill
+              className="object-cover opacity-20"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#354F52]/90 to-[#52796F]/90"></div>
+          </div>
+
+          {/* Coaches Cards */}
+          <div
+            className={`flex justify-center items-center gap-8 md:gap-12 relative z-10 flex-wrap transition-all duration-500 
+            ${isChanging ? "opacity-0 translate-y-5" : "opacity-100 translate-y-0"}`}
+          >
+            {categories[activeCategory].map((coach, i) => (
+              <Card
+                key={i}
+                className={`relative transform transition-all duration-300 hover:scale-105 ${
+                  i === 1 ? "-mt-8 md:-mt-12" : ""
+                }`}
+                image={coach.image}
+                title={coach.title}
+                para={coach.para}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
