@@ -25,7 +25,7 @@ export default function Home() {
      <Services/>
       <Coaches/>
       <Achievement/>
-      <TestimonialSection/>
+   
      <FAQ/>
     </div>
   );
