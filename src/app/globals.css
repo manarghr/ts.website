@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 @keyframes fadeLine {
   to {
     opacity: 1;
@@ -6,17 +7,22 @@
   }
 }
 
-
 .animate-fadeLine {
   animation: fadeLine 0.8s ease forwards;
-
 }
+
 /* global.css or your component CSS file */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
 }
 
