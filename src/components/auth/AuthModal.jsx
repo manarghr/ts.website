@@ -143,40 +143,32 @@ export default function AuthModal({ isOpen, onClose }) {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault()
     if (!validateSignup()) return
 
     setIsSubmitting(true)
 
     try {
-      // Get existing users from localStorage
-      const existingUsers = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-      
-      // Check if user already exists
-      if (existingUsers.find((u) => u.email === formData.email)) {
-        setErrors({ email: "This email is already registered" })
+      // Register user via API
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setErrors({ email: data.error || "An error occurred. Please try again." })
         setIsSubmitting(false)
         return
       }
 
-      // Create new user
-      const newUser = {
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString(),
-        followers: [],
-        followings: [],
-        favoriteCoaches: [],
-        likedVideos: [],
-        bio: formData.bio || "",
-      }
-
-      // Save to localStorage
-      existingUsers.push(newUser)
-      localStorage.setItem("trainsight_users", JSON.stringify(existingUsers))
-      localStorage.setItem("trainsight_current_user", JSON.stringify(newUser))
+      // Save user to localStorage for frontend state
+      localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
 
       // Dispatch event to update navbar
       window.dispatchEvent(new Event("userUpdated"));
@@ -197,40 +189,39 @@ export default function AuthModal({ isOpen, onClose }) {
     }
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     if (!validateLogin()) return
 
     setIsSubmitting(true)
 
     try {
-      // Get users from localStorage
-      const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-      const user = users.find(
-        (u) => u.email === loginData.email && u.password === loginData.password
-      )
+      // Login via API
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      })
 
-      if (!user) {
-        setErrors({ email: "Invalid email or password" })
+      const data = await response.json()
+
+      if (!response.ok) {
+        setErrors({ email: data.error || "Invalid email or password" })
         setIsSubmitting(false)
         return
       }
 
-      // Update last login
-      const updatedUser = {
-        ...user,
-        lastLogin: new Date().toISOString(),
-      }
-      const updatedUsers = users.map((u) => (u.id === user.id ? updatedUser : u))
-      localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
-      localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
+      // Save user to localStorage for frontend state
+      localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
 
       // Dispatch event to update navbar
       window.dispatchEvent(new Event("userUpdated"));
 
       setIsSubmitting(false)
       setShowSuccess(true)
-      setSuccessMessage(`Welcome back, ${updatedUser.fullName}! Ready to crush your fitness goals today? Let's make it happen! 💪`)
+      setSuccessMessage(`Welcome back, ${data.user.fullName}! Ready to crush your fitness goals today? Let's make it happen! 💪`)
 
       setTimeout(() => {
         onClose()

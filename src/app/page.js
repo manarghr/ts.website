@@ -4,7 +4,7 @@ import AIHome from '@/components/AiHome/AIHome';
 import Services from '@/components/Services/Services';
 import Footer from '@/components/footer/Footer';
 import FAQ from '@/components/faq/FAQ';
-import Coaches from '@/components/coaches/Coaches';
+import CoachesHome from '@/components/coaches/CoachesHome';
 import Achievement from "@/components/achievement/Achievement";
 import TestimonialSection from "@/components/Testimonials/Testimonials";
 
@@ -15,7 +15,7 @@ export default function Home() {
       <AIHome/>
       <Services/>
       <Achievement/>
-      <Coaches/>
+      <CoachesHome/>
       <TestimonialSection/>
       <FAQ/>
     </div>
