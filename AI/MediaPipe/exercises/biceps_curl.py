@@ -1,6 +1,6 @@
 from posture_utils import calculate_angle, get_best_point
 
-def analyse_biceps_curl(landmarks, mp_pose):
+def analyse_biceps_curl(landmarks, mp_pose, smoother):
     shoulder = get_best_point(
         landmarks,
         mp_pose.PoseLandmark.LEFT_SHOULDER.value,
@@ -19,7 +19,8 @@ def analyse_biceps_curl(landmarks, mp_pose):
         mp_pose.PoseLandmark.RIGHT_WRIST.value
     )
 
-    angle = calculate_angle(shoulder, elbow, wrist)
+    angle_raw = calculate_angle(shoulder, elbow, wrist)
+    angle = smoother.smooth(angle_raw)
 
     feedback = []
     if angle > 160:
@@ -30,4 +31,3 @@ def analyse_biceps_curl(landmarks, mp_pose):
         feedback.append("Biceps Curl correct")
 
     return feedback
-
