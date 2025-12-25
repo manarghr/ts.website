@@ -3,6 +3,8 @@ import mediapipe as mp
 import numpy as np
 import os
 from pathlib import Path
+from posture_utils import AngleSmoother
+from posture_utils import RepCounter
 from exercises.squat import analyse_squat
 from exercises.pushup import analyse_pushup
 from exercises.deadlift import analyse_deadlift
@@ -14,9 +16,9 @@ from exercises.biceps_curl import analyse_biceps_curl
 from exercises.dips import analyse_dips
 from exercises.hip_thrust import analyse_hip_thrust
 
-
-EXO = "squat"  
-VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\squat.mp4"
+# Configuration de l'exercice et du chemin de la vidéo
+EXO = "biceps_curl"  # Choisis l'exercice
+VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\biceps_curl.mp4"
 
 
 # Vérification du chemin de la vidéo
@@ -35,6 +37,9 @@ if not cap.isOpened():
 # Initialisation du compteur de répétitions
 repetition_count = 0
 last_feedback = None
+
+
+angle_smoother = AngleSmoother(window_size=7)
 
 # Boucle principale
 with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
@@ -103,7 +108,7 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
         cv2.imshow("Analyse Posture", frame)
 
         # Quitte avec la touche Échap
-        if cv2.waitKey(5) & 0xFF == 27:
+        if cv2.waitKey(25) & 0xFF == 27:
             break
 
 # Libère les ressources

@@ -1,27 +1,14 @@
-from posture_utils import calculate_angle, get_best_point
+from posture_utils import calculate_angle
 
-def analyse_biceps_curl(landmarks, mp_pose, smoother):
-    shoulder = get_best_point(
-        landmarks,
-        mp_pose.PoseLandmark.LEFT_SHOULDER.value,
-        mp_pose.PoseLandmark.RIGHT_SHOULDER.value
-    )
+def analyse_biceps_curl(landmarks, mp_pose):
+    shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,
+                landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
+    elbow = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x,
+             landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].y]
+    wrist = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x,
+             landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
 
-    elbow = get_best_point(
-        landmarks,
-        mp_pose.PoseLandmark.LEFT_ELBOW.value,
-        mp_pose.PoseLandmark.RIGHT_ELBOW.value
-    )
-
-    wrist = get_best_point(
-        landmarks,
-        mp_pose.PoseLandmark.LEFT_WRIST.value,
-        mp_pose.PoseLandmark.RIGHT_WRIST.value
-    )
-
-    angle_raw = calculate_angle(shoulder, elbow, wrist)
-    angle = smoother.smooth(angle_raw)
-
+    angle = calculate_angle(shoulder, elbow, wrist)
     feedback = []
     if angle > 160:
         feedback.append("Bras trop tendu — plie légèrement le coude")
@@ -29,5 +16,4 @@ def analyse_biceps_curl(landmarks, mp_pose, smoother):
         feedback.append("Bras trop plié — remonte doucement")
     else:
         feedback.append("Biceps Curl correct")
-
     return feedback
