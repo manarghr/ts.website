@@ -1,5 +1,5 @@
 import numpy as np
-
+from collections import deque
 def calculate_angle(a, b, c):
     """Calcule l'angle entre trois points (a, b, c)"""
     a, b, c = np.array(a), np.array(b), np.array(c)
@@ -25,3 +25,12 @@ def get_best_point(landmarks, left_id, right_id):
     else:
         return [right.x, right.y]
 
+
+
+class AngleSmoother:
+    def __init__(self, window_size=5):
+        self.window = deque(maxlen=window_size)
+
+    def smooth(self, angle):
+        self.window.append(angle)
+        return sum(self.window) / len(self.window)
