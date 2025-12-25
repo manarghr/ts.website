@@ -171,8 +171,10 @@ export default function ProfilePage({ userId }) {
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("trainsight_current_user");
+    // Clear profile picture from navbar by dispatching event
     window.dispatchEvent(new Event("userLoggedOut"));
-    window.location.href = "/";
+    // Force page reload to clear any cached images
+    window.location.href = "/profile";
   };
 
   const [currentUser, setCurrentUser] = useState(null);
@@ -329,13 +331,156 @@ export default function ProfilePage({ userId }) {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
-        <div className="text-center">
-          <p className="text-xl text-slate-600 mb-4">Please log in to view profiles</p>
-          <Link href="/" className="text-[#52796F] hover:underline font-semibold">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
+        {/* White Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-white"></div>
+        
+        {/* Animated gradient blurs - green */}
+        <motion.div
+          className="absolute top-0 left-1/4 w-96 h-96 bg-[#52796F]/20 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#354F52]/20 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2,
+          }}
+        />
+
+        {/* Floating gym equipment icons - green */}
+        {[
+          { icon: Dumbbell, x: 10, y: 20, size: 50, duration: 8, delay: 0 },
+          { icon: Activity, x: 85, y: 15, size: 45, duration: 10, delay: 1 },
+          { icon: Apple, x: 20, y: 60, size: 55, duration: 12, delay: 2 },
+          { icon: UtensilsCrossed, x: 75, y: 55, size: 48, duration: 9, delay: 0.5 },
+          { icon: Zap, x: 50, y: 30, size: 52, duration: 11, delay: 1.5 },
+        ].map((item, index) => {
+          const IconComponent = item.icon;
+          return (
+            <motion.div
+              key={index}
+              className="absolute text-[#52796F]"
+              style={{
+                left: `${item.x}%`,
+                top: `${item.y}%`,
+              }}
+              animate={{
+                y: [0, -30, 0],
+                x: [0, Math.sin(index) * 20, 0],
+                rotate: [0, 360],
+                opacity: [0.4, 0.6, 0.4],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: item.duration,
+                delay: item.delay,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <IconComponent size={item.size} />
+            </motion.div>
+          );
+        })}
+
+        {/* Main Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 text-center px-4"
+        >
+          {/* Icon */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="mb-8 flex justify-center"
+          >
+            <div className="w-32 h-32 bg-[#52796F]/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-[#52796F]/30 shadow-2xl">
+              <Lock className="w-16 h-16 text-[#354F52]" />
+            </div>
+          </motion.div>
+
+          {/* Title */}
+          <motion.h1
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-5xl md:text-6xl font-extrabold text-[#354F52] mb-4 drop-shadow-lg"
+          >
+            Welcome to TrainSight
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="text-xl md:text-2xl text-slate-600 mb-8 font-semibold"
+          >
+            Please sign up or login to see your profile
+          </motion.p>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="flex justify-center items-center"
+          >
+            <motion.a
+              href="/"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-4 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center gap-2"
+            >
+              <User className="w-5 h-5" />
             Go to Home
-          </Link>
-        </div>
+            </motion.a>
+          </motion.div>
+
+          {/* Decorative Elements */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="mt-12 flex justify-center gap-8"
+          >
+            {[Dumbbell, Activity, Star].map((Icon, index) => (
+              <motion.div
+                key={index}
+                animate={{
+                  y: [0, -10, 0],
+                  rotate: [0, 10, -10, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: index * 0.3,
+                }}
+                className="w-12 h-12 bg-[#52796F]/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-[#52796F]/20"
+              >
+                <Icon className="w-6 h-6 text-[#52796F]" />
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
       </div>
     )
   }
@@ -1402,7 +1547,7 @@ export default function ProfilePage({ userId }) {
                       <p className="text-slate-400 text-sm">The user has chosen to keep this information private</p>
                     </motion.div>
                   )}
-                </div>
+                    </div>
               )}
 
               {activeTab === "meals" && (
@@ -1472,11 +1617,11 @@ export default function ProfilePage({ userId }) {
                                       <div className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-lg">
                                         <Apple className="w-3 h-3 text-slate-600" />
                                         <span className="font-semibold text-slate-700">{meal.category}</span>
-                                      </div>
-                                    )}
-                                  </div>
+                </div>
+              )}
+            </div>
                                 )}
-                              </div>
+          </div>
                             </div>
                           </motion.div>
                         ))}

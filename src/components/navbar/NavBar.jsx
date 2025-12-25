@@ -29,17 +29,26 @@ export default function Navbar() {
       const user = localStorage.getItem("trainsight_current_user")
       if (user) {
         setCurrentUser(JSON.parse(user))
+      } else {
+        setCurrentUser(null)
       }
+    }
+
+    const handleLogout = () => {
+      setCurrentUser(null)
+      setShowDropdown(false)
     }
 
     // Listen for custom event when user data is updated
     window.addEventListener("userUpdated", handleStorageChange)
+    window.addEventListener("userLoggedOut", handleLogout)
 
     // Also check on focus in case localStorage was updated in another tab
     window.addEventListener("focus", handleStorageChange)
 
     return () => {
       window.removeEventListener("userUpdated", handleStorageChange)
+      window.removeEventListener("userLoggedOut", handleLogout)
       window.removeEventListener("focus", handleStorageChange)
     }
   }, [])
@@ -98,29 +107,33 @@ export default function Navbar() {
         <FaRegBell className="text-white text-lg cursor-pointer hover:text-[#C1B8AE] transition-colors" />
 
         <div className="relative profile-dropdown-container">
-          <button 
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowDropdown(!showDropdown)
-            }} 
-            className="flex items-center focus:outline-none hover:opacity-80 transition-opacity"
-          >
-            {currentUser?.profilePicture ? (
-              <Image
-                src={currentUser.profilePicture || "/placeholder.svg"}
-                alt={currentUser.fullName || "Profile"}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-full object-cover border-2 border-white cursor-pointer hover:border-[#C1B8AE] transition-all hover:scale-110"
-                unoptimized
-              />
-            ) : (
-              <FaUser className="w-6 h-6 text-white" />
-            )}
-          </button>
+          {currentUser ? (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowDropdown(!showDropdown)
+              }} 
+              className="flex items-center focus:outline-none hover:opacity-80 transition-opacity"
+            >
+              {currentUser?.profilePicture ? (
+                <Image
+                  src={currentUser.profilePicture || "/placeholder.svg"}
+                  alt={currentUser.fullName || "Profile"}
+                  width={40}
+                  height={40}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white cursor-pointer hover:border-[#C1B8AE] transition-all hover:scale-110"
+                  unoptimized
+                />
+              ) : (
+                <FaUser className="w-6 h-6 text-white cursor-pointer" />
+              )}
+            </button>
+          ) : (
+            <FaUser className="w-6 h-6 text-white opacity-50 cursor-not-allowed" />
+          )}
 
           <AnimatePresence>
-            {showDropdown && (
+            {showDropdown && currentUser && (
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
