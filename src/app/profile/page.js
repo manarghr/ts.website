@@ -19,6 +19,10 @@ import {
   Lock,
   Unlock,
   LogOut,
+  Apple,
+  UtensilsCrossed,
+  Activity,
+  Zap,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -29,25 +33,66 @@ const AnimatedBackground = () => {
   
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#354F52] via-[#2F3E46] to-[#1B2D2F] opacity-90"></div>
+      {/* Lighter base background - less green */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#4a6a6f] via-[#5a7a7f] to-[#6a8a8f]"></div>
+      
+      {/* Animated gradient blurs - using platform colors */}
+      <motion.div
+        className="absolute top-0 left-1/4 w-96 h-96 bg-[#52796F]/30 rounded-full blur-3xl"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      <motion.div
+        className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#354F52]/30 rounded-full blur-3xl"
+        animate={{
+          scale: [1, 1.3, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 2,
+        }}
+      />
+      <motion.div
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#52796F]/20 rounded-full blur-3xl"
+        animate={{
+          scale: [1, 1.1, 1],
+          opacity: [0.2, 0.4, 0.2],
+        }}
+        transition={{
+          duration: 12,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 4,
+        }}
+      />
       
       {/* Animated particles */}
       {particles.map((_, i) => {
         // eslint-disable-next-line react-hooks/purity
-        const size = Math.random() * 6 + 4;
+        const size = Math.random() * 6 + 3;
         // eslint-disable-next-line react-hooks/purity
         const posX = Math.random() * 100;
         // eslint-disable-next-line react-hooks/purity
         const posY = Math.random() * 100;
         // eslint-disable-next-line react-hooks/purity
-        const duration = Math.random() * 20 + 10;
+        const duration = Math.random() * 15 + 8;
         // eslint-disable-next-line react-hooks/purity
-        const delay = Math.random() * -20;
+        const delay = Math.random() * -15;
         
         return (
           <motion.div
             key={i}
-            className="absolute rounded-full bg-white/10"
+            className="absolute rounded-full bg-[#52796F]/20"
             style={{
               width: `${size}px`,
               height: `${size}px`,
@@ -58,7 +103,8 @@ const AnimatedBackground = () => {
               y: [0, 100, 0],
               // eslint-disable-next-line react-hooks/purity
               x: [0, Math.random() * 100 - 50, 0],
-              opacity: [0.1, 0.8, 0.1],
+              opacity: [0.1, 0.4, 0.1],
+              scale: [1, 1.3, 1],
             }}
             transition={{
               duration: duration,
@@ -70,10 +116,53 @@ const AnimatedBackground = () => {
         );
       })}
       
-      {/* Animated grid lines */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[length:40px_40px] bg-grid-white/[0.1]" />
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 opacity-[0.03]">
+        <div className="absolute inset-0 bg-[length:60px_60px] bg-[linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)]" />
       </div>
+      
+      {/* Floating gym equipment and nutrition icons */}
+      {[
+        { icon: Dumbbell, x: 10, y: 20, size: 40, duration: 8, delay: 0 },
+        { icon: Activity, x: 85, y: 15, size: 35, duration: 10, delay: 1 },
+        { icon: Apple, x: 20, y: 60, size: 45, duration: 12, delay: 2 },
+        { icon: UtensilsCrossed, x: 75, y: 55, size: 38, duration: 9, delay: 0.5 },
+        { icon: Zap, x: 50, y: 30, size: 42, duration: 11, delay: 1.5 },
+        { icon: Dumbbell, x: 15, y: 75, size: 36, duration: 13, delay: 2.5 },
+        { icon: Activity, x: 90, y: 70, size: 40, duration: 10, delay: 0.8 },
+        { icon: Apple, x: 5, y: 45, size: 44, duration: 14, delay: 3 },
+        { icon: UtensilsCrossed, x: 95, y: 40, size: 37, duration: 9.5, delay: 1.2 },
+        { icon: Zap, x: 30, y: 85, size: 39, duration: 11.5, delay: 2.2 },
+        { icon: Dumbbell, x: 60, y: 10, size: 41, duration: 12.5, delay: 0.3 },
+        { icon: Activity, x: 40, y: 50, size: 43, duration: 10.5, delay: 1.8 },
+      ].map((item, index) => {
+        const IconComponent = item.icon;
+        return (
+          <motion.div
+            key={index}
+            className="absolute text-white/35"
+            style={{
+              left: `${item.x}%`,
+              top: `${item.y}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, Math.sin(index) * 20, 0],
+              rotate: [0, 360],
+              opacity: [0.3, 0.45, 0.3],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: item.duration,
+              delay: item.delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <IconComponent size={item.size} />
+          </motion.div>
+        );
+      })}
     </div>
   );
 };
@@ -107,6 +196,7 @@ export default function ProfilePage({ userId }) {
     coaches: "public",
     videos: "public",
     workouts: "public",
+    meals: "public",
   })
 
   useEffect(() => {
@@ -142,6 +232,7 @@ export default function ProfilePage({ userId }) {
               coaches: "public",
               videos: "public",
               workouts: "public",
+              meals: "public",
             },
           )
         }
@@ -265,193 +356,316 @@ export default function ProfilePage({ userId }) {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <AnimatedBackground />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50/80 via-white/80 to-slate-100/80 backdrop-blur-sm py-8 px-4 md:px-8">
-        <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen py-12 px-4 md:px-8 relative z-10">
+        <div className="max-w-6xl mx-auto space-y-8">
          
           {/* Profile Header */}
           <motion.div 
-            className="bg-white/80 backdrop-blur-sm shadow-lg relative z-10"
-            initial={{ opacity: 0, y: -20 }}
+            className="bg-white/95 backdrop-blur-xl shadow-2xl rounded-3xl relative z-10 overflow-hidden border border-white/30"
+            initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
           >
-            <div className="h-32 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52]"></div>
-            <div className="px-8 pb-8 -mt-16">
-              <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
-                <div className="relative group">
+            {/* Decorative top bar */}
+            <div className="h-3 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52]"></div>
+            <div className="h-48 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] relative overflow-hidden">
+              {/* Animated motivational text loop - centered in green frame */}
+              <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                <motion.div
+                  className="flex gap-16 whitespace-nowrap"
+                  initial={{ x: '0%' }}
+                  animate={{
+                    x: ['0%', '-100%'],
+                  }}
+                  transition={{
+                    duration: 150,
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    ease: "linear",
+                  }}
+                  style={{ willChange: 'transform' }}
+                >
+                  {[...Array(10)].map((_, i) => (
+                    <span key={i} className="text-white/15 text-3xl md:text-4xl font-black tracking-wider">
+                      YOU CAN DO IT • TRAIN HARD • STAY STRONG • NEVER GIVE UP • PUSH YOUR LIMITS • BE STRONG •
+                    </span>
+                  ))}
+                </motion.div>
+              </div>
+              {/* Animated overlay */}
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                animate={{
+                  x: ['-100%', '200%'],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 w-56 h-56 bg-white/5 rounded-full blur-3xl"></div>
+              {/* Subtle accent colors */}
+              <div className="absolute top-4 right-8 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl"></div>
+              <div className="absolute bottom-4 left-8 w-40 h-40 bg-teal-400/10 rounded-full blur-2xl"></div>
+            </div>
+            <div className="px-8 pb-10 -mt-20">
+              <div className="flex flex-col md:flex-row items-start md:items-end gap-8 mt-4">
+                <motion.div 
+                  className="relative group"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                >
                   {profileUser?.profilePicture ? (
+                    <div className="relative">
                     <Image
                       src={profileUser.profilePicture || "/placeholder.svg"}
                       alt={profileUser.fullName || "Profile"}
                       width={128}
                       height={128}
-                      className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl ring-2 ring-[#52796F]/20"
+                        className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-2xl ring-4 ring-[#52796F]/30 transform transition-transform duration-300 group-hover:scale-110"
                       unoptimized
                     />
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#52796F]/20 to-[#354F52]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#354F52] to-[#52796F] flex items-center justify-center border-4 border-white shadow-xl ring-2 ring-[#52796F]/20">
+                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#354F52] flex items-center justify-center border-4 border-white shadow-2xl ring-4 ring-[#52796F]/30 transform transition-transform duration-300 group-hover:scale-110 animate-pulse-glow">
                       <User className="w-16 h-16 text-white" />
                     </div>
                   )}
                   {isOwnProfile && (
-                    <label className="absolute bottom-0 right-0 w-10 h-10 bg-gradient-to-r from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-all group-hover:scale-110 border-2 border-white">
-                      <Camera className="w-5 h-5 text-white" />
+                    <motion.label 
+                      className="absolute bottom-0 right-0 w-12 h-12 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center cursor-pointer shadow-xl hover:shadow-2xl transition-all border-4 border-white z-10"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Camera className="w-6 h-6 text-white" />
                       <input type="file" accept="image/*" onChange={handleProfilePictureChange} className="hidden" />
-                    </label>
+                    </motion.label>
                   )}
-                </div>
+                </motion.div>
                 
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
-                    <div>
-                      <h1 className="text-3xl font-bold text-slate-800 mb-2">{profileUser?.fullName}</h1>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4, duration: 0.5 }}
+                    >
+                      <h1 className="text-5xl font-extrabold text-white mb-6 drop-shadow-lg relative z-10">
+                        {profileUser?.fullName}
+                      </h1>
                       {profileUser?.selectedPlan && (
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-semibold mb-3 ${
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.5, type: "spring" }}
+                          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg relative z-10 ${
                             profileUser.selectedPlan === "annual"
-                              ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white"
+                              ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-2 border-emerald-400/30"
                               : profileUser.selectedPlan === "monthly"
-                                ? "bg-gradient-to-r from-[#52796F] to-[#354F52] text-white"
-                                : "bg-slate-200 text-slate-700"
+                                ? "bg-gradient-to-r from-[#52796F] to-[#354F52] text-white border-2 border-[#52796F]/30"
+                                : "bg-gradient-to-r from-slate-200 to-slate-300 text-slate-700 border-2 border-slate-300/50"
                           }`}
+                          style={{ marginTop: '1.5rem' }}
                         >
-                          {profileUser.selectedPlan === "annual"
-                            ? "⭐ Annual Member"
-                            : profileUser.selectedPlan === "monthly"
-                              ? "💎 Monthly Member"
-                              : "🎁 Free Trial"}
-                        </span>
+                          {profileUser.selectedPlan === "annual" ? (
+                            <>
+                              <Star className="w-4 h-4" />
+                              Annual Member
+                            </>
+                          ) : profileUser.selectedPlan === "monthly" ? (
+                            <>
+                              <Dumbbell className="w-4 h-4" />
+                              Monthly Member
+                            </>
+                          ) : (
+                            <>
+                              <Star className="w-4 h-4" />
+                              Free Trial
+                            </>
+                          )}
+                        </motion.span>
                       )}
-                    </div>
+                    </motion.div>
                   </div>
 
                   {profileUser?.bio ? (
-                    <div className="mb-4">
+                    <motion.div 
+                      className="mb-4 mt-8"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                    >
                       {isEditingBio && isOwnProfile ? (
-                        <div>
+                        <div className="animate-fadeInUp">
                           <textarea
                             value={editBio}
                             onChange={(e) => setEditBio(e.target.value)}
                             rows="3"
-                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none resize-none transition-all"
+                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none resize-none transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md"
                             placeholder="Tell us about yourself..."
                           />
-                          <div className="flex gap-2 mt-2">
-                            <button
+                          <div className="flex gap-3 mt-3">
+                            <motion.button
                               onClick={handleSaveBio}
-                              className="px-4 py-2 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-5 py-2.5 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl hover:shadow-xl transition-all flex items-center gap-2 font-bold shadow-lg"
                             >
                               <Save className="w-4 h-4" />
                               Save
-                            </button>
-                            <button
+                            </motion.button>
+                            <motion.button
                               onClick={() => {
                                 setEditBio(profileUser.bio || "")
                                 setIsEditingBio(false)
                               }}
-                              className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all flex items-center gap-2 font-semibold"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-5 py-2.5 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-all flex items-center gap-2 font-semibold shadow-sm"
                             >
                               <X className="w-4 h-4" />
                               Cancel
-                            </button>
+                            </motion.button>
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-start gap-3">
-                          <p className="text-slate-600 flex-1 leading-relaxed">{profileUser.bio}</p>
+                        <div className="flex items-start gap-3 p-5 bg-gradient-to-br from-white via-slate-50/50 to-white rounded-xl border-2 border-slate-200/50 hover:shadow-lg transition-all group relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#52796F]/5 via-transparent to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          <p className="text-slate-700 flex-1 leading-relaxed font-medium relative z-10">{profileUser.bio}</p>
                           {isOwnProfile && (
-                            <button
+                            <motion.button
                               onClick={() => setIsEditingBio(true)}
-                              className="text-[#52796F] hover:text-[#354F52] transition-colors p-2 hover:bg-slate-100 rounded-lg"
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              className="text-[#52796F] hover:text-emerald-600 transition-colors p-2 hover:bg-[#52796F]/10 rounded-lg shadow-sm relative z-10"
                             >
                               <Edit2 className="w-4 h-4" />
-                            </button>
+                            </motion.button>
                           )}
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   ) : (
-                    <div className="mb-4">
+                    <motion.div 
+                      className="mb-4 mt-8"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                    >
                       {isEditingBio && isOwnProfile ? (
-                        <div>
+                        <div className="animate-fadeInUp">
                           <textarea
                             value={editBio}
                             onChange={(e) => setEditBio(e.target.value)}
                             rows="3"
-                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none resize-none transition-all"
+                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none resize-none transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md"
                             placeholder="Tell us about yourself..."
                           />
-                          <div className="flex gap-2 mt-2">
-                            <button
+                          <div className="flex gap-3 mt-3">
+                            <motion.button
                               onClick={handleSaveBio}
-                              className="px-4 py-2 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-5 py-2.5 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl hover:shadow-xl transition-all flex items-center gap-2 font-bold shadow-lg"
                             >
                               <Save className="w-4 h-4" />
                               Save
-                            </button>
-                            <button
+                            </motion.button>
+                            <motion.button
                               onClick={() => {
                                 setEditBio("")
                                 setIsEditingBio(false)
                               }}
-                              className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all flex items-center gap-2 font-semibold"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-5 py-2.5 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-all flex items-center gap-2 font-semibold shadow-sm"
                             >
                               <X className="w-4 h-4" />
                               Cancel
-                            </button>
+                            </motion.button>
                           </div>
                         </div>
                       ) : isOwnProfile ? (
-                        <button
+                        <motion.button
                           onClick={() => setIsEditingBio(true)}
-                          className="text-[#52796F] hover:text-[#354F52] transition-colors text-sm flex items-center gap-2 font-semibold hover:bg-slate-100 px-3 py-2 rounded-lg"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="text-[#52796F] hover:text-[#354F52] transition-colors text-sm flex items-center gap-2 font-semibold hover:bg-slate-100 px-4 py-2.5 rounded-xl border-2 border-dashed border-[#52796F]/30 hover:border-[#52796F]/50"
                         >
                           <Edit2 className="w-4 h-4" />
                           Add a bio
-                        </button>
+                        </motion.button>
                       ) : null}
-                    </div>
+                    </motion.div>
                   )}
 
-                  <div className="flex flex-wrap gap-4 text-sm text-slate-600">
+                  <motion.div 
+                    className="flex flex-wrap gap-3 text-sm mt-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.7 }}
+                  >
                     {isOwnProfile ? (
                       <>
-                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg">
-                          <Mail className="w-4 h-4 text-[#52796F]" />
-                          {profileUser?.email}
-                        </div>
+                        <motion.div 
+                          className="flex items-center gap-2 bg-gradient-to-br from-white to-blue-50/30 px-5 py-3 rounded-xl border-2 border-blue-200/50 shadow-lg hover:shadow-xl transition-all group relative overflow-hidden"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          <Mail className="w-4 h-4 text-blue-600 relative z-10" />
+                          <span className="text-slate-700 font-semibold relative z-10">{profileUser?.email}</span>
+                        </motion.div>
                         {profileUser?.phone && (
-                          <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg">
-                            <Phone className="w-4 h-4 text-[#52796F]" />
-                            {profileUser.phone}
-                          </div>
+                          <motion.div 
+                            className="flex items-center gap-2 bg-gradient-to-br from-white to-emerald-50/30 px-5 py-3 rounded-xl border-2 border-emerald-200/50 shadow-lg hover:shadow-xl transition-all group relative overflow-hidden"
+                            whileHover={{ scale: 1.05 }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <Phone className="w-4 h-4 text-emerald-600 relative z-10" />
+                            <span className="text-slate-700 font-semibold relative z-10">{profileUser.phone}</span>
+                          </motion.div>
                         )}
                       </>
                     ) : null}
                     {profileUser?.age && (
-                      <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg">
-                        <Calendar className="w-4 h-4 text-[#52796F]" />
-                        {profileUser.age} years old
-                      </div>
+                      <motion.div 
+                        className="flex items-center gap-2 bg-gradient-to-br from-white to-teal-50/30 px-5 py-3 rounded-xl border-2 border-teal-200/50 shadow-lg hover:shadow-xl transition-all group relative overflow-hidden"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <Calendar className="w-4 h-4 text-teal-600 relative z-10" />
+                        <span className="text-slate-700 font-semibold relative z-10">{profileUser.age} years old</span>
+                      </motion.div>
                     )}
                     {profileUser?.gender && (
-                      <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg">
-                        <User className="w-4 h-4 text-[#52796F]" />
-                        <span className="capitalize">{profileUser.gender}</span>
-                      </div>
+                      <motion.div 
+                        className="flex items-center gap-2 bg-gradient-to-br from-white to-purple-50/30 px-5 py-3 rounded-xl border-2 border-purple-200/50 shadow-lg hover:shadow-xl transition-all group relative overflow-hidden"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <User className="w-4 h-4 text-purple-600 relative z-10" />
+                        <span className="capitalize text-slate-700 font-semibold relative z-10">{profileUser.gender}</span>
+                      </motion.div>
                     )}
-                  </div>
+                  </motion.div>
                 </div>
                 
                 {/* Logout Button */}
                 {isOwnProfile && (
                   <motion.button
                     onClick={handleLogout}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors absolute right-6 bottom-6"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.8 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 px-5 py-2.5 text-white bg-gradient-to-r from-[#354F52] to-[#52796F] rounded-xl hover:shadow-xl transition-all font-semibold shadow-lg absolute right-6 bottom-6"
                   >
-                    <LogOut size={16} />
+                    <LogOut size={18} />
                     Logout
                   </motion.button>
                 )}
@@ -460,79 +674,131 @@ export default function ProfilePage({ userId }) {
           </motion.div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <button
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <motion.button
               onClick={() => setShowFollowModal("followers")}
-              className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border border-slate-100 group cursor-pointer w-full"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-white rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all border-2 border-blue-200/50 group cursor-pointer w-full relative overflow-hidden"
             >
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <Users className="w-6 h-6 text-white" />
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-[#52796F]/5 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex flex-col items-center relative z-10">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-teal-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl">
+                  <Users className="w-8 h-8 text-white" />
                 </div>
-                <div className="text-3xl font-bold text-slate-800 mb-1">{profileUser?.followers?.length || 0}</div>
-                <div className="text-sm text-slate-600 font-medium">Followers</div>
+                <div className="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent mb-2">
+                  {profileUser?.followers?.length || 0}
               </div>
-            </button>
-            <button
+                <div className="text-sm text-slate-600 font-bold uppercase tracking-wide">Followers</div>
+              </div>
+            </motion.button>
+            <motion.button
               onClick={() => setShowFollowModal("following")}
-              className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border border-slate-100 group cursor-pointer w-full"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-white rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all border-2 border-emerald-200/50 group cursor-pointer w-full relative overflow-hidden"
             >
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <Users className="w-6 h-6 text-white" />
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-[#52796F]/5 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex flex-col items-center relative z-10">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl">
+                  <Users className="w-8 h-8 text-white" />
                 </div>
-                <div className="text-3xl font-bold text-slate-800 mb-1">{profileUser?.followings?.length || 0}</div>
-                <div className="text-sm text-slate-600 font-medium">Following</div>
+                <div className="text-5xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+                  {profileUser?.followings?.length || 0}
               </div>
-            </button>
-            <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border border-slate-100 group">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <Dumbbell className="w-6 h-6 text-white" />
+                <div className="text-sm text-slate-600 font-bold uppercase tracking-wide">Following</div>
                 </div>
-                <div className="text-3xl font-bold text-slate-800 mb-1">
-                  {isContentVisible("coaches") ? profileUser?.favoriteCoaches?.length || 0 : "🔒"}
+            </motion.button>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all border-2 border-amber-200/50 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-[#52796F]/5 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex flex-col items-center relative z-10">
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl">
+                  <Dumbbell className="w-8 h-8 text-white" />
                 </div>
-                <div className="text-sm text-slate-600 font-medium">Coaches</div>
+                <div className="text-5xl font-extrabold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-2">
+                  {isContentVisible("coaches") ? profileUser?.favoriteCoaches?.length || 0 : (
+                    <Lock className="w-10 h-10 text-slate-400 mx-auto" />
+                  )}
               </div>
+                <div className="text-sm text-slate-600 font-bold uppercase tracking-wide">Coaches</div>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all border border-slate-100 group">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-rose-400 to-red-500 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <Heart className="w-6 h-6 text-white" />
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all border-2 border-rose-200/50 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 via-[#52796F]/5 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex flex-col items-center relative z-10">
+                <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl">
+                  <Heart className="w-8 h-8 text-white fill-white" />
                 </div>
-                <div className="text-3xl font-bold text-slate-800 mb-1">
-                  {isContentVisible("videos") ? profileUser?.likedVideos?.length || 0 : "🔒"}
+                <div className="text-5xl font-extrabold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                  {isContentVisible("videos") ? profileUser?.likedVideos?.length || 0 : (
+                    <Lock className="w-10 h-10 text-slate-400 mx-auto" />
+                  )}
                 </div>
-                <div className="text-sm text-slate-600 font-medium">Videos</div>
+                <div className="text-sm text-slate-600 font-bold uppercase tracking-wide">Videos</div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Tabs Content */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-100">
-            <div className="border-b border-slate-200">
-              <div className="flex gap-1 px-4 overflow-x-auto">
+          <motion.div 
+            className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <div className="border-b border-slate-200/50 bg-gradient-to-r from-slate-50/80 to-white/80">
+              <div className="flex gap-2 px-4 overflow-x-auto scrollbar-hide">
                 {[
                   { id: "overview", label: "Overview", icon: User },
                   { id: "coaches", label: "Favorite Coaches", icon: Dumbbell },
                   { id: "videos", label: "Liked Videos", icon: Video },
                   { id: "workouts", label: "Enrolled Workouts", icon: Calendar },
-                ].map((tab) => (
-                  <button
+                  { id: "meals", label: "Favorite Meals", icon: UtensilsCrossed },
+                ].map((tab, index) => (
+                  <motion.button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`px-6 py-4 font-semibold transition-all rounded-t-lg whitespace-nowrap ${
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.7 + index * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`px-6 py-4 font-bold transition-all duration-300 rounded-t-xl whitespace-nowrap relative ${
                       activeTab === tab.id
-                        ? "bg-gradient-to-r from-[#52796F] to-[#354F52] text-white shadow-lg"
-                        : "text-slate-600 hover:text-[#52796F] hover:bg-slate-50"
+                        ? "bg-gradient-to-r from-[#52796F] to-[#354F52] text-white shadow-xl transform scale-105"
+                        : "text-slate-600 hover:text-[#52796F] hover:bg-white/80"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
+                    {activeTab === tab.id && (
+                      <motion.div
+                        className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-full"
+                        layoutId="activeTab"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                    <div className="flex items-center gap-2 relative z-10">
                       <tab.icon className="w-5 h-5" />
                       <span className="hidden sm:inline">{tab.label}</span>
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -540,27 +806,39 @@ export default function ProfilePage({ userId }) {
             <div className="p-6">
               {activeTab === "overview" && (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-2xl font-bold text-slate-800">Profile Information</h3>
+                  <motion.div 
+                    className="flex items-center justify-between mb-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <h3 className="text-3xl font-extrabold bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] bg-clip-text text-transparent flex items-center gap-3">
+                      <User className="w-8 h-8 text-[#52796F]" />
+                      Profile Information
+                    </h3>
                     {isOwnProfile && !isEditingInfo && (
-                      <button
+                      <motion.button
                         onClick={() => setIsEditingInfo(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="px-5 py-2.5 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl hover:shadow-xl transition-all flex items-center gap-2 font-bold shadow-lg"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-5 h-5" />
                         Edit Info
-                      </button>
+                      </motion.button>
                     )}
                     {isEditingInfo && (
-                      <div className="flex gap-2">
-                        <button
+                      <div className="flex gap-3">
+                        <motion.button
                           onClick={handleSaveInfo}
-                          className="px-4 py-2 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-5 py-2.5 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl hover:shadow-xl transition-all flex items-center gap-2 font-bold shadow-lg"
                         >
-                          <Save className="w-4 h-4" />
+                          <Save className="w-5 h-5" />
                           Save Changes
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                           onClick={() => {
                             setEditForm({
                               fullName: profileUser?.fullName || "",
@@ -573,84 +851,119 @@ export default function ProfilePage({ userId }) {
                             })
                             setIsEditingInfo(false)
                           }}
-                          className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all flex items-center gap-2 font-semibold"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-5 py-2.5 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-all flex items-center gap-2 font-semibold shadow-sm"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-5 h-5" />
                           Cancel
-                        </button>
+                        </motion.button>
                       </div>
                     )}
-                  </div>
+                  </motion.div>
 
                   {isEditingInfo ? (
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Full Name</label>
+                    <motion.div 
+                      className="grid md:grid-cols-2 gap-6"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {[
+                        { key: "fullName", label: "Full Name", type: "text", icon: User },
+                        { key: "email", label: "Email", type: "email", icon: Mail },
+                        { key: "phone", label: "Phone", type: "tel", icon: Phone },
+                        { key: "age", label: "Age", type: "number", icon: Calendar },
+                      ].map((field, index) => {
+                        const IconComponent = field.icon;
+                        return (
+                          <motion.div 
+                            key={field.key}
+                            className="space-y-2 animate-fadeInUp"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                              <IconComponent className="w-4 h-4 text-[#52796F]" />
+                              {field.label}
+                            </label>
+                            <div className="relative group">
                         <input
-                          type="text"
-                          value={editForm.fullName}
-                          onChange={(e) => handleInputChange("fullName", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
-                        />
+                                type={field.type}
+                                value={editForm[field.key]}
+                                onChange={(e) => handleInputChange(field.key, e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md group-focus-within:border-[#52796F]/50"
+                              />
+                              <IconComponent className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#52796F] transition-colors duration-300" />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Email</label>
-                        <input
-                          type="email"
-                          value={editForm.email}
-                          onChange={(e) => handleInputChange("email", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Phone</label>
-                        <input
-                          type="tel"
-                          value={editForm.phone}
-                          onChange={(e) => handleInputChange("phone", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Age</label>
-                        <input
-                          type="number"
-                          value={editForm.age}
-                          onChange={(e) => handleInputChange("age", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Gender</label>
+                          </motion.div>
+                        );
+                      })}
+                      <motion.div 
+                        className="space-y-2 animate-fadeInUp"
+                        style={{ animationDelay: '200ms' }}
+                      >
+                        <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                          <Users className="w-4 h-4 text-[#52796F]" />
+                          Gender
+                        </label>
+                        <div className="relative group">
                         <select
                           value={editForm.gender}
                           onChange={(e) => handleInputChange("gender", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md appearance-none cursor-pointer"
                         >
                           <option value="">Select Gender</option>
                           <option value="male">Male</option>
                           <option value="female">Female</option>
                           <option value="other">Other</option>
                         </select>
+                          <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Workout Experience</label>
+                        </div>
+                      </motion.div>
+                      <motion.div 
+                        className="space-y-2 animate-fadeInUp"
+                        style={{ animationDelay: '250ms' }}
+                      >
+                        <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                          <Dumbbell className="w-4 h-4 text-[#52796F]" />
+                          Workout Experience
+                        </label>
+                        <div className="relative group">
                         <select
                           value={editForm.workoutExperience}
                           onChange={(e) => handleInputChange("workoutExperience", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md appearance-none cursor-pointer"
                         >
                           <option value="">Select Experience</option>
                           <option value="first-time">First Time</option>
                           <option value="regular">Regular Workout</option>
                         </select>
+                          <Dumbbell className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Sports Rating</label>
+                        </div>
+                      </motion.div>
+                      <motion.div 
+                        className="space-y-2 animate-fadeInUp"
+                        style={{ animationDelay: '300ms' }}
+                      >
+                        <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                          <Star className="w-4 h-4 text-[#52796F]" />
+                          Sports Rating
+                        </label>
+                        <div className="relative group">
                         <select
                           value={editForm.sportsRating}
                           onChange={(e) => handleInputChange("sportsRating", e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md appearance-none cursor-pointer"
                         >
                           <option value="">Select Rating</option>
                           <option value="1">1 - Beginner</option>
@@ -659,71 +972,131 @@ export default function ProfilePage({ userId }) {
                           <option value="4">4 - Advanced</option>
                           <option value="5">5 - Expert</option>
                         </select>
+                          <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                       </div>
                     </div>
+                      </motion.div>
+                    </motion.div>
                   ) : (
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 hover:shadow-lg transition-all">
-                        <div className="text-sm text-slate-600 mb-2 font-semibold">Gender</div>
-                        <div className="font-bold text-slate-800 capitalize text-lg">
-                          {profileUser?.gender || "Not specified"}
-                        </div>
-                      </div>
-                      <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 hover:shadow-lg transition-all">
-                        <div className="text-sm text-slate-600 mb-2 font-semibold">Age</div>
-                        <div className="font-bold text-slate-800 text-lg">
-                          {profileUser?.age ? `${profileUser.age} years` : "Not specified"}
-                        </div>
-                      </div>
-                      <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 hover:shadow-lg transition-all">
-                        <div className="text-sm text-slate-600 mb-2 font-semibold">Workout Experience</div>
-                        <div className="font-bold text-slate-800 capitalize text-lg">
-                          {profileUser?.workoutExperience === "first-time"
+                      {[
+                        { 
+                          key: "gender", 
+                          label: "Gender", 
+                          value: profileUser?.gender ? profileUser.gender.charAt(0).toUpperCase() + profileUser.gender.slice(1) : "Not specified",
+                          icon: Users,
+                        },
+                        { 
+                          key: "age", 
+                          label: "Age", 
+                          value: profileUser?.age ? `${profileUser.age} years` : "Not specified",
+                          icon: Calendar,
+                        },
+                        { 
+                          key: "workoutExperience", 
+                          label: "Workout Experience", 
+                          value: profileUser?.workoutExperience === "first-time"
                             ? "First Time"
                             : profileUser?.workoutExperience === "regular"
                               ? "Regular Workout"
-                              : "Not specified"}
+                              : "Not specified",
+                          icon: Dumbbell,
+                        },
+                        { 
+                          key: "sportsRating", 
+                          label: "Sports Rating", 
+                          value: profileUser?.sportsRating,
+                          icon: Star,
+                          isRating: true
+                        },
+                      ].map((item, index) => {
+                        const IconComponent = item.icon;
+                        return (
+                          <motion.div
+                            key={item.key}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 * index }}
+                            whileHover={{ scale: 1.02, y: -5 }}
+                            className="p-6 bg-white/95 backdrop-blur-sm rounded-2xl border border-white/50 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#52796F]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                            <div className="relative z-10">
+                              <div className="text-sm text-slate-600 mb-2 font-bold flex items-center gap-2">
+                                <IconComponent className="w-4 h-4 text-[#52796F]" />
+                                {item.label}
                         </div>
-                      </div>
-                      <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 hover:shadow-lg transition-all">
-                        <div className="text-sm text-slate-600 mb-2 font-semibold">Sports Rating</div>
-                        <div className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                          {profileUser?.sportsRating ? (
-                            <>
-                              <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-                              {profileUser.sportsRating}/5
+                              <div className="font-extrabold text-slate-800 text-xl flex items-center gap-2">
+                                {item.isRating && item.value ? (
+                                  <>
+                                    <Star className="w-6 h-6 text-[#52796F] fill-[#52796F]" />
+                                    {item.value}/5
                             </>
                           ) : (
-                            "Not rated"
+                                  item.value
                           )}
                         </div>
                       </div>
+                          </motion.div>
+                        );
+                      })}
                       {isOwnProfile && (
                         <>
-                          <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all">
-                            <div className="text-sm text-blue-600 mb-2 font-semibold flex items-center gap-2">
-                              <Mail className="w-4 h-4" />
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            whileHover={{ scale: 1.02, y: -5 }}
+                            className="p-6 bg-white/95 backdrop-blur-sm rounded-2xl border border-white/50 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#52796F]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                            <div className="relative z-10">
+                              <div className="text-sm text-slate-600 mb-2 font-bold flex items-center gap-2">
+                                <Mail className="w-4 h-4 text-[#52796F]" />
                               Email (Private)
                             </div>
-                            <div className="font-bold text-blue-800 text-lg break-all">{profileUser?.email}</div>
+                              <div className="font-extrabold text-slate-800 text-lg break-all">{profileUser?.email}</div>
                           </div>
+                          </motion.div>
                           {profileUser?.phone && (
-                            <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all">
-                              <div className="text-sm text-green-600 mb-2 font-semibold flex items-center gap-2">
-                                <Phone className="w-4 h-4" />
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.5 }}
+                              whileHover={{ scale: 1.02, y: -5 }}
+                              className="p-6 bg-white/95 backdrop-blur-sm rounded-2xl border border-white/50 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#52796F]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                              <div className="relative z-10">
+                                <div className="text-sm text-slate-600 mb-2 font-bold flex items-center gap-2">
+                                  <Phone className="w-4 h-4 text-[#52796F]" />
                                 Phone (Private)
                               </div>
-                              <div className="font-bold text-green-800 text-lg">{profileUser.phone}</div>
+                                <div className="font-extrabold text-slate-800 text-lg">{profileUser.phone}</div>
                             </div>
+                            </motion.div>
                           )}
                         </>
                       )}
-                      <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all">
-                        <div className="text-sm text-purple-600 mb-2 font-semibold">Plan</div>
-                        <div className="font-bold text-purple-800 capitalize text-lg">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        className="p-6 bg-white/95 backdrop-blur-sm rounded-2xl border border-white/50 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#52796F]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                        <div className="relative z-10">
+                          <div className="text-sm text-slate-600 mb-2 font-bold">Plan</div>
+                          <div className="font-extrabold text-slate-800 capitalize text-lg">
                           {profileUser?.selectedPlan || "Not selected"}
                         </div>
                       </div>
+                      </motion.div>
                     </div>
                   )}
                 </div>
@@ -734,61 +1107,88 @@ export default function ProfilePage({ userId }) {
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-2xl font-bold text-slate-800">Favorite Coaches</h3>
                     {isOwnProfile && (
-                      <button
+                      <motion.button
                         onClick={() => handlePrivacyToggle("coaches")}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg ${
                           privacySettings.coaches === "public"
-                            ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-lg"
-                            : "bg-gradient-to-r from-slate-500 to-slate-600 text-white hover:shadow-lg"
+                            ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-xl"
+                            : "bg-gradient-to-r from-slate-500 to-slate-600 text-white hover:shadow-xl"
                         }`}
                       >
                         {privacySettings.coaches === "public" ? (
                           <>
-                            <Unlock className="w-4 h-4" />
+                            <Unlock className="w-5 h-5" />
                             Public
                           </>
                         ) : (
                           <>
-                            <Lock className="w-4 h-4" />
+                            <Lock className="w-5 h-5" />
                             Private
                           </>
                         )}
-                      </button>
+                      </motion.button>
                     )}
                   </div>
                   {isContentVisible("coaches") ? (
                     profileUser?.favoriteCoaches && profileUser.favoriteCoaches.length > 0 ? (
                       <div className="grid md:grid-cols-3 gap-4">
                         {profileUser.favoriteCoaches.map((coach, index) => (
-                          <div
+                          <motion.div
                             key={index}
-                            className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 hover:shadow-lg transition-all"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            whileHover={{ scale: 1.05, y: -5 }}
+                            className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
                           >
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center">
-                                <Dumbbell className="w-5 h-5 text-white" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                            <div className="flex items-center gap-3 mb-2 relative z-10">
+                              <div className="w-12 h-12 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <Dumbbell className="w-6 h-6 text-white" />
                               </div>
-                              <div className="font-bold text-slate-800">{coach.name || "Coach"}</div>
+                              <div className="font-bold text-slate-800 text-lg">{coach.name || "Coach"}</div>
                             </div>
-                            <div className="text-sm text-slate-600 font-medium">{coach.category || "General"}</div>
-                          </div>
+                            <div className="text-sm text-slate-600 font-semibold relative z-10">{coach.category || "General"}</div>
+                          </motion.div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-16">
-                        <Dumbbell className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                        <p className="text-slate-500 text-lg">No favorite coaches yet</p>
+                      <motion.div 
+                        className="text-center py-16"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <motion.div
+                          animate={{ rotate: [0, 10, -10, 0] }}
+                          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                        >
+                          <Dumbbell className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                        </motion.div>
+                        <p className="text-slate-600 text-xl font-semibold mb-2">No favorite coaches yet</p>
                         {isOwnProfile && (
-                          <p className="text-slate-400 text-sm mt-2">Start following coaches to see them here!</p>
+                          <p className="text-slate-400 text-sm">Start following coaches to see them here!</p>
                         )}
-                      </div>
+                      </motion.div>
                     )
                   ) : (
-                    <div className="text-center py-16">
-                      <Lock className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                      <p className="text-slate-500 text-lg">This section is private</p>
-                      <p className="text-slate-400 text-sm mt-2">The user has chosen to keep this information private</p>
-                    </div>
+                    <motion.div 
+                      className="text-center py-16"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Lock className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                      </motion.div>
+                      <p className="text-slate-600 text-xl font-semibold mb-2">This section is private</p>
+                      <p className="text-slate-400 text-sm">The user has chosen to keep this information private</p>
+                    </motion.div>
                   )}
                 </div>
               )}
@@ -824,33 +1224,58 @@ export default function ProfilePage({ userId }) {
                     profileUser?.likedVideos && profileUser.likedVideos.length > 0 ? (
                       <div className="grid md:grid-cols-3 gap-4">
                         {profileUser.likedVideos.map((video, index) => (
-                          <div
+                          <motion.div
                             key={index}
-                            className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 hover:shadow-lg transition-all"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            whileHover={{ scale: 1.05, y: -5 }}
+                            className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
                           >
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 bg-gradient-to-br from-rose-400 to-red-500 rounded-full flex items-center justify-center">
-                                <Heart className="w-5 h-5 text-white" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                            <div className="flex items-center gap-3 mb-2 relative z-10">
+                              <div className="w-12 h-12 bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <Heart className="w-6 h-6 text-white fill-white" />
                               </div>
-                              <div className="font-bold text-slate-800">{video.title || "Video"}</div>
+                              <div className="font-bold text-slate-800 text-lg">{video.title || "Video"}</div>
                             </div>
-                            <div className="text-sm text-slate-600 font-medium">{video.coach || "Unknown"}</div>
-                          </div>
+                            <div className="text-sm text-slate-600 font-semibold relative z-10">{video.coach || "Unknown"}</div>
+                          </motion.div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-16">
-                        <Heart className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                        <p className="text-slate-500 text-lg">No liked videos yet</p>
-                        {isOwnProfile && <p className="text-slate-400 text-sm mt-2">Like videos to see them here!</p>}
-                      </div>
+                      <motion.div 
+                        className="text-center py-16"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          <Heart className="w-20 h-20 text-slate-300 mx-auto mb-4 fill-slate-300" />
+                        </motion.div>
+                        <p className="text-slate-600 text-xl font-semibold mb-2">No liked videos yet</p>
+                        {isOwnProfile && <p className="text-slate-400 text-sm">Like videos to see them here!</p>}
+                      </motion.div>
                     )
                   ) : (
-                    <div className="text-center py-16">
-                      <Lock className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                      <p className="text-slate-500 text-lg">This section is private</p>
-                      <p className="text-slate-400 text-sm mt-2">The user has chosen to keep this information private</p>
-                    </div>
+                    <motion.div 
+                      className="text-center py-16"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Lock className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                      </motion.div>
+                      <p className="text-slate-600 text-xl font-semibold mb-2">This section is private</p>
+                      <p className="text-slate-400 text-sm">The user has chosen to keep this information private</p>
+                    </motion.div>
                   )}
                 </div>
               )}
@@ -886,91 +1311,257 @@ export default function ProfilePage({ userId }) {
                     profileUser?.enrolledWorkouts && profileUser.enrolledWorkouts.length > 0 ? (
                       <div className="grid md:grid-cols-2 gap-4">
                         {profileUser.enrolledWorkouts.map((workout, index) => (
-                          <div
+                          <motion.div
                             key={index}
-                            className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 hover:shadow-lg transition-all"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            whileHover={{ scale: 1.02, x: 5 }}
+                            className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
                           >
-                            <div className="flex items-start gap-4">
-                              <div className="w-14 h-14 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-xl flex items-center justify-center flex-shrink-0">
-                                <Calendar className="w-7 h-7 text-white" />
-                              </div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                            <div className="flex items-start gap-4 relative z-10">
+                              <motion.div 
+                                className="w-16 h-16 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform"
+                                whileHover={{ rotate: 360 }}
+                                transition={{ duration: 0.5 }}
+                              >
+                                <Calendar className="w-8 h-8 text-white" />
+                              </motion.div>
                               <div className="flex-1">
-                                <div className="font-bold text-slate-800 text-lg mb-1">
+                                <div className="font-extrabold text-slate-800 text-xl mb-2">
                                   {workout.name || "Workout Program"}
                                 </div>
-                                <div className="text-sm text-slate-600 mb-3">
+                                <div className="text-sm text-slate-600 mb-4 font-medium">
                                   {workout.description || "Build strength and endurance"}
                                 </div>
-                                <div className="flex items-center gap-4 text-xs text-slate-500">
-                                  <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-4 text-xs text-slate-500 mb-3">
+                                  <div className="flex items-center gap-1 bg-white/80 px-2 py-1 rounded-lg">
                                     <Calendar className="w-3 h-3" />
-                                    <span>{workout.duration || "8 weeks"}</span>
+                                    <span className="font-semibold">{workout.duration || "8 weeks"}</span>
                                   </div>
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-1 bg-white/80 px-2 py-1 rounded-lg">
                                     <Dumbbell className="w-3 h-3" />
-                                    <span>{workout.difficulty || "Intermediate"}</span>
+                                    <span className="font-semibold">{workout.difficulty || "Intermediate"}</span>
                                   </div>
                                 </div>
                                 {workout.progress && (
-                                  <div className="mt-3">
-                                    <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
+                                  <div className="mt-4">
+                                    <div className="flex items-center justify-between text-xs text-slate-600 mb-2 font-semibold">
                                       <span>Progress</span>
-                                      <span className="font-semibold">{workout.progress}%</span>
+                                      <span className="font-bold">{workout.progress}%</span>
                                     </div>
-                                    <div className="w-full bg-slate-200 rounded-full h-2">
-                                      <div
-                                        className="bg-gradient-to-r from-[#52796F] to-[#354F52] h-2 rounded-full transition-all"
-                                        style={{ width: `${workout.progress}%` }}
-                                      ></div>
+                                    <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
+                                      <motion.div
+                                        className="bg-gradient-to-r from-[#52796F] to-[#354F52] h-3 rounded-full shadow-lg"
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${workout.progress}%` }}
+                                        transition={{ duration: 1, delay: index * 0.1 }}
+                                      ></motion.div>
                                     </div>
                                   </div>
                                 )}
                               </div>
                             </div>
-                          </div>
+                          </motion.div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-16">
-                        <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                        <p className="text-slate-500 text-lg">No enrolled workouts yet</p>
+                      <motion.div 
+                        className="text-center py-16"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <motion.div
+                          animate={{ rotate: [0, 15, -15, 0] }}
+                          transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
+                        >
+                          <Calendar className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                        </motion.div>
+                        <p className="text-slate-600 text-xl font-semibold mb-2">No enrolled workouts yet</p>
                         {isOwnProfile && (
-                          <p className="text-slate-400 text-sm mt-2">Start a workout program to see it here!</p>
+                          <p className="text-slate-400 text-sm">Start a workout program to see it here!</p>
                         )}
-                      </div>
+                      </motion.div>
                     )
                   ) : (
-                    <div className="text-center py-16">
-                      <Lock className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                      <p className="text-slate-500 text-lg">This section is private</p>
-                      <p className="text-slate-400 text-sm mt-2">The user has chosen to keep this information private</p>
-                    </div>
+                    <motion.div 
+                      className="text-center py-16"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Lock className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                      </motion.div>
+                      <p className="text-slate-600 text-xl font-semibold mb-2">This section is private</p>
+                      <p className="text-slate-400 text-sm">The user has chosen to keep this information private</p>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "meals" && (
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-bold text-slate-800">Favorite Meals</h3>
+                    {isOwnProfile && (
+                      <motion.button
+                        onClick={() => handlePrivacyToggle("meals")}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg ${
+                          privacySettings.meals === "public"
+                            ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-xl"
+                            : "bg-gradient-to-r from-slate-500 to-slate-600 text-white hover:shadow-xl"
+                        }`}
+                      >
+                        {privacySettings.meals === "public" ? (
+                          <>
+                            <Unlock className="w-5 h-5" />
+                            Public
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-5 h-5" />
+                            Private
+                          </>
+                        )}
+                      </motion.button>
+                    )}
+                  </div>
+                  {isContentVisible("meals") ? (
+                    profileUser?.favoriteMeals && profileUser.favoriteMeals.length > 0 ? (
+                      <div className="grid md:grid-cols-3 gap-4">
+                        {profileUser.favoriteMeals.map((meal, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            whileHover={{ scale: 1.05, y: -5 }}
+                            className="p-6 bg-white rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                            <div className="flex items-start gap-4 relative z-10">
+                              <motion.div 
+                                className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform"
+                                whileHover={{ rotate: 360 }}
+                                transition={{ duration: 0.5 }}
+                              >
+                                <UtensilsCrossed className="w-8 h-8 text-white" />
+                              </motion.div>
+                              <div className="flex-1">
+                                <div className="font-extrabold text-slate-800 text-xl mb-2">
+                                  {meal.name || "Meal"}
+                                </div>
+                                <div className="text-sm text-slate-600 mb-3 font-medium">
+                                  {meal.description || "Delicious and nutritious meal"}
+                                </div>
+                                {meal.calories && (
+                                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                                    <div className="flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-lg">
+                                      <Zap className="w-3 h-3 text-emerald-600" />
+                                      <span className="font-semibold text-emerald-700">{meal.calories} cal</span>
+                                    </div>
+                                    {meal.category && (
+                                      <div className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-lg">
+                                        <Apple className="w-3 h-3 text-slate-600" />
+                                        <span className="font-semibold text-slate-700">{meal.category}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <motion.div 
+                        className="text-center py-16"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          <UtensilsCrossed className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                        </motion.div>
+                        <p className="text-slate-600 text-xl font-semibold mb-2">No favorite meals yet</p>
+                        {isOwnProfile && (
+                          <p className="text-slate-400 text-sm">Like meals to see them here!</p>
+                        )}
+                      </motion.div>
+                    )
+                  ) : (
+                    <motion.div 
+                      className="text-center py-16"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Lock className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                      </motion.div>
+                      <p className="text-slate-600 text-xl font-semibold mb-2">This section is private</p>
+                      <p className="text-slate-400 text-sm">The user has chosen to keep this information private</p>
+                    </motion.div>
                   )}
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {showFollowModal && (
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            <motion.div
+              className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4"
               onClick={() => setShowFollowModal(null)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <div
-                className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden"
+              <motion.div
+                className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden border-2 border-white/20"
                 onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
               >
-                <div className="bg-gradient-to-r from-[#354F52] to-[#52796F] p-6 flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <div className="h-2 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52]"></div>
+                <div className="bg-gradient-to-r from-[#354F52] to-[#52796F] p-6 flex items-center justify-between relative overflow-hidden">
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                    animate={{
+                      x: ['-100%', '200%'],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  />
+                  <h3 className="text-xl font-extrabold text-white flex items-center gap-2 relative z-10">
                     <Users className="w-6 h-6" />
                     {showFollowModal === "followers" ? "Followers" : "Following"}
                   </h3>
-                  <button
+                  <motion.button
                     onClick={() => setShowFollowModal(null)}
-                    className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="text-white hover:bg-white/20 rounded-lg p-2 transition-all relative z-10"
                   >
                     <X className="w-5 h-5" />
-                  </button>
+                  </motion.button>
                 </div>
                 <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
                   {((showFollowModal === "followers" ? profileUser?.followers : profileUser?.followings) || []).length >
@@ -978,52 +1569,67 @@ export default function ProfilePage({ userId }) {
                     <div className="space-y-3">
                       {(showFollowModal === "followers" ? profileUser?.followers : profileUser?.followings).map(
                         (user, index) => (
-                          <div
+                          <motion.div
                             key={index}
-                            className="flex items-center gap-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl hover:shadow-md transition-all border border-slate-200"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            whileHover={{ scale: 1.02, x: 5 }}
+                            className="flex items-center gap-4 p-4 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl hover:shadow-xl transition-all duration-300 border-2 border-slate-200/50 group relative overflow-hidden"
                           >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                             {user.profilePicture ? (
                               <Image
                                 src={user.profilePicture || "/placeholder.svg"}
                                 alt={user.fullName || "User"}
                                 width={48}
                                 height={48}
-                                className="w-12 h-12 rounded-full object-cover ring-2 ring-[#52796F]/20"
+                                className="w-12 h-12 rounded-full object-cover ring-2 ring-[#52796F]/30 shadow-md group-hover:scale-110 transition-transform relative z-10"
                                 unoptimized
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#354F52] to-[#52796F] flex items-center justify-center ring-2 ring-[#52796F]/20">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#354F52] to-[#52796F] flex items-center justify-center ring-2 ring-[#52796F]/30 shadow-md group-hover:scale-110 transition-transform relative z-10">
                                 <User className="w-6 h-6 text-white" />
                               </div>
                             )}
-                            <div className="flex-1">
-                              <div className="font-bold text-slate-800">{user.fullName || "User"}</div>
+                            <div className="flex-1 relative z-10">
+                              <div className="font-bold text-slate-800 text-lg">{user.fullName || "User"}</div>
                               {user.bio && <div className="text-sm text-slate-600 line-clamp-1">{user.bio}</div>}
                             </div>
                             <Link
                               href={`/profile/${user.id}`}
-                              className="px-4 py-2 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
+                              className="px-4 py-2 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl hover:shadow-lg transition-all text-sm font-bold relative z-10"
                             >
                               View
                             </Link>
-                          </div>
+                          </motion.div>
                         ),
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-12">
-                      <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                      <p className="text-slate-500 text-lg">
+                    <motion.div 
+                      className="text-center py-12"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Users className="w-20 h-20 text-slate-300 mx-auto mb-4" />
+                      </motion.div>
+                      <p className="text-slate-600 text-xl font-semibold mb-2">
                         No {showFollowModal === "followers" ? "followers" : "following"} yet
                       </p>
                       {isOwnProfile && (
-                        <p className="text-slate-400 text-sm mt-2">Connect with other members to grow your network!</p>
+                        <p className="text-slate-400 text-sm">Connect with other members to grow your network!</p>
                       )}
-                    </div>
+                    </motion.div>
                   )}
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
         </div>
       </div>
