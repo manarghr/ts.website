@@ -9,4 +9,19 @@ def calculate_angle(a, b, c):
         angle = 360 - angle
     return angle
 
+def get_best_point(landmarks, left_id, right_id):
+    left = landmarks[left_id]
+    right = landmarks[right_id]
+
+    
+    if left.visibility > 0.7 and right.visibility > 0.7:
+        return [
+            (left.x + right.x) / 2,
+            (left.y + right.y) / 2
+        ]
+
+    if left.visibility > right.visibility:
+        return [left.x, left.y]
+    else:
+        return [right.x, right.y]
 
