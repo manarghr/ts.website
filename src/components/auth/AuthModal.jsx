@@ -184,6 +184,7 @@ export default function AuthModal({ isOpen, onClose }) {
     if (!validateSignup()) return
 
     setIsSubmitting(true)
+    setErrors({}) // Clear previous errors
 
     try {
       // Register user via API
@@ -195,13 +196,31 @@ export default function AuthModal({ isOpen, onClose }) {
         body: JSON.stringify(formData),
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setErrors({ email: data.error || "An error occurred. Please try again." })
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError)
+        setErrors({ email: "Server error. Please try again later." })
         setIsSubmitting(false)
         return
       }
+
+      if (!response.ok) {
+        const errorMsg = data?.error || data?.details || "An error occurred. Please try again."
+        
+        // If database error, try localStorage fallback
+        if (errorMsg.includes('Database') || data?.useLocalStorage) {
+          return handleSignupLocalStorage()
+        }
+        
+        setErrors({ email: errorMsg })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Clear any errors on success
+      setErrors({})
 
       // Save user to localStorage for frontend state
       localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
@@ -220,6 +239,74 @@ export default function AuthModal({ isOpen, onClose }) {
       }, 3000)
     } catch (error) {
       console.error("Error during signup:", error)
+      // Try localStorage fallback on network errors
+      if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+        return handleSignupLocalStorage()
+      }
+      setErrors({ email: error.message || "Network error. Please check your connection and try again." })
+      setIsSubmitting(false)
+    }
+  }
+
+  // LocalStorage fallback for registration
+  const handleSignupLocalStorage = () => {
+    try {
+      // Get existing users from localStorage
+      const existingUsers = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
+      
+      // Check if user already exists
+      const existingUser = existingUsers.find(
+        (u) => u.email === formData.email || u.phone === formData.phone
+      )
+      
+      if (existingUser) {
+        setErrors({ email: "User with this email or phone already exists" })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Create new user
+      const newUser = {
+        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password, // Store plain password for demo (not secure!)
+        gender: formData.gender || '',
+        age: formData.age || null,
+        workoutExperience: formData.workoutExperience || '',
+        sportsRating: formData.sportsRating || '',
+        selectedPlan: formData.selectedPlan || '',
+        profilePicture: formData.profilePicture || '',
+        bio: formData.bio || '',
+        followers: [],
+        followings: [],
+        favoriteCoaches: [],
+        likedVideos: [],
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      // Save to localStorage
+      const updatedUsers = [...existingUsers, newUser]
+      localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
+      localStorage.setItem("trainsight_current_user", JSON.stringify(newUser))
+
+      // Dispatch event to update navbar
+      window.dispatchEvent(new Event("userUpdated"))
+
+      setIsSubmitting(false)
+      setShowSuccess(true)
+      setSuccessMessage(
+        `Welcome aboard, ${formData.fullName.split(" ")[0]}! Your fitness journey starts now. We're excited to help you achieve your goals!`,
+      )
+
+      setTimeout(() => {
+        onClose()
+      }, 3000)
+    } catch (error) {
+      console.error("Error during localStorage signup:", error)
       setErrors({ email: "An error occurred. Please try again." })
       setIsSubmitting(false)
     }
@@ -230,6 +317,7 @@ export default function AuthModal({ isOpen, onClose }) {
     if (!validateLogin()) return
 
     setIsSubmitting(true)
+    setErrors({}) // Clear previous errors
 
     try {
       // Login via API
@@ -241,13 +329,32 @@ export default function AuthModal({ isOpen, onClose }) {
         body: JSON.stringify(loginData),
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setErrors({ email: data.error || "Invalid email or password" })
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError)
+        setErrors({ email: "Server error. Please try again later." })
         setIsSubmitting(false)
         return
       }
+
+      if (!response.ok) {
+        const errorMsg = data?.error || data?.details || "Invalid email or password"
+        
+        // If database error, try localStorage fallback
+        if (data?.error?.includes('Database') || data?.useLocalStorage) {
+          // Use localStorage for login
+          return handleLoginLocalStorage()
+        }
+        
+        setErrors({ email: errorMsg })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Clear any errors on success
+      setErrors({})
 
       // Save user to localStorage for frontend state
       localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
@@ -264,6 +371,58 @@ export default function AuthModal({ isOpen, onClose }) {
       }, 2500)
     } catch (error) {
       console.error("Error during login:", error)
+      // Try localStorage fallback on network errors
+      if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+        return handleLoginLocalStorage()
+      }
+      setErrors({ email: error.message || "Network error. Please check your connection and try again." })
+      setIsSubmitting(false)
+    }
+  }
+
+  // LocalStorage fallback for login
+  const handleLoginLocalStorage = () => {
+    try {
+      // Get users from localStorage
+      const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
+      
+      // Find user by email
+      const user = users.find((u) => u.email === loginData.email)
+      
+      if (!user) {
+        setErrors({ email: "Invalid email or password" })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Check password (plain text comparison for demo - not secure!)
+      if (user.password !== loginData.password) {
+        setErrors({ email: "Invalid email or password" })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Update last login
+      user.lastLogin = new Date().toISOString()
+      const updatedUsers = users.map((u) => (u.id === user.id ? user : u))
+      localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
+
+      // Save current user (without password)
+      const { password, ...userWithoutPassword } = user
+      localStorage.setItem("trainsight_current_user", JSON.stringify(userWithoutPassword))
+
+      // Dispatch event to update navbar
+      window.dispatchEvent(new Event("userUpdated"))
+
+      setIsSubmitting(false)
+      setShowSuccess(true)
+      setSuccessMessage(`Welcome back, ${user.fullName}! Ready to crush your fitness goals today? Let's make it happen!`)
+
+      setTimeout(() => {
+        onClose()
+      }, 2500)
+    } catch (error) {
+      console.error("Error during localStorage login:", error)
       setErrors({ email: "An error occurred. Please try again." })
       setIsSubmitting(false)
     }
@@ -447,9 +606,12 @@ export default function AuthModal({ isOpen, onClose }) {
                           placeholder="Enter your email"
                         />
                       </div>
-                      {errors.email && <p className="text-red-500 text-sm mt-1 animate-fadeInUp flex items-center gap-1">
-                        <span>⚠️</span> {errors.email}
-                      </p>}
+                      {errors.email && (
+                        <p className="text-red-500 text-sm mt-1 animate-fadeInUp flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
 
                     <div className="md:col-span-2 animate-fadeInUp" style={{ animationDelay: '150ms' }}>

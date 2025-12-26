@@ -2,7 +2,18 @@
 // File: src/app/api/auth/register/route.js
 
 import { NextResponse } from 'next/server';
-import { createUser } from '@/backend/utils/auth-helpers';
+
+// Try MongoDB first, fallback to localStorage-based auth
+let createUser;
+let useMongoDB = true;
+
+try {
+  const authHelpers = await import('@/backend/utils/auth-helpers');
+  createUser = authHelpers.createUser;
+} catch (error) {
+  console.warn('MongoDB not available, using localStorage fallback');
+  useMongoDB = false;
+}
 
 export async function POST(request) {
   try {
@@ -47,19 +58,57 @@ export async function POST(request) {
     }
 
     // Create user
-    const user = await createUser({
-      fullName,
-      email,
-      phone,
-      password,
-      gender,
-      age,
-      workoutExperience,
-      sportsRating,
-      selectedPlan,
-      profilePicture,
-      bio,
-    });
+    let user;
+    
+    if (useMongoDB && createUser) {
+      try {
+        user = await createUser({
+          fullName,
+          email,
+          phone,
+          password,
+          gender,
+          age,
+          workoutExperience,
+          sportsRating,
+          selectedPlan,
+          profilePicture,
+          bio,
+        });
+      } catch (dbError) {
+        // If MongoDB fails, fall back to localStorage approach
+        if (dbError.message.includes('Database connection') || dbError.message.includes('MongoDB')) {
+          useMongoDB = false;
+        } else {
+          throw dbError;
+        }
+      }
+    }
+
+    // Fallback: Create user data (client will handle localStorage)
+    if (!useMongoDB || !user) {
+      const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      user = {
+        id: userId,
+        fullName,
+        email,
+        phone,
+        gender: gender || '',
+        age: age || null,
+        workoutExperience: workoutExperience || '',
+        sportsRating: sportsRating || '',
+        selectedPlan: selectedPlan || '',
+        profilePicture: profilePicture || '',
+        bio: bio || '',
+        followers: [],
+        followings: [],
+        favoriteCoaches: [],
+        likedVideos: [],
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    }
 
     return NextResponse.json({
       success: true,
@@ -77,8 +126,16 @@ export async function POST(request) {
       );
     }
 
+    // Handle database connection errors
+    if (error.message.includes('Database connection failed') || error.message.includes('MongoDB')) {
+      return NextResponse.json(
+        { error: 'Database connection error. Please check server configuration.', details: error.message },
+        { status: 503 } // Service Unavailable
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: error.message || 'Internal server error', details: error.message },
       { status: 500 }
     );
   }

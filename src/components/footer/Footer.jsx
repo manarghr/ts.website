@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <footer className="bg-[#354F52] text-white py-12 font-poppins">
+    <footer className="bg-[#354F52] text-white py-12">
       <div className="w-[90%] max-w-[1200px] mx-auto">
         {/* Main content */}
         <div className="flex flex-wrap justify-between gap-8 mb-10">

@@ -3,11 +3,9 @@
 
 import { MongoClient } from 'mongodb';
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please add your Mongo URI to .env.local');
-}
-
+// Don't throw error immediately - let it fail gracefully in getCollection
 const uri = process.env.MONGODB_URI;
+
 const options = {
   // Add connection options for better reliability
   maxPoolSize: 10,
@@ -18,7 +16,10 @@ const options = {
 let client;
 let clientPromise;
 
-if (process.env.NODE_ENV === 'development') {
+if (!uri) {
+  // Create a rejected promise if URI is not set
+  clientPromise = Promise.reject(new Error('MongoDB URI is not configured. Please add MONGODB_URI to .env.local'));
+} else if (process.env.NODE_ENV === 'development') {
   // In development mode, use a global variable so that the value
   // is preserved across module reloads caused by HMR (Hot Module Replacement).
   if (!global._mongoClientPromise) {
@@ -49,8 +50,13 @@ export async function getDatabase() {
  * Get collection helper
  */
 export async function getCollection(collectionName) {
-  const db = await getDatabase();
-  return db.collection(collectionName);
+  try {
+    const db = await getDatabase();
+    return db.collection(collectionName);
+  } catch (error) {
+    console.error('MongoDB connection error:', error.message);
+    throw new Error('Database connection failed. Please check your MongoDB configuration.');
+  }
 }
 
 /**

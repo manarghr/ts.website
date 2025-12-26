@@ -993,6 +993,9 @@ export default function ProfilePage({ userId }) {
                               gender: profileUser?.gender || "",
                               workoutExperience: profileUser?.workoutExperience || "",
                               sportsRating: profileUser?.sportsRating || "",
+                              weight: profileUser?.weight || "",
+                              height: profileUser?.height || "",
+                              muscleWeight: profileUser?.muscleWeight || "",
                             })
                             setIsEditingInfo(false)
                           }}

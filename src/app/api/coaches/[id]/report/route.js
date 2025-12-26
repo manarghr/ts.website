@@ -2,7 +2,7 @@
 // File: src/app/api/coaches/[id]/report/route.js
 
 import { NextResponse } from 'next/server';
-import { submitReport } from '../../../../../backend/utils/report-helpers';
+import { submitReport } from '@/backend/utils/report-helpers';
 
 export async function POST(request, { params }) {
   try {

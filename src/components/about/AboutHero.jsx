@@ -59,17 +59,39 @@ export default function AboutHero() {
     <div className="w-full overflow-hidden">
       {/* Hero Section with Parallax Effect */}
       <section className="relative w-full h-[500px] md:h-[600px] overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-linear-to-r from-[#354F52] via-[#52796F] to-[#354F52] bg-cover bg-center bg-fixed"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1400')",
-            backgroundSize: "cover",
-            backgroundPosition: "center"
-          }}
-        >
-          <div className="absolute inset-0 bg-[#354F52]/80" />
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46]" />
+        
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 right-20 w-96 h-96 bg-[#6BB371]/10 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#52796F]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
         </div>
-        <div className="relative h-full flex items-center justify-center px-8 md:px-16">
+
+        {/* Background Image - Horizontal Transparent */}
+        <div 
+          className="absolute inset-0 z-[1] opacity-20"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            filter: 'brightness(1.1) contrast(0.85)'
+          }}
+        />
+        
+        {/* ABOUT US Text - Above the image */}
+        <div className="absolute inset-0 flex items-center justify-center z-[2]">
+          <div className="text-[120px] md:text-[200px] lg:text-[280px] font-black text-white opacity-[0.05] select-none" style={{
+            fontFamily: 'var(--font-montserrat), sans-serif',
+            letterSpacing: '15px',
+            animation: 'heartbeat 4s ease-in-out infinite',
+          }}>
+            ABOUT US
+          </div>
+        </div>
+
+        <div className="relative z-10 h-full flex items-center justify-center px-8 md:px-16">
           <div className={`text-center transition-all duration-1000 ${isVisible["hero"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
             <h1 className="text-white text-5xl md:text-7xl font-bold mb-6 tracking-wide uppercase">
               ABOUT <span className="text-[#6BB371]">TRAINSIGHT</span>

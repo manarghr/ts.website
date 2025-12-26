@@ -159,14 +159,28 @@ export default function Coaches() {
               rgba(255,255,255,0.03) 200px
             )`,
           }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-[180px] md:text-[280px] lg:text-[350px] font-black opacity-5 select-none animate-pulse-glow" style={{
-              fontFamily: 'monospace',
-              letterSpacing: '20px',
-            }}>
-              COACHES
-            </div>
+        />
+        
+        {/* Coach Image Background - Horizontal Transparent */}
+        <div 
+          className="absolute inset-0 z-[1] opacity-20"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            filter: 'brightness(1.1) contrast(0.85)'
+          }}
+        />
+        
+        {/* COACHES Text - Above the image */}
+        <div className="absolute inset-0 flex items-center justify-center z-[2]">
+          <div className="text-[180px] md:text-[280px] lg:text-[350px] font-black text-white opacity-[0.05] select-none" style={{
+            fontFamily: 'var(--font-montserrat), sans-serif',
+            letterSpacing: '20px',
+            animation: 'heartbeat 4s ease-in-out infinite',
+          }}>
+            COACHES
           </div>
         </div>
 

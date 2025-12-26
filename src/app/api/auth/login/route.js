@@ -2,7 +2,18 @@
 // File: src/app/api/auth/login/route.js
 
 import { NextResponse } from 'next/server';
-import { authenticateUser } from '@/backend/utils/auth-helpers';
+
+// Try MongoDB first, fallback to localStorage-based auth
+let authenticateUser;
+let useMongoDB = true;
+
+try {
+  const authHelpers = await import('@/backend/utils/auth-helpers');
+  authenticateUser = authHelpers.authenticateUser;
+} catch (error) {
+  console.warn('MongoDB not available, using localStorage fallback');
+  useMongoDB = false;
+}
 
 export async function POST(request) {
   try {
@@ -18,7 +29,34 @@ export async function POST(request) {
     }
 
     // Authenticate user
-    const user = await authenticateUser(email, password);
+    let user;
+    
+    if (useMongoDB && authenticateUser) {
+      try {
+        user = await authenticateUser(email, password);
+      } catch (dbError) {
+        // If MongoDB fails, fall back to localStorage approach
+        if (dbError.message.includes('Database connection') || dbError.message.includes('MongoDB')) {
+          useMongoDB = false;
+        } else if (dbError.message.includes('Invalid email or password')) {
+          // Re-throw auth errors
+          throw dbError;
+        } else {
+          useMongoDB = false;
+        }
+      }
+    }
+
+    // Fallback: Return error - client will handle localStorage auth
+    if (!useMongoDB || !user) {
+      return NextResponse.json(
+        { 
+          error: 'Please use client-side authentication. Database not configured.',
+          useLocalStorage: true 
+        },
+        { status: 200 } // Return 200 but with useLocalStorage flag
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -36,8 +74,16 @@ export async function POST(request) {
       );
     }
 
+    // Handle database connection errors
+    if (error.message.includes('Database connection failed') || error.message.includes('MongoDB')) {
+      return NextResponse.json(
+        { error: 'Database connection error. Please check server configuration.', details: error.message },
+        { status: 503 } // Service Unavailable
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: error.message || 'Internal server error', details: error.message },
       { status: 500 }
     );
   }

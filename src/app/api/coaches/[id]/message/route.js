@@ -2,7 +2,7 @@
 // File: src/app/api/coaches/[id]/message/route.js
 
 import { NextResponse } from 'next/server';
-import { sendMessage } from '../../../../../backend/utils/message-helpers';
+import { sendMessage } from '@/backend/utils/message-helpers';
 
 export async function POST(request, { params }) {
   try {

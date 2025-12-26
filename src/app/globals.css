@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+/* Font Variables - These are set by Next.js font loader via CSS variables */
+
+/* Typography Styles - Headings use Montserrat */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-montserrat), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Body text uses Inter */
+body, p, span, div, a, button, input, textarea, select, li {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.6;
+}
+
+/* Paragraphs get better spacing */
+p {
+  line-height: 1.7;
+  margin-bottom: 1em;
+}
+
 @keyframes fadeLine {
   to {
     opacity: 1;
@@ -103,6 +125,25 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  8% {
+    transform: scale(1.015);
+  }
+  16% {
+    transform: scale(1);
+  }
+  24% {
+    transform: scale(1.015);
+  }
+  32% {
+    transform: scale(1);
+  }
+  /* Long pause before next heartbeat */
 }
 
 .animate-gradient {
