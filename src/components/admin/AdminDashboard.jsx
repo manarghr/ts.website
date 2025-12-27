@@ -343,7 +343,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <nav className="p-4 space-y-2">
+          <nav className="p-4 space-y-2 pb-24">
             {menuItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -367,9 +367,10 @@ export default function AdminDashboard() {
           </nav>
 
           <div className="absolute bottom-4 left-4 right-4">
+            <div className="border-t border-gray-200 pt-4 mb-4"></div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 border border-red-200 hover:border-red-300"
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Logout</span>
@@ -912,7 +913,7 @@ export default function AdminDashboard() {
 
                 {/* Programs Section */}
                 {activeSection === "programs" && (
-                  <div className="space-y-6">
+                  <div className="space-y-6 mt-6">
                     <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6">
                       <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-gray-800">Training Programs Management</h2>
@@ -920,7 +921,22 @@ export default function AdminDashboard() {
                           onClick={() => {
                             setShowProgramForm(true);
                             setEditingItem(null);
-                            setProgramForm({ name: "", description: "", duration: "", schedule: [], exercises: [], price: 0, discount: false, discount_percentage: 0 });
+                            setProgramForm({ 
+                              name: "", 
+                              description: "", 
+                              duration: "", 
+                              schedule: [], 
+                              exercises: [], 
+                              price: 0, 
+                              discount: false, 
+                              discount_percentage: 0,
+                              goal: "muscle_building",
+                              level: "All Levels",
+                              equipment: [],
+                              coach_recommendation: "",
+                              coach_id: "",
+                              overview: ""
+                            });
                           }}
                           className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
                         >
@@ -972,7 +988,7 @@ export default function AdminDashboard() {
                     {/* Program Form Modal */}
                     {showProgramForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold">{editingItem ? "Edit Program" : "Add New Program"}</h3>
                             <button onClick={() => { setShowProgramForm(false); setEditingItem(null); }}>
@@ -1009,6 +1025,122 @@ export default function AdminDashboard() {
                                 className="w-full px-3 py-2 border rounded-lg"
                                 placeholder="e.g., 4 weeks, 12 weeks"
                               />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1">Goal</label>
+                                <select
+                                  value={programForm.goal}
+                                  onChange={(e) => setProgramForm({ ...programForm, goal: e.target.value })}
+                                  className="w-full px-3 py-2 border rounded-lg"
+                                >
+                                  <option value="weight_loss">Weight Loss</option>
+                                  <option value="bulking">Bulking</option>
+                                  <option value="muscle_building">Muscle Building</option>
+                                  <option value="endurance">Endurance</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1">Level</label>
+                                <select
+                                  value={programForm.level}
+                                  onChange={(e) => setProgramForm({ ...programForm, level: e.target.value })}
+                                  className="w-full px-3 py-2 border rounded-lg"
+                                >
+                                  <option value="Beginner">Beginner</option>
+                                  <option value="Intermediate">Intermediate</option>
+                                  <option value="Advanced">Advanced</option>
+                                  <option value="All Levels">All Levels</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Overview (Extended Description)</label>
+                              <textarea
+                                value={programForm.overview}
+                                onChange={(e) => setProgramForm({ ...programForm, overview: e.target.value })}
+                                className="w-full px-3 py-2 border rounded-lg"
+                                rows="3"
+                                placeholder="Additional detailed information about the program"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Equipment (comma-separated)</label>
+                              <input
+                                type="text"
+                                value={Array.isArray(programForm.equipment) ? programForm.equipment.join(", ") : programForm.equipment}
+                                onChange={(e) => {
+                                  const equipmentList = e.target.value.split(",").map(item => item.trim()).filter(item => item);
+                                  setProgramForm({ ...programForm, equipment: equipmentList });
+                                }}
+                                className="w-full px-3 py-2 border rounded-lg"
+                                placeholder="e.g., Dumbbells, Barbell, Bench, Resistance Bands"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">Enter equipment separated by commas</p>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Coach Recommendation</label>
+                              <textarea
+                                value={programForm.coach_recommendation}
+                                onChange={(e) => setProgramForm({ ...programForm, coach_recommendation: e.target.value })}
+                                className="w-full px-3 py-2 border rounded-lg"
+                                rows="2"
+                                placeholder="Recommended coach or coaching style for this program"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Coach ID (Optional)</label>
+                              <input
+                                type="text"
+                                value={programForm.coach_id}
+                                onChange={(e) => setProgramForm({ ...programForm, coach_id: e.target.value })}
+                                className="w-full px-3 py-2 border rounded-lg"
+                                placeholder="Enter coach ID if linking to specific coach"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Exercises (JSON Array or comma-separated)</label>
+                              <textarea
+                                value={Array.isArray(programForm.exercises) ? JSON.stringify(programForm.exercises, null, 2) : programForm.exercises}
+                                onChange={(e) => {
+                                  try {
+                                    const parsed = JSON.parse(e.target.value);
+                                    if (Array.isArray(parsed)) {
+                                      setProgramForm({ ...programForm, exercises: parsed });
+                                    } else {
+                                      setProgramForm({ ...programForm, exercises: e.target.value.split(",").map(item => item.trim()).filter(item => item) });
+                                    }
+                                  } catch {
+                                    // If not valid JSON, treat as comma-separated
+                                    const exercises = e.target.value.split(",").map(item => item.trim()).filter(item => item);
+                                    setProgramForm({ ...programForm, exercises });
+                                  }
+                                }}
+                                className="w-full px-3 py-2 border rounded-lg font-mono text-sm"
+                                rows="4"
+                                placeholder='["Squats", "Deadlifts", "Bench Press"] or Squats, Deadlifts, Bench Press'
+                              />
+                              <p className="text-xs text-gray-500 mt-1">Enter as JSON array or comma-separated list</p>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Schedule (JSON Array - Day-by-Day)</label>
+                              <textarea
+                                value={JSON.stringify(programForm.schedule, null, 2)}
+                                onChange={(e) => {
+                                  try {
+                                    const parsed = JSON.parse(e.target.value);
+                                    if (Array.isArray(parsed)) {
+                                      setProgramForm({ ...programForm, schedule: parsed });
+                                    }
+                                  } catch {
+                                    // Invalid JSON, keep as is
+                                  }
+                                }}
+                                className="w-full px-3 py-2 border rounded-lg font-mono text-sm"
+                                rows="8"
+                                placeholder={`[\n  {\n    "day": "Day 1",\n    "focus": "Upper Body",\n    "exercises": ["Bench Press", "Rows"],\n    "notes": "Focus on form"\n  },\n  {\n    "day": "Day 2",\n    "focus": "Lower Body",\n    "exercises": ["Squats", "Deadlifts"]\n  }\n]`}
+                              />
+                              <p className="text-xs text-gray-500 mt-1">Format: Array of objects with day, focus, exercises, and optional notes</p>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
