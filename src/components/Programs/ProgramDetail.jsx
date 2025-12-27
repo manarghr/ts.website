@@ -20,7 +20,25 @@ export default function ProgramDetail({ programId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [enrolling, setEnrolling] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
+
+  // Check if user is logged in
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem("trainsight_current_user");
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          setCurrentUser(userData);
+          setIsLoggedIn(true);
+        } catch (err) {
+          console.error("Error parsing user data:", err);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchProgram = async () => {
@@ -69,10 +87,45 @@ export default function ProgramDetail({ programId }) {
 
   const handleEnroll = async () => {
     try {
+      // Check if user is logged in
+      if (!isLoggedIn || !currentUser) {
+        const proceed = confirm('You need to be logged in to enroll in this program. Would you like to login now?');
+        if (proceed) {
+          router.push('/?auth=login');
+        }
+        return;
+      }
+
       setEnrolling(true);
-      // TODO: Implement enrollment logic
-      // This could check if user is logged in, if program is paid, etc.
-      alert('Enrollment functionality will be implemented soon!');
+
+      // Check if program is paid
+      if (program.price > 0) {
+        // For paid programs, you would typically redirect to payment
+        const proceed = confirm(
+          `This program costs $${program.discount && program.discount_percentage 
+            ? (program.price * (1 - program.discount_percentage / 100)).toFixed(2)
+            : program.price.toFixed(2)}. Would you like to proceed to payment?`
+        );
+        
+        if (proceed) {
+          // TODO: Implement payment flow
+          // For now, just show a message
+          alert('Payment integration will be implemented soon. Your enrollment will be processed after payment.');
+          // In the future: router.push(`/checkout?program=${program.id}`);
+        }
+      } else {
+        // Free program or subscription-based
+        // TODO: Implement enrollment API call
+        // const response = await fetch('/api/programs/enroll', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ programId: program.id, userId: currentUser.id })
+        // });
+        
+        alert(`Successfully enrolled in "${program.name}"! You can now access this program from your dashboard.`);
+        // Optionally redirect to dashboard or program content
+        // router.push('/dashboard');
+      }
     } catch (err) {
       console.error('Error enrolling:', err);
       alert('Error enrolling in program. Please try again.');
@@ -193,17 +246,24 @@ export default function ProgramDetail({ programId }) {
             <div className="lg:col-span-2 space-y-12">
               {/* Overview */}
               <div className="bg-white rounded-2xl p-8 shadow-lg">
-                <h2 className="text-3xl font-bold text-[#354F52] mb-6">Overview</h2>
+                <h2 className="text-3xl font-bold text-[#354F52] mb-6 flex items-center gap-3">
+                  <div className="w-1 h-8 bg-gradient-to-b from-[#52796F] to-[#6BB371] rounded"></div>
+                  Overview
+                </h2>
                 <div className="prose max-w-none text-gray-700 leading-relaxed">
-                  <p className="text-lg">{program.description}</p>
-                  {program.overview && (
-                    <p className="mt-4">{program.overview}</p>
+                  <p className="text-lg font-medium mb-4 text-[#354F52]">{program.description}</p>
+                  {program.overview ? (
+                    <div className="mt-6 p-6 bg-[#C8CDC5]/10 rounded-lg border-l-4 border-[#52796F]">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-line">{program.overview}</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic mt-4">Additional program details will be available after enrollment.</p>
                   )}
                 </div>
               </div>
 
               {/* Day-by-Day Schedule */}
-              {program.schedule && program.schedule.length > 0 && (
+              {program.schedule && program.schedule.length > 0 ? (
                 <div className="bg-white rounded-2xl p-8 shadow-lg">
                   <div className="flex items-center gap-3 mb-6">
                     <FaCalendar className="text-[#52796F] text-2xl" />
@@ -211,36 +271,52 @@ export default function ProgramDetail({ programId }) {
                   </div>
                   <div className="space-y-6">
                     {program.schedule.map((day, index) => (
-                      <div key={index} className="border-l-4 border-[#52796F] pl-6 py-4">
-                        <h3 className="text-xl font-bold text-[#354F52] mb-2">
-                          {day.day || `Day ${index + 1}`}
-                        </h3>
-                        {day.focus && (
-                          <p className="text-[#52796F] font-semibold mb-2">{day.focus}</p>
-                        )}
+                      <div key={index} className="border-l-4 border-[#52796F] pl-6 py-4 bg-[#C8CDC5]/5 rounded-r-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-xl font-bold text-[#354F52]">
+                            {day.day || `Day ${index + 1}`}
+                          </h3>
+                          {day.focus && (
+                            <span className="px-3 py-1 bg-[#52796F]/10 text-[#52796F] rounded-full text-sm font-semibold">
+                              {day.focus}
+                            </span>
+                          )}
+                        </div>
                         {day.exercises && day.exercises.length > 0 && (
-                          <ul className="space-y-2 mt-3">
+                          <ul className="space-y-3 mt-4">
                             {day.exercises.map((exercise, exIndex) => (
-                              <li key={exIndex} className="flex items-start gap-2 text-gray-700">
+                              <li key={exIndex} className="flex items-start gap-3 text-gray-700 bg-white p-3 rounded-lg border border-[#C8CDC5]/30">
                                 <FaCheckCircle className="text-[#6BB371] flex-shrink-0 mt-1" />
-                                <span>
-                                  {typeof exercise === 'string' ? exercise : exercise.name}
+                                <div className="flex-1">
+                                  <span className="font-medium">
+                                    {typeof exercise === 'string' ? exercise : exercise.name}
+                                  </span>
                                   {exercise.sets && exercise.reps && (
-                                    <span className="text-gray-500 ml-2">
+                                    <span className="text-gray-500 ml-2 text-sm">
                                       ({exercise.sets} sets × {exercise.reps} reps)
                                     </span>
                                   )}
-                                </span>
+                                </div>
                               </li>
                             ))}
                           </ul>
                         )}
                         {day.notes && (
-                          <p className="text-gray-600 text-sm mt-2 italic">{day.notes}</p>
+                          <div className="mt-3 p-3 bg-[#52796F]/5 rounded-lg border-l-2 border-[#52796F]">
+                            <p className="text-gray-700 text-sm italic">{day.notes}</p>
+                          </div>
                         )}
                       </div>
                     ))}
                   </div>
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl p-8 shadow-lg">
+                  <div className="flex items-center gap-3 mb-4">
+                    <FaCalendar className="text-[#52796F] text-2xl" />
+                    <h2 className="text-3xl font-bold text-[#354F52]">Day-by-Day Schedule</h2>
+                  </div>
+                  <p className="text-gray-500 italic">Schedule details will be available after enrollment.</p>
                 </div>
               )}
 
@@ -302,35 +378,81 @@ export default function ProgramDetail({ programId }) {
               )}
 
               {/* Pricing & Enroll */}
-              <div className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-2xl p-6 shadow-lg text-white">
+              <div className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-2xl p-6 shadow-lg text-white sticky top-6">
                 <h3 className="text-2xl font-bold mb-4">Get Started</h3>
+                
+                {/* Price Display */}
                 {program.price > 0 ? (
                   <div className="mb-6">
-                    <div className="text-4xl font-bold mb-2">
-                      ${finalPrice.toFixed(2)}
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <div className="text-4xl font-bold">
+                        ${finalPrice.toFixed(2)}
+                      </div>
+                      {program.discount && program.discount_percentage && (
+                        <div className="text-lg text-white/70 line-through">
+                          ${program.price.toFixed(2)}
+                        </div>
+                      )}
                     </div>
                     {program.discount && program.discount_percentage && (
-                      <div className="text-sm text-white/80 line-through mb-1">
-                        ${program.price.toFixed(2)}
+                      <div className="inline-block px-3 py-1 bg-[#6BB371] rounded-full text-sm font-semibold mb-2">
+                        {program.discount_percentage}% OFF
                       </div>
                     )}
-                    <div className="text-sm text-white/80">One-time payment</div>
+                    <div className="text-sm text-white/80 mt-2">One-time payment</div>
                   </div>
                 ) : (
                   <div className="mb-6">
                     <div className="text-4xl font-bold mb-2">Free</div>
                     <div className="text-sm text-white/80">No payment required</div>
+                    <div className="text-xs text-white/70 mt-2 italic">
+                      Available with subscription
+                    </div>
                   </div>
                 )}
+
+                {/* Access Info */}
+                <div className="mb-6 p-3 bg-white/10 rounded-lg">
+                  <div className="text-sm font-semibold mb-2">What you'll get:</div>
+                  <ul className="text-xs space-y-1 text-white/90">
+                    <li className="flex items-center gap-2">
+                      <FaCheckCircle className="text-[#6BB371] text-xs" />
+                      <span>Full program access</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <FaCheckCircle className="text-[#6BB371] text-xs" />
+                      <span>Day-by-day schedule</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <FaCheckCircle className="text-[#6BB371] text-xs" />
+                      <span>Exercise instructions</span>
+                    </li>
+                    {program.coach_recommendation && (
+                      <li className="flex items-center gap-2">
+                        <FaCheckCircle className="text-[#6BB371] text-xs" />
+                        <span>Coach recommendations</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                {/* Enroll Button */}
                 <button
                   onClick={handleEnroll}
                   disabled={enrolling}
-                  className="w-full py-4 px-6 bg-white text-[#354F52] font-bold rounded-lg hover:bg-[#C8CDC5] transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 px-6 bg-white text-[#354F52] font-bold rounded-lg hover:bg-[#C8CDC5] transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mb-3"
                 >
-                  {enrolling ? 'Enrolling...' : 'Enroll Now'}
+                  {enrolling ? 'Processing...' : isLoggedIn ? 'Enroll Now' : 'Login to Enroll'}
                 </button>
-                {program.price === 0 && (
-                  <p className="text-xs text-white/80 mt-4 text-center">
+                
+                {!isLoggedIn && (
+                  <p className="text-xs text-white/80 text-center mb-2">
+                    Login required to enroll
+                  </p>
+                )}
+                
+                {program.price === 0 && isLoggedIn && (
+                  <p className="text-xs text-white/80 text-center">
                     This program is included with your subscription
                   </p>
                 )}

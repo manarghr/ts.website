@@ -15,6 +15,7 @@ export default function ProgramsPage() {
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedGoal, setSelectedGoal] = useState('all');
   const router = useRouter();
 
   useEffect(() => {
@@ -161,6 +162,61 @@ export default function ProgramsPage() {
         <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#52796F]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
+          {/* Summary Stats */}
+          {programs.length > 0 && (
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-6 bg-white/80 backdrop-blur-sm rounded-2xl px-8 py-4 shadow-lg">
+                <div>
+                  <div className="text-3xl font-bold text-[#354F52]">{programs.length}</div>
+                  <div className="text-sm text-gray-600">Total Programs</div>
+                </div>
+                {Object.entries(goalLabels).map(([goal, label]) => {
+                  const count = (groupedPrograms[goal] || []).length;
+                  if (count === 0) return null;
+                  return (
+                    <div key={goal} className="border-l border-gray-300 pl-6">
+                      <div className="text-2xl font-bold text-[#52796F]">{count}</div>
+                      <div className="text-xs text-gray-600">{label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Filter Buttons */}
+          {programs.length > 0 && (
+            <div className="mb-12 flex flex-wrap justify-center gap-4">
+              <button
+                onClick={() => setSelectedGoal('all')}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                  selectedGoal === 'all'
+                    ? 'bg-[#354F52] text-white shadow-lg'
+                    : 'bg-white text-[#354F52] hover:bg-[#52796F] hover:text-white'
+                }`}
+              >
+                All Programs
+              </button>
+              {Object.entries(goalLabels).map(([goal, label]) => {
+                const goalPrograms = groupedPrograms[goal] || [];
+                if (goalPrograms.length === 0) return null;
+                return (
+                  <button
+                    key={goal}
+                    onClick={() => setSelectedGoal(goal)}
+                    className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 ${
+                      selectedGoal === goal
+                        ? 'bg-[#354F52] text-white shadow-lg'
+                        : 'bg-white text-[#354F52] hover:bg-[#52796F] hover:text-white'
+                    }`}
+                  >
+                    {goalIcons[goal]}
+                    {label} ({goalPrograms.length})
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {loading ? (
             <div className="text-center py-20">
               <div className="text-[#354F52] text-lg">Loading programs...</div>
@@ -187,6 +243,8 @@ export default function ProgramsPage() {
               
               return Object.entries(groupedPrograms).map(([goal, goalPrograms], goalIndex) => {
                 if (goalPrograms.length === 0) return null;
+                // Filter by selected goal
+                if (selectedGoal !== 'all' && selectedGoal !== goal) return null;
               
               return (
                 <div key={goal} className="mb-16">
@@ -239,20 +297,32 @@ export default function ProgramsPage() {
                           )}
                         </div>
 
-                        {program.price > 0 && (
-                          <div className="text-center mb-4">
-                            <span className="text-2xl font-bold text-[#354F52]">
-                              ${program.discount && program.discount_percentage ? 
-                                (program.price * (1 - program.discount_percentage / 100)).toFixed(2) : 
-                                program.price.toFixed(2)}
-                            </span>
-                            {program.discount && program.discount_percentage && (
-                              <span className="text-sm text-gray-500 line-through ml-2">
-                                ${program.price.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                        {/* Price Display */}
+                        <div className="text-center mb-4">
+                          {program.price > 0 ? (
+                            <>
+                              <div className="flex items-center justify-center gap-2 mb-1">
+                                <span className="text-2xl font-bold text-[#354F52]">
+                                  ${program.discount && program.discount_percentage ? 
+                                    (program.price * (1 - program.discount_percentage / 100)).toFixed(2) : 
+                                    program.price.toFixed(2)}
+                                </span>
+                                {program.discount && program.discount_percentage && (
+                                  <span className="text-sm text-gray-500 line-through">
+                                    ${program.price.toFixed(2)}
+                                  </span>
+                                )}
+                              </div>
+                              {program.discount && program.discount_percentage && (
+                                <span className="inline-block px-2 py-1 bg-[#6BB371]/20 text-[#6BB371] rounded-full text-xs font-semibold">
+                                  {program.discount_percentage}% OFF
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-xl font-bold text-[#52796F]">Free</div>
+                          )}
+                        </div>
 
                         <button 
                           onClick={(e) => {

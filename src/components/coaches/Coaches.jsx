@@ -72,20 +72,65 @@ export default function Coaches() {
     return cat.toLowerCase().trim();
   };
 
-  const categories = {
-    Strength: coaches.filter(coach => {
-      const cat = normalizeCategory(coach.category);
-      return cat === 'strength' || cat === 'fitness' || cat === 'powerlifting';
-    }),
-    Yoga: coaches.filter(coach => {
-      const cat = normalizeCategory(coach.category);
-      return cat === 'yoga' || cat === 'meditation' || cat === 'mindfulness';
-    }),
-    Cardio: coaches.filter(coach => {
-      const cat = normalizeCategory(coach.category);
-      return cat === 'cardio' || cat === 'hiit' || cat === 'endurance' || cat === 'running';
-    }),
+  // Get all unique categories from coaches
+  const getAllCategories = () => {
+    const categoryMap = {};
+    coaches.forEach(coach => {
+      if (coach.category) {
+        const cat = coach.category.trim();
+        if (!categoryMap[cat]) {
+          categoryMap[cat] = [];
+        }
+        categoryMap[cat].push(coach);
+      } else {
+        // If no category, put in "Other" category
+        if (!categoryMap['Other']) {
+          categoryMap['Other'] = [];
+        }
+        categoryMap['Other'].push(coach);
+      }
+    });
+    return categoryMap;
   };
+
+  // Get categories dynamically from coaches data
+  const allCategories = getAllCategories();
+  
+  // Create a sorted list of category names
+  const categoryNames = Object.keys(allCategories).sort();
+  
+  // Debug: Log categories and coaches
+  useEffect(() => {
+    if (coaches.length > 0) {
+      console.log('=== COACHES DEBUG ===');
+      console.log('Total coaches:', coaches.length);
+      console.log('Coaches data:', coaches);
+      console.log('Categories found:', categoryNames);
+      console.log('Categories with coaches:', allCategories);
+      categoryNames.forEach(cat => {
+        console.log(`Category "${cat}": ${allCategories[cat]?.length || 0} coaches`);
+        console.log(`  Coaches:`, allCategories[cat]);
+      });
+    }
+  }, [coaches.length]);
+  
+  // Map category names to display names and icons
+  const categoryDisplayNames = {
+    'Strength': 'Strength',
+    'Yoga': 'Yoga',
+    'Cardio': 'Cardio',
+    'Nutrition': 'Nutrition',
+    'CrossFit': 'CrossFit',
+    'Boxing': 'Boxing',
+    'Pilates': 'Pilates',
+    'Personal Training': 'Personal Training',
+    'Senior Fitness': 'Senior Fitness',
+    'Sports Performance': 'Sports Performance',
+    'Rehabilitation': 'Rehabilitation',
+  };
+
+  // Use dynamic categories or fallback to empty object
+  const categories = allCategories;
 
   // Helper function to get image for coach
   const getCoachImage = (coach, index) => {
@@ -96,27 +141,29 @@ export default function Coaches() {
     return defaultImages[index % defaultImages.length];
   };
 
-  // Carousel state for each category
-  const [carouselIndices, setCarouselIndices] = useState({
-    Strength: 0,
-    Yoga: 0,
-    Cardio: 0,
-  });
+  // Carousel state for each category (dynamic)
+  const [carouselIndices, setCarouselIndices] = useState({});
+  const scrollRefs = useRef({});
 
-  const scrollRefs = {
-    Strength: useRef(null),
-    Yoga: useRef(null),
-    Cardio: useRef(null),
-  };
+  // Initialize carousel state for all categories
+  useEffect(() => {
+    if (categoryNames.length === 0) return;
+    
+    const newIndices = {};
+    categoryNames.forEach(cat => {
+      newIndices[cat] = carouselIndices[cat] || 0;
+    });
+    setCarouselIndices(prev => ({ ...prev, ...newIndices }));
+  }, [coaches.length]);
 
   const scrollCarousel = (category, direction) => {
-    const container = scrollRefs[category].current;
+    const container = scrollRefs.current[category];
     if (!container) return;
 
     const cardWidth = 320; // Card width + gap
     const categoryCoaches = categories[category] || [];
     const maxIndex = categoryCoaches.length - 1;
-    const currentIndex = carouselIndices[category];
+    const currentIndex = carouselIndices[category] || 0;
 
     let newIndex;
     if (direction === "left") {
@@ -132,10 +179,24 @@ export default function Coaches() {
     });
   };
 
-  const categoryIcons = {
-    Strength: <FaDumbbell />,
-    Yoga: <FaLeaf />,
-    Cardio: <FaRunning />,
+  // Category icons mapping
+  const getCategoryIcon = (category) => {
+    const cat = category.toLowerCase();
+    if (cat.includes('strength') || cat.includes('fitness') || cat.includes('powerlifting')) {
+      return <FaDumbbell />;
+    } else if (cat.includes('yoga') || cat.includes('meditation') || cat.includes('mindfulness') || cat.includes('pilates')) {
+      return <FaLeaf />;
+    } else if (cat.includes('cardio') || cat.includes('hiit') || cat.includes('endurance') || cat.includes('running') || cat.includes('crossfit')) {
+      return <FaRunning />;
+    } else {
+      return <FaDumbbell />; // Default icon
+    }
+  };
+
+  // Category colors mapping
+  const getCategoryColor = (category, index) => {
+    const colors = ['#354F52', '#52796F', '#6BB371', '#4A7C59', '#5A8A6B', '#3D5A4F'];
+    return colors[index % colors.length];
   };
 
   return (
@@ -201,199 +262,121 @@ export default function Coaches() {
         </div>
       </section>
 
-      {/* Coaches Sections */}
+      {/* Coaches Sections - Dynamic */}
       <div className="py-16 md:py-24">
-        {/* STRENGTH Section */}
-        <section data-section id="strength" className="mb-20">
-          <div className="bg-gradient-to-r from-[#C8CDC5] via-[#CAD2C5] to-[#C8CDC5] py-5 mb-10 shadow-md">
-            <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#354F52] rounded-lg flex items-center justify-center text-white text-xl">
-                {categoryIcons.Strength}
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-[#354F52] uppercase tracking-wide">
-                STRENGTH
-              </h2>
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-[#354F52] text-lg">Loading coaches...</div>
+          </div>
+        ) : coaches.length === 0 ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-gray-500 text-lg">No coaches available</div>
+          </div>
+        ) : categoryNames.length === 0 ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-gray-500 text-lg">
+              No categories found. Coaches: {coaches.length}
             </div>
           </div>
-          
-          <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
-            {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="text-[#354F52] text-lg">Loading coaches...</div>
-              </div>
-            ) : categories.Strength.length === 0 ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="text-gray-500 text-lg">No Strength coaches available</div>
-              </div>
-            ) : (
-              <>
-                <div
-                  ref={scrollRefs.Strength}
-                  className="flex gap-8 overflow-x-auto scroll-smooth no-scrollbar snap-x snap-mandatory pb-4"
-                >
-                  {categories.Strength.map((coach, index) => (
-                    <div 
-                      key={coach.id || coach._id || index} 
-                      className={`snap-center min-w-[320px] fade-in-on-scroll ${isVisible.strength ? 'visible' : ''}`}
-                      style={{ transitionDelay: `${index * 0.1}s` }}
-                    >
-                      <Card
-                        id={coach.id}
-                        image={getCoachImage(coach, index)}
-                        name={coach.name}
-                        description={coach.bio || coach.description || 'Professional fitness coach'}
-                      />
+        ) : (
+          categoryNames.map((categoryName, categoryIndex) => {
+            const categoryCoaches = categories[categoryName] || [];
+            const categoryId = categoryName.toLowerCase().replace(/\s+/g, '-');
+            const categoryColor = getCategoryColor(categoryName, categoryIndex);
+            
+            return (
+              <section key={categoryName} data-section id={categoryId} className="mb-20">
+                <div className="bg-gradient-to-r from-[#C8CDC5] via-[#CAD2C5] to-[#C8CDC5] py-5 mb-10 shadow-md">
+                  <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl" style={{ backgroundColor: categoryColor }}>
+                      {getCategoryIcon(categoryName)}
                     </div>
-                  ))}
+                    <h2 className="text-2xl md:text-3xl font-bold text-[#354F52] uppercase tracking-wide">
+                      {categoryName.toUpperCase()}
+                    </h2>
+                  </div>
                 </div>
-
-                {/* Navigation Arrows */}
-                <button
-                  onClick={() => scrollCarousel("Strength", "left")}
-                  disabled={carouselIndices.Strength === 0}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 w-14 h-14 bg-[#354F52] text-white rounded-full flex items-center justify-center shadow-xl hover:bg-[#52796F] hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
-                >
-                  <IoIosArrowBack size={26} />
-                </button>
-                <button
-                  onClick={() => scrollCarousel("Strength", "right")}
-                  disabled={carouselIndices.Strength === categories.Strength.length - 1}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 w-14 h-14 bg-[#354F52] text-white rounded-full flex items-center justify-center shadow-xl hover:bg-[#52796F] hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
-                >
-                  <IoIosArrowForward size={26} />
-                </button>
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* YOGA Section */}
-        <section data-section id="yoga" className="mb-20">
-          <div className="bg-gradient-to-r from-[#C8CDC5] via-[#CAD2C5] to-[#C8CDC5] py-5 mb-10 shadow-md">
-            <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#52796F] rounded-lg flex items-center justify-center text-white text-xl">
-                {categoryIcons.Yoga}
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-[#354F52] uppercase tracking-wide">
-                YOGA
-              </h2>
-            </div>
-          </div>
-          
-          <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
-            {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="text-[#354F52] text-lg">Loading coaches...</div>
-              </div>
-            ) : categories.Yoga.length === 0 ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="text-gray-500 text-lg">No Yoga coaches available</div>
-              </div>
-            ) : (
-              <>
-                <div
-                  ref={scrollRefs.Yoga}
-                  className="flex gap-8 overflow-x-auto scroll-smooth no-scrollbar snap-x snap-mandatory pb-4"
-                >
-                  {categories.Yoga.map((coach, index) => (
-                    <div 
-                      key={coach.id || coach._id || index} 
-                      className={`snap-center min-w-[320px] fade-in-on-scroll ${isVisible.yoga ? 'visible' : ''}`}
-                      style={{ transitionDelay: `${index * 0.1}s` }}
-                    >
-                      <Card
-                        id={coach.id}
-                        image={getCoachImage(coach, index)}
-                        name={coach.name}
-                        description={coach.bio || coach.description || 'Professional fitness coach'}
-                      />
+                
+                <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
+                  {categoryCoaches.length === 0 ? (
+                    <div className="flex justify-center items-center py-20">
+                      <div className="text-gray-500 text-lg">No {categoryName} coaches available</div>
                     </div>
-                  ))}
+                  ) : (
+                    <>
+                      <div
+                        ref={(el) => {
+                          if (el) {
+                            scrollRefs.current[categoryName] = el;
+                          }
+                        }}
+                        className="flex gap-8 overflow-x-auto scroll-smooth no-scrollbar snap-x snap-mandatory pb-4"
+                        style={{ minHeight: '400px' }}
+                      >
+                        {categoryCoaches.map((coach, index) => {
+                          if (!coach) return null;
+                          return (
+                            <div 
+                              key={coach.id || coach._id || `coach-${categoryName}-${index}`} 
+                              className="snap-center min-w-[320px]"
+                            >
+                              <Card
+                                id={coach.id}
+                                image={getCoachImage(coach, index)}
+                                name={coach.name || 'Unknown Coach'}
+                                description={coach.bio || coach.description || 'Professional fitness coach'}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Navigation Arrows */}
+                      {categoryCoaches.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => scrollCarousel(categoryName, "left")}
+                            disabled={(carouselIndices[categoryName] || 0) === 0}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 w-14 h-14 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
+                            style={{ backgroundColor: categoryColor }}
+                            onMouseEnter={(e) => {
+                              if (!e.currentTarget.disabled) {
+                                e.currentTarget.style.backgroundColor = categoryColor;
+                                e.currentTarget.style.opacity = '0.8';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = categoryColor;
+                            }}
+                          >
+                            <IoIosArrowBack size={26} />
+                          </button>
+                          <button
+                            onClick={() => scrollCarousel(categoryName, "right")}
+                            disabled={(carouselIndices[categoryName] || 0) === categoryCoaches.length - 1}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 w-14 h-14 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
+                            style={{ backgroundColor: categoryColor }}
+                            onMouseEnter={(e) => {
+                              if (!e.currentTarget.disabled) {
+                                e.currentTarget.style.backgroundColor = categoryColor;
+                                e.currentTarget.style.opacity = '0.8';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = categoryColor;
+                            }}
+                          >
+                            <IoIosArrowForward size={26} />
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
                 </div>
-
-                {/* Navigation Arrows */}
-                <button
-                  onClick={() => scrollCarousel("Yoga", "left")}
-                  disabled={carouselIndices.Yoga === 0}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 w-14 h-14 bg-[#354F52] text-white rounded-full flex items-center justify-center shadow-xl hover:bg-[#52796F] hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
-                >
-                  <IoIosArrowBack size={26} />
-                </button>
-                <button
-                  onClick={() => scrollCarousel("Yoga", "right")}
-                  disabled={carouselIndices.Yoga === categories.Yoga.length - 1}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 w-14 h-14 bg-[#354F52] text-white rounded-full flex items-center justify-center shadow-xl hover:bg-[#52796F] hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
-                >
-                  <IoIosArrowForward size={26} />
-                </button>
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* CARDIO Section */}
-        <section data-section id="cardio" className="mb-20">
-          <div className="bg-gradient-to-r from-[#C8CDC5] via-[#CAD2C5] to-[#C8CDC5] py-5 mb-10 shadow-md">
-            <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#6BB371] rounded-lg flex items-center justify-center text-white text-xl">
-                {categoryIcons.Cardio}
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-[#354F52] uppercase tracking-wide">
-                CARDIO
-              </h2>
-            </div>
-          </div>
-          
-          <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
-            {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="text-[#354F52] text-lg">Loading coaches...</div>
-              </div>
-            ) : categories.Cardio.length === 0 ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="text-gray-500 text-lg">No Cardio coaches available</div>
-              </div>
-            ) : (
-              <>
-                <div
-                  ref={scrollRefs.Cardio}
-                  className="flex gap-8 overflow-x-auto scroll-smooth no-scrollbar snap-x snap-mandatory pb-4"
-                >
-                  {categories.Cardio.map((coach, index) => (
-                    <div 
-                      key={coach.id || coach._id || index} 
-                      className={`snap-center min-w-[320px] fade-in-on-scroll ${isVisible.cardio ? 'visible' : ''}`}
-                      style={{ transitionDelay: `${index * 0.1}s` }}
-                    >
-                      <Card
-                        id={coach.id}
-                        image={getCoachImage(coach, index)}
-                        name={coach.name}
-                        description={coach.bio || coach.description || 'Professional fitness coach'}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Navigation Arrows */}
-                <button
-                  onClick={() => scrollCarousel("Cardio", "left")}
-                  disabled={carouselIndices.Cardio === 0}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 w-14 h-14 bg-[#354F52] text-white rounded-full flex items-center justify-center shadow-xl hover:bg-[#52796F] hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
-                >
-                  <IoIosArrowBack size={26} />
-                </button>
-                <button
-                  onClick={() => scrollCarousel("Cardio", "right")}
-                  disabled={carouselIndices.Cardio === categories.Cardio.length - 1}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 w-14 h-14 bg-[#354F52] text-white rounded-full flex items-center justify-center shadow-xl hover:bg-[#52796F] hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
-                >
-                  <IoIosArrowForward size={26} />
-                </button>
-              </>
-            )}
-          </div>
-        </section>
+              </section>
+            );
+          })
+        )}
       </div>
 
       {/* Newsletter Section */}

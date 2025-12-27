@@ -16,6 +16,8 @@ import {
   Save,
   X as XIcon,
   LogOut,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -35,6 +37,14 @@ export default function AdminDashboard() {
   const [showNutritionForm, setShowNutritionForm] = useState(false);
   const [showProgramForm, setShowProgramForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  
+  // Image upload states
+  const [coachImagePreview, setCoachImagePreview] = useState("");
+  const [coachImageFile, setCoachImageFile] = useState(null);
+  const [coachImageUploading, setCoachImageUploading] = useState(false);
+  const [videoThumbnailPreview, setVideoThumbnailPreview] = useState("");
+  const [videoThumbnailFile, setVideoThumbnailFile] = useState(null);
+  const [videoThumbnailUploading, setVideoThumbnailUploading] = useState(false);
 
   // Form data
   const [coachForm, setCoachForm] = useState({ id: "", name: "", category: "", bio: "", image_url: "" });
@@ -82,6 +92,99 @@ export default function AdminDashboard() {
     window.location.reload();
   };
 
+  // Image upload handler
+  const handleImageUpload = async (file, type) => {
+    if (!file) return null;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      alert('Invalid file type. Please upload an image (JPEG, PNG, GIF, or WebP).');
+      return null;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size too large. Maximum size is 5MB.');
+      return null;
+    }
+
+    try {
+      if (type === 'coach') {
+        setCoachImageUploading(true);
+      } else if (type === 'video') {
+        setVideoThumbnailUploading(true);
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        return data.imageUrl;
+      } else {
+        alert(data.error || 'Failed to upload image');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+      return null;
+    } finally {
+      if (type === 'coach') {
+        setCoachImageUploading(false);
+      } else if (type === 'video') {
+        setVideoThumbnailUploading(false);
+      }
+    }
+  };
+
+  // Coach image handler
+  const handleCoachImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCoachImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+    setCoachImageFile(file);
+
+    // Upload image
+    const imageUrl = await handleImageUpload(file, 'coach');
+    if (imageUrl) {
+      setCoachForm({ ...coachForm, image_url: imageUrl });
+    }
+  };
+
+  // Video thumbnail handler
+  const handleVideoThumbnailChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setVideoThumbnailPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+    setVideoThumbnailFile(file);
+
+    // Upload image
+    const imageUrl = await handleImageUpload(file, 'video');
+    if (imageUrl) {
+      setVideoForm({ ...videoForm, thumbnail_url: imageUrl });
+    }
+  };
+
   const handleAddCoach = async (e) => {
     e.preventDefault();
     try {
@@ -94,6 +197,8 @@ export default function AdminDashboard() {
       if (data.success) {
         setShowCoachForm(false);
         setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" });
+        setCoachImagePreview("");
+        setCoachImageFile(null);
         fetchData();
       }
     } catch (error) {
@@ -114,6 +219,8 @@ export default function AdminDashboard() {
         setShowCoachForm(false);
         setEditingItem(null);
         setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" });
+        setCoachImagePreview("");
+        setCoachImageFile(null);
         fetchData();
       }
     } catch (error) {
@@ -144,6 +251,8 @@ export default function AdminDashboard() {
       if (data.success) {
         setShowVideoForm(false);
         setVideoForm({ title: "", description: "", video_url: "", thumbnail_url: "", bio: "", price: 0, discount: false, discount_percentage: 0 });
+        setVideoThumbnailPreview("");
+        setVideoThumbnailFile(null);
         fetchData();
       }
     } catch (error) {
@@ -164,6 +273,8 @@ export default function AdminDashboard() {
         setShowVideoForm(false);
         setEditingItem(null);
         setVideoForm({ title: "", description: "", video_url: "", thumbnail_url: "", bio: "", price: 0, discount: false, discount_percentage: 0 });
+        setVideoThumbnailPreview("");
+        setVideoThumbnailFile(null);
         fetchData();
       }
     } catch (error) {
@@ -285,12 +396,16 @@ export default function AdminDashboard() {
   const openEditCoach = (coach) => {
     setEditingItem(coach);
     setCoachForm({ id: coach.id, name: coach.name, category: coach.category, bio: coach.bio || "", image_url: coach.image_url || "" });
+    setCoachImagePreview(coach.image_url || "");
+    setCoachImageFile(null);
     setShowCoachForm(true);
   };
 
   const openEditVideo = (video) => {
     setEditingItem(video);
     setVideoForm({ title: video.title, description: video.description || "", video_url: video.video_url, thumbnail_url: video.thumbnail_url || "", bio: video.bio || "", price: video.price || 0, discount: video.discount || false, discount_percentage: video.discount_percentage || 0 });
+    setVideoThumbnailPreview(video.thumbnail_url || "");
+    setVideoThumbnailFile(null);
     setShowVideoForm(true);
   };
 
@@ -451,17 +566,47 @@ export default function AdminDashboard() {
                     <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6">
                       <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-gray-800">Coaches Management</h2>
-                        <button
-                          onClick={() => {
-                            setShowCoachForm(true);
-                            setEditingItem(null);
-                            setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" });
-                          }}
-                          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
-                        >
-                          <Plus className="w-5 h-5" />
-                          Add Coach
-                        </button>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={async () => {
+                              if (!confirm("This will create 15+ sample coaches. Continue?")) return;
+                              setLoading(true);
+                              try {
+                                const res = await fetch("/api/test-db/create-sample-coaches", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" }
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  alert(`✅ Successfully created ${data.coachesCreated} sample coaches!`);
+                                  fetchData();
+                                } else {
+                                  alert(`Error: ${data.error || data.message}`);
+                                }
+                              } catch (error) {
+                                console.error("Error creating sample coaches:", error);
+                                alert("Error creating sample coaches. Check console for details.");
+                              } finally {
+                                setLoading(false);
+                              }
+                            }}
+                            className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                          >
+                            <Plus className="w-5 h-5" />
+                            Create Sample Coaches
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowCoachForm(true);
+                              setEditingItem(null);
+                              setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" });
+                            }}
+                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                          >
+                            <Plus className="w-5 h-5" />
+                            Add Coach
+                          </button>
+                        </div>
                       </div>
 
                       <div className="mb-6">
@@ -571,13 +716,49 @@ export default function AdminDashboard() {
                               />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium mb-1">Image URL</label>
-                              <input
-                                type="text"
-                                value={coachForm.image_url}
-                                onChange={(e) => setCoachForm({ ...coachForm, image_url: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg"
-                              />
+                              <label className="block text-sm font-medium mb-1">Profile Image</label>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-4">
+                                  <label className="flex-1 cursor-pointer">
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={handleCoachImageChange}
+                                      className="hidden"
+                                      disabled={coachImageUploading}
+                                    />
+                                    <div className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                      <Upload className="w-5 h-5 text-gray-500" />
+                                      <span className="text-sm text-gray-600">
+                                        {coachImageUploading ? "Uploading..." : coachImageFile ? "Change Image" : "Upload Image"}
+                                      </span>
+                                    </div>
+                                  </label>
+                                </div>
+                                {(coachImagePreview || coachForm.image_url) && (
+                                  <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200">
+                                    <img
+                                      src={coachImagePreview || coachForm.image_url}
+                                      alt="Preview"
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setCoachImagePreview("");
+                                        setCoachImageFile(null);
+                                        setCoachForm({ ...coachForm, image_url: "" });
+                                      }}
+                                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                    >
+                                      <XIcon className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                )}
+                                {coachForm.image_url && !coachImagePreview && (
+                                  <p className="text-xs text-gray-500">Current image: {coachForm.image_url}</p>
+                                )}
+                              </div>
                             </div>
                             <div className="flex gap-3">
                               <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
@@ -606,6 +787,8 @@ export default function AdminDashboard() {
                             setShowVideoForm(true);
                             setEditingItem(null);
                             setVideoForm({ title: "", description: "", video_url: "", thumbnail_url: "", bio: "", price: 0, discount: false, discount_percentage: 0 });
+                            setVideoThumbnailPreview("");
+                            setVideoThumbnailFile(null);
                           }}
                           className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
                         >
@@ -709,13 +892,49 @@ export default function AdminDashboard() {
                               />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium mb-1">Thumbnail URL</label>
-                              <input
-                                type="text"
-                                value={videoForm.thumbnail_url}
-                                onChange={(e) => setVideoForm({ ...videoForm, thumbnail_url: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg"
-                              />
+                              <label className="block text-sm font-medium mb-1">Thumbnail Image</label>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-4">
+                                  <label className="flex-1 cursor-pointer">
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={handleVideoThumbnailChange}
+                                      className="hidden"
+                                      disabled={videoThumbnailUploading}
+                                    />
+                                    <div className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                      <Upload className="w-5 h-5 text-gray-500" />
+                                      <span className="text-sm text-gray-600">
+                                        {videoThumbnailUploading ? "Uploading..." : videoThumbnailFile ? "Change Image" : "Upload Thumbnail"}
+                                      </span>
+                                    </div>
+                                  </label>
+                                </div>
+                                {(videoThumbnailPreview || videoForm.thumbnail_url) && (
+                                  <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200">
+                                    <img
+                                      src={videoThumbnailPreview || videoForm.thumbnail_url}
+                                      alt="Preview"
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setVideoThumbnailPreview("");
+                                        setVideoThumbnailFile(null);
+                                        setVideoForm({ ...videoForm, thumbnail_url: "" });
+                                      }}
+                                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                    >
+                                      <XIcon className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                )}
+                                {videoForm.thumbnail_url && !videoThumbnailPreview && (
+                                  <p className="text-xs text-gray-500">Current thumbnail: {videoForm.thumbnail_url}</p>
+                                )}
+                              </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
@@ -917,32 +1136,62 @@ export default function AdminDashboard() {
                     <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6">
                       <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-bold text-gray-800">Training Programs Management</h2>
-                        <button
-                          onClick={() => {
-                            setShowProgramForm(true);
-                            setEditingItem(null);
-                            setProgramForm({ 
-                              name: "", 
-                              description: "", 
-                              duration: "", 
-                              schedule: [], 
-                              exercises: [], 
-                              price: 0, 
-                              discount: false, 
-                              discount_percentage: 0,
-                              goal: "muscle_building",
-                              level: "All Levels",
-                              equipment: [],
-                              coach_recommendation: "",
-                              coach_id: "",
-                              overview: ""
-                            });
-                          }}
-                          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
-                        >
-                          <Plus className="w-5 h-5" />
-                          Add Program
-                        </button>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={async () => {
+                              if (!confirm("This will create 12+ sample programs. Continue?")) return;
+                              setLoading(true);
+                              try {
+                                const res = await fetch("/api/test-db/create-sample-programs", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" }
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  alert(`✅ Successfully created ${data.programsCreated} sample programs!`);
+                                  fetchData();
+                                } else {
+                                  alert(`Error: ${data.error || data.message}`);
+                                }
+                              } catch (error) {
+                                console.error("Error creating sample programs:", error);
+                                alert("Error creating sample programs. Check console for details.");
+                              } finally {
+                                setLoading(false);
+                              }
+                            }}
+                            className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                          >
+                            <Plus className="w-5 h-5" />
+                            Create Sample Programs
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowProgramForm(true);
+                              setEditingItem(null);
+                              setProgramForm({ 
+                                name: "", 
+                                description: "", 
+                                duration: "", 
+                                schedule: [], 
+                                exercises: [], 
+                                price: 0, 
+                                discount: false, 
+                                discount_percentage: 0,
+                                goal: "muscle_building",
+                                level: "All Levels",
+                                equipment: [],
+                                coach_recommendation: "",
+                                coach_id: "",
+                                overview: ""
+                              });
+                            }}
+                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                          >
+                            <Plus className="w-5 h-5" />
+                            Add Program
+                          </button>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
