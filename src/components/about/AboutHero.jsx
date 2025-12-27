@@ -103,7 +103,12 @@ export default function AboutHero() {
             <p className="text-white text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
               Transforming fitness through AI-powered movement intelligence
             </p>
-            <div className="w-24 h-1 bg-[#6BB371] mx-auto animate-pulse" />
+            <motion.div
+              initial={{ width: 0 }}
+              animate={isVisible["hero"] ? { width: 96 } : { width: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="h-1 bg-[#6BB371] mx-auto"
+            />
           </div>
         </div>
         <div 
