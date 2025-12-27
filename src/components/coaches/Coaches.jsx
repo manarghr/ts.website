@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import Card from "./Cardes";
 import Image from "next/image";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
@@ -185,16 +186,18 @@ export default function Coaches() {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 text-center">
-          <div className="inline-block mb-6 px-4 py-2 bg-[#52796F]/30 backdrop-blur-sm border border-[#6BB371]/30 rounded-full text-sm font-medium">
-            Expert Trainers
-          </div>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold uppercase tracking-wide mb-4 animate-fadeInUp">
-            MEET OUR
-            <span className="block text-[#6BB371] mt-2">COACHES</span>
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 animate-fadeInUp">
+            Meet Our <span className="text-[#6F8676]">Coaches</span>
           </h1>
-          <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
+          <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto animate-fadeInUp mb-8" style={{ animationDelay: '0.2s' }}>
             Professional trainers dedicated to your fitness journey
           </p>
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: 96 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="h-1 bg-[#6BB371] mx-auto"
+          />
         </div>
       </section>
 
