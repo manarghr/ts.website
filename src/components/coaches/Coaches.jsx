@@ -190,7 +190,7 @@ export default function Coaches() {
           </div>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold uppercase tracking-wide mb-4 animate-fadeInUp">
             MEET OUR
-            <span className="block text-[#6BB371] mt-2">COACHES</span>
+            <span className="block text-[#6F8676] mt-2">COACHES</span>
           </h1>
           <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
             Professional trainers dedicated to your fitness journey
