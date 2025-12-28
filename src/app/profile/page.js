@@ -25,6 +25,10 @@ import {
   Zap,
   MessageSquare,
   Trash2,
+  Coffee,
+  Sun,
+  Moon,
+  Cookie,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -1627,16 +1631,58 @@ export default function ProfilePage({ userId }) {
                   </div>
                   {isContentVisible("meals") ? (
                     profileUser?.favoriteMeals && profileUser.favoriteMeals.length > 0 ? (
-                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {profileUser.favoriteMeals.map((meal, index) => (
-                          <motion.div
-                            key={meal.id || index}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            whileHover={{ scale: 1.02, y: -5 }}
-                            className="bg-white rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
-                          >
+                      <div className="space-y-8">
+                        {(() => {
+                          // Group meals by category
+                          const mealsByCategory = {
+                            breakfast: profileUser.favoriteMeals.filter(m => m.mealType === "breakfast"),
+                            lunch: profileUser.favoriteMeals.filter(m => m.mealType === "lunch"),
+                            dinner: profileUser.favoriteMeals.filter(m => m.mealType === "dinner"),
+                            snacks: profileUser.favoriteMeals.filter(m => m.mealType === "snacks"),
+                          };
+
+                          const categoryConfig = [
+                            { id: "breakfast", label: "Breakfast", icon: Coffee, color: "from-orange-500 to-amber-600" },
+                            { id: "lunch", label: "Lunch", icon: Sun, color: "from-yellow-500 to-orange-500" },
+                            { id: "dinner", label: "Dinner", icon: Moon, color: "from-purple-500 to-indigo-600" },
+                            { id: "snacks", label: "Snacks", icon: Cookie, color: "from-pink-500 to-rose-600" },
+                          ];
+
+                          return categoryConfig.map((category) => {
+                            const categoryMeals = mealsByCategory[category.id];
+                            if (!categoryMeals || categoryMeals.length === 0) return null;
+
+                            const Icon = category.icon;
+                            return (
+                              <div key={category.id} className="space-y-4">
+                                {/* Category Header */}
+                                <motion.div
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  className="flex items-center gap-3 pb-2 border-b-2 border-slate-200"
+                                >
+                                  <div className={`p-2 rounded-lg bg-gradient-to-r ${category.color} shadow-lg`}>
+                                    <Icon className="w-6 h-6 text-white" />
+                                  </div>
+                                  <h4 className="text-2xl font-bold text-slate-800">
+                                    {category.label}
+                                  </h4>
+                                  <span className="text-sm text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                                    {categoryMeals.length} {categoryMeals.length === 1 ? 'meal' : 'meals'}
+                                  </span>
+                                </motion.div>
+
+                                {/* Meals Grid */}
+                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                  {categoryMeals.map((meal, index) => (
+                                    <motion.div
+                                      key={meal.id || index}
+                                      initial={{ opacity: 0, y: 20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: index * 0.05 }}
+                                      whileHover={{ scale: 1.02, y: -5 }}
+                                      className="bg-white rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+                                    >
                             {/* Meal Image */}
                             {meal.image && (
                               <div className="relative h-48 overflow-hidden">
@@ -1756,9 +1802,14 @@ export default function ProfilePage({ userId }) {
                                   )}
                                 </div>
                               )}
-                            </div>
-                          </motion.div>
-                        ))}
+                                    </div>
+                                  </motion.div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     ) : (
                       <motion.div 
