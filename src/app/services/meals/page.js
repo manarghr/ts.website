@@ -101,7 +101,8 @@ export default function MealsPage() {
     { id: "snacks", label: "Snacks", icon: Cookie },
   ];
 
-  const meals = [
+  // Default meals
+  const defaultMeals = [
     // Breakfast Meals
     {
       id: 1,
@@ -347,6 +348,57 @@ export default function MealsPage() {
       description: "Balanced snack with healthy fats"
     },
   ];
+
+  // Load meals from localStorage (admin-added meals) and merge with default meals
+  const [meals, setMeals] = useState(() => {
+    if (typeof window !== "undefined") {
+      const adminMeals = localStorage.getItem("admin_meals");
+      if (adminMeals) {
+        try {
+          const parsedAdminMeals = JSON.parse(adminMeals);
+          // Merge admin meals with default meals, avoiding duplicates by id
+          const existingIds = new Set(parsedAdminMeals.map(m => m.id));
+          const uniqueDefaultMeals = defaultMeals.filter(m => !existingIds.has(m.id));
+          return [...parsedAdminMeals, ...uniqueDefaultMeals];
+        } catch (error) {
+          console.error("Error parsing admin meals:", error);
+          return defaultMeals;
+        }
+      }
+    }
+    return defaultMeals;
+  });
+
+  // Update meals when admin_meals changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const handleStorageChange = () => {
+        const adminMeals = localStorage.getItem("admin_meals");
+        if (adminMeals) {
+          try {
+            const parsedAdminMeals = JSON.parse(adminMeals);
+            const existingIds = new Set(parsedAdminMeals.map(m => m.id));
+            const uniqueDefaultMeals = defaultMeals.filter(m => !existingIds.has(m.id));
+            setMeals([...parsedAdminMeals, ...uniqueDefaultMeals]);
+          } catch (error) {
+            console.error("Error parsing admin meals:", error);
+          }
+        } else {
+          setMeals(defaultMeals);
+        }
+      };
+
+      window.addEventListener("storage", handleStorageChange);
+      // Also listen for custom event when meals are updated
+      window.addEventListener("mealsUpdated", handleStorageChange);
+      
+      return () => {
+        window.removeEventListener("storage", handleStorageChange);
+        window.removeEventListener("mealsUpdated", handleStorageChange);
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredMeals = meals.filter(meal => {
     const matchesSearch = meal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

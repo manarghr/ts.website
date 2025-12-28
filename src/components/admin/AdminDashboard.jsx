@@ -18,23 +18,35 @@ import {
   LogOut,
   Upload,
   Image as ImageIcon,
+  TrendingUp,
+  UserPlus,
+  Activity,
+  BarChart3,
+  Cookie,
+  Coffee,
+  Sun,
+  Moon,
+  Clock,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AdminDashboard() {
-  const [activeSection, setActiveSection] = useState("users");
+  const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [users, setUsers] = useState([]);
   const [coaches, setCoaches] = useState([]);
   const [videos, setVideos] = useState([]);
-  const [nutritionPlans, setNutritionPlans] = useState([]);
   const [programs, setPrograms] = useState([]);
+  const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statsLoading, setStatsLoading] = useState(true);
   
   // Form states
   const [showCoachForm, setShowCoachForm] = useState(false);
   const [showVideoForm, setShowVideoForm] = useState(false);
-  const [showNutritionForm, setShowNutritionForm] = useState(false);
+  const [showMealForm, setShowMealForm] = useState(false);
+  const [ingredientInput, setIngredientInput] = useState("");
   const [showProgramForm, setShowProgramForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   
@@ -49,12 +61,63 @@ export default function AdminDashboard() {
   // Form data
   const [coachForm, setCoachForm] = useState({ id: "", name: "", category: "", bio: "", image_url: "" });
   const [videoForm, setVideoForm] = useState({ title: "", description: "", video_url: "", thumbnail_url: "", bio: "", price: 0, discount: false, discount_percentage: 0 });
-  const [nutritionForm, setNutritionForm] = useState({ name: "", description: "", duration: "", meals: [], price: 0, discount: false, discount_percentage: 0 });
+  const [mealForm, setMealForm] = useState({ 
+    id: "", 
+    name: "", 
+    mealType: "breakfast", 
+    goal: "all", 
+    calories: 0, 
+    protein: 0, 
+    carbs: 0, 
+    fats: 0, 
+    fiber: 0, 
+    ingredients: [], 
+    image: "", 
+    prepTime: "", 
+    description: "" 
+  });
   const [programForm, setProgramForm] = useState({ name: "", description: "", duration: "", schedule: [], exercises: [], price: 0, discount: false, discount_percentage: 0 });
 
   useEffect(() => {
-    fetchData();
+    if (activeSection === "dashboard") {
+      fetchStats();
+    } else {
+      fetchData();
+    }
   }, [activeSection]);
+
+  const fetchStats = async () => {
+    setStatsLoading(true);
+    try {
+      // Fetch all data for stats
+      const [usersRes, coachesRes, videosRes, programsRes] = await Promise.all([
+        fetch("/api/admin/users"),
+        fetch("/api/coaches"),
+        fetch("/api/admin/videos"),
+        fetch("/api/admin/programs"),
+      ]);
+      
+      const usersData = await usersRes.json();
+      const coachesData = await coachesRes.json();
+      const videosData = await videosRes.json();
+      const programsData = await programsRes.json();
+      
+      if (usersData.success) setUsers(usersData.users || []);
+      if (coachesData.success) setCoaches(coachesData.coaches || []);
+      if (videosData.success) setVideos(videosData.videos || []);
+      if (programsData.success) setPrograms(programsData.programs || []);
+      
+      // Load meals from localStorage
+      const storedMeals = localStorage.getItem("admin_meals");
+      if (storedMeals) {
+        setMeals(JSON.parse(storedMeals));
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -71,14 +134,24 @@ export default function AdminDashboard() {
         const res = await fetch("/api/admin/videos");
         const data = await res.json();
         if (data.success) setVideos(data.videos || []);
-      } else if (activeSection === "nutrition") {
-        const res = await fetch("/api/admin/nutrition");
-        const data = await res.json();
-        if (data.success) setNutritionPlans(data.plans || []);
       } else if (activeSection === "programs") {
         const res = await fetch("/api/admin/programs");
         const data = await res.json();
         if (data.success) setPrograms(data.programs || []);
+      } else if (activeSection === "meals") {
+        // Meals are stored in localStorage, fetch from there
+        const allUsers = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
+        const allMeals = [];
+        allUsers.forEach(user => {
+          if (user.favoriteMeals && Array.isArray(user.favoriteMeals)) {
+            user.favoriteMeals.forEach(meal => {
+              if (!allMeals.find(m => m.id === meal.id)) {
+                allMeals.push(meal);
+              }
+            });
+          }
+        });
+        setMeals(allMeals);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -293,53 +366,84 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleAddNutrition = async (e) => {
+  const handleAddMeal = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/admin/nutrition", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nutritionForm),
+      // Generate a unique numeric ID that doesn't conflict with default meals (1-16)
+      // Use numeric ID starting from 10000 to avoid conflicts
+      const existingIds = meals.map(m => typeof m.id === 'number' ? m.id : parseInt(m.id) || 0);
+      const maxId = Math.max(10000, ...existingIds, Date.now());
+      const newMeal = {
+        ...mealForm,
+        id: mealForm.id || (maxId + 1),
+      };
+      const updatedMeals = [...meals, newMeal];
+      setMeals(updatedMeals);
+      localStorage.setItem("admin_meals", JSON.stringify(updatedMeals));
+      setShowMealForm(false);
+      setMealForm({ 
+        id: "", 
+        name: "", 
+        mealType: "breakfast", 
+        goal: "all", 
+        calories: 0, 
+        protein: 0, 
+        carbs: 0, 
+        fats: 0, 
+        fiber: 0, 
+        ingredients: [], 
+        image: "", 
+        prepTime: "", 
+        description: "" 
       });
-      const data = await res.json();
-      if (data.success) {
-        setShowNutritionForm(false);
-        setNutritionForm({ name: "", description: "", duration: "", meals: [], price: 0, discount: false, discount_percentage: 0 });
-        fetchData();
-      }
+      setIngredientInput("");
+      fetchData();
     } catch (error) {
-      console.error("Error adding nutrition plan:", error);
+      console.error("Error adding meal:", error);
     }
   };
 
-  const handleUpdateNutrition = async (e) => {
+  const handleUpdateMeal = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/admin/nutrition", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...nutritionForm, id: editingItem.id }),
+      const updatedMeals = meals.map(m => m.id === editingItem.id ? mealForm : m);
+      setMeals(updatedMeals);
+      localStorage.setItem("admin_meals", JSON.stringify(updatedMeals));
+      window.dispatchEvent(new Event("mealsUpdated"));
+      setShowMealForm(false);
+      setEditingItem(null);
+      setMealForm({ 
+        id: "", 
+        name: "", 
+        mealType: "breakfast", 
+        goal: "all", 
+        calories: 0, 
+        protein: 0, 
+        carbs: 0, 
+        fats: 0, 
+        fiber: 0, 
+        ingredients: [], 
+        image: "", 
+        prepTime: "", 
+        description: "" 
       });
-      const data = await res.json();
-      if (data.success) {
-        setShowNutritionForm(false);
-        setEditingItem(null);
-        setNutritionForm({ name: "", description: "", duration: "", meals: [], price: 0, discount: false, discount_percentage: 0 });
-        fetchData();
-      }
+      setIngredientInput("");
+      fetchData();
     } catch (error) {
-      console.error("Error updating nutrition plan:", error);
+      console.error("Error updating meal:", error);
     }
   };
 
-  const handleDeleteNutrition = async (id) => {
-    if (!confirm("Are you sure you want to delete this nutrition plan?")) return;
+  const handleDeleteMeal = async (id) => {
+    if (!confirm("Are you sure you want to delete this meal?")) return;
     try {
-      const res = await fetch(`/api/admin/nutrition?id=${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) fetchData();
+      const updatedMeals = meals.filter(m => m.id !== id);
+      setMeals(updatedMeals);
+      localStorage.setItem("admin_meals", JSON.stringify(updatedMeals));
+      window.dispatchEvent(new Event("mealsUpdated"));
+      fetchData();
     } catch (error) {
-      console.error("Error deleting nutrition plan:", error);
+      console.error("Error deleting meal:", error);
     }
   };
 
@@ -409,10 +513,25 @@ export default function AdminDashboard() {
     setShowVideoForm(true);
   };
 
-  const openEditNutrition = (plan) => {
-    setEditingItem(plan);
-    setNutritionForm({ name: plan.name, description: plan.description, duration: plan.duration || "", meals: plan.meals || [], price: plan.price || 0, discount: plan.discount || false, discount_percentage: plan.discount_percentage || 0 });
-    setShowNutritionForm(true);
+  const openEditMeal = (meal) => {
+    setEditingItem(meal);
+    setMealForm({ 
+      id: meal.id,
+      name: meal.name || "", 
+      mealType: meal.mealType || "breakfast", 
+      goal: meal.goal || "all", 
+      calories: meal.calories || 0, 
+      protein: meal.protein || 0, 
+      carbs: meal.carbs || 0, 
+      fats: meal.fats || 0, 
+      fiber: meal.fiber || 0, 
+      ingredients: meal.ingredients || [], 
+      image: meal.image || "", 
+      prepTime: meal.prepTime || "", 
+      description: meal.description || "" 
+    });
+    setIngredientInput("");
+    setShowMealForm(true);
   };
 
   const openEditProgram = (program) => {
@@ -427,38 +546,54 @@ export default function AdminDashboard() {
   );
 
   const menuItems = [
+    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
     { id: "users", label: "Users", icon: Users },
     { id: "coaches", label: "Coaches", icon: UserCog },
     { id: "videos", label: "Videos", icon: Video },
-    { id: "nutrition", label: "Nutrition", icon: UtensilsCrossed },
+    { id: "meals", label: "Meals", icon: Cookie },
     { id: "programs", label: "Programs", icon: Dumbbell },
   ];
 
+  // Calculate stats
+  const stats = {
+    totalUsers: users.length,
+    newUsersToday: users.filter(u => {
+      if (!u.createdAt) return false;
+      const today = new Date();
+      const userDate = new Date(u.createdAt);
+      return userDate.toDateString() === today.toDateString();
+    }).length,
+    totalCoaches: coaches.length,
+    totalVideos: videos.length,
+    totalPrograms: programs.length,
+    totalMeals: meals.length,
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 relative overflow-hidden">
+    <div className="fixed inset-0 bg-white relative overflow-hidden h-screen w-screen">
       {/* Animated background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400 opacity-10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-400 opacity-10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-400 opacity-5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-20 right-20 w-96 h-96 bg-[#6BB371]/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#52796F]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#354F52]/5 rounded-full blur-3xl animate-pulse-glow"></div>
       </div>
 
-      <div className="flex relative z-10">
+      <div className="flex relative z-10 h-full">
         {/* Sidebar */}
-        <div className={`bg-white/90 backdrop-blur-sm shadow-xl transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0"} overflow-hidden`}>
-          <div className="p-6 border-b border-gray-200">
+        <div className={`bg-gradient-to-b from-[#354F52] to-[#2F3E46] shadow-xl transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0"} overflow-hidden flex flex-col h-full`}>
+          <div className="p-6 border-b border-[#52796F]/30 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <Dumbbell className="w-6 h-6 text-blue-600" />
-                Admin Panel
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Dumbbell className="w-6 h-6 text-[#6BB371]" />
+                TrainSight Admin
               </h2>
-              <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
-                <X className="w-5 h-5 text-gray-600" />
+              <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/70 hover:text-white">
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          <nav className="p-4 space-y-2 pb-24">
+          <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
             {menuItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -470,8 +605,8 @@ export default function AdminDashboard() {
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     activeSection === item.id
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white shadow-lg"
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -481,11 +616,10 @@ export default function AdminDashboard() {
             })}
           </nav>
 
-          <div className="absolute bottom-4 left-4 right-4">
-            <div className="border-t border-gray-200 pt-4 mb-4"></div>
+          <div className="border-t border-[#52796F]/30 p-4 flex-shrink-0">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 border border-red-200 hover:border-red-300"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-500/20 text-white/90 hover:bg-red-500/30 hover:text-white transition-all duration-200 border border-red-500/30 hover:border-red-500/50"
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Logout</span>
@@ -494,25 +628,145 @@ export default function AdminDashboard() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-x-hidden">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto bg-white h-full">
           {/* Header */}
-          <div className="bg-white/90 backdrop-blur-sm shadow-md p-4 flex items-center justify-between">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden">
-              <Menu className="w-6 h-6 text-gray-700" />
+          <div className="bg-gradient-to-r from-[#354F52] to-[#52796F] shadow-md p-4 flex items-center justify-between">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-white">
+              <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-2xl font-bold text-gray-800 capitalize">
+            <h1 className="text-2xl font-bold text-white capitalize">
               {menuItems.find((m) => m.id === activeSection)?.label || "Dashboard"}
             </h1>
             <div className="w-6"></div>
           </div>
 
           <div className="p-6">
-            {loading ? (
+            {loading || statsLoading ? (
               <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#6BB371]"></div>
               </div>
             ) : (
               <>
+                {/* Dashboard Stats Section */}
+                {activeSection === "dashboard" && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-xl p-6 text-white shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-white/20 rounded-lg">
+                            <Users className="w-6 h-6" />
+                          </div>
+                          <TrendingUp className="w-5 h-5 text-[#6BB371]" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-1">{stats.totalUsers}</h3>
+                        <p className="text-white/80 text-sm">Total Users</p>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-gradient-to-br from-[#6BB371] to-[#52796F] rounded-xl p-6 text-white shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-white/20 rounded-lg">
+                            <UserPlus className="w-6 h-6" />
+                          </div>
+                          <Activity className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-1">{stats.newUsersToday}</h3>
+                        <p className="text-white/80 text-sm">New Users Today</p>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-gradient-to-br from-[#354F52] to-[#2F3E46] rounded-xl p-6 text-white shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-white/20 rounded-lg">
+                            <UserCog className="w-6 h-6" />
+                          </div>
+                          <TrendingUp className="w-5 h-5 text-[#6BB371]" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-1">{stats.totalCoaches}</h3>
+                        <p className="text-white/80 text-sm">Total Coaches</p>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-gradient-to-br from-[#52796F] to-[#6BB371] rounded-xl p-6 text-white shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-white/20 rounded-lg">
+                            <Video className="w-6 h-6" />
+                          </div>
+                          <Activity className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-1">{stats.totalVideos}</h3>
+                        <p className="text-white/80 text-sm">Total Videos</p>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="bg-gradient-to-br from-[#6BB371] to-[#52796F] rounded-xl p-6 text-white shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-white/20 rounded-lg">
+                            <Cookie className="w-6 h-6" />
+                          </div>
+                          <TrendingUp className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-1">{stats.totalMeals}</h3>
+                        <p className="text-white/80 text-sm">Total Meals</p>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-xl p-6 text-white shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-white/20 rounded-lg">
+                            <Dumbbell className="w-6 h-6" />
+                          </div>
+                          <Activity className="w-5 h-5 text-[#6BB371]" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-1">{stats.totalPrograms}</h3>
+                        <p className="text-white/80 text-sm">Total Programs</p>
+                      </motion.div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                      <h2 className="text-xl font-bold text-[#354F52] mb-4">Quick Actions</h2>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {menuItems.filter(item => item.id !== "dashboard").map((item) => {
+                          const Icon = item.icon;
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => setActiveSection(item.id)}
+                              className="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#52796F]/10 to-[#354F52]/10 rounded-lg hover:from-[#52796F]/20 hover:to-[#354F52]/20 transition-all border border-[#52796F]/20 hover:border-[#6BB371]/40"
+                            >
+                              <Icon className="w-6 h-6 text-[#52796F]" />
+                              <span className="text-sm font-medium text-[#354F52]">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {/* Users Section */}
                 {activeSection === "users" && (
                   <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6">
@@ -590,7 +844,7 @@ export default function AdminDashboard() {
                                 setLoading(false);
                               }
                             }}
-                            className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                            className="flex items-center gap-2 bg-gradient-to-r from-[#6BB371] to-[#52796F] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#6BB371]/30 transition-all"
                           >
                             <Plus className="w-5 h-5" />
                             Create Sample Coaches
@@ -601,7 +855,7 @@ export default function AdminDashboard() {
                               setEditingItem(null);
                               setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" });
                             }}
-                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                            className="flex items-center gap-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#52796F]/30 transition-all"
                           >
                             <Plus className="w-5 h-5" />
                             Add Coach
@@ -617,7 +871,7 @@ export default function AdminDashboard() {
                             placeholder="Search coaches by name or bio..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                           />
                         </div>
                       </div>
@@ -644,7 +898,7 @@ export default function AdminDashboard() {
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => openEditCoach(coach)}
-                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                    className="p-2 text-[#52796F] hover:bg-[#52796F]/10 rounded transition-colors"
                                   >
                                     <Edit className="w-4 h-4" />
                                   </button>
@@ -790,7 +1044,7 @@ export default function AdminDashboard() {
                             setVideoThumbnailPreview("");
                             setVideoThumbnailFile(null);
                           }}
-                          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                          className="flex items-center gap-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#52796F]/30 transition-all"
                         >
                           <Plus className="w-5 h-5" />
                           Add Video
@@ -820,7 +1074,7 @@ export default function AdminDashboard() {
                               <div className="flex gap-2 mt-3">
                                 <button
                                   onClick={() => openEditVideo(video)}
-                                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#52796F]/10 text-[#52796F] rounded hover:bg-[#52796F]/20 transition-colors"
                                 >
                                   <Edit className="w-4 h-4" />
                                   Edit
@@ -983,143 +1237,262 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
-                {/* Nutrition Section */}
-                {activeSection === "nutrition" && (
+                {/* Meals Section */}
+                {activeSection === "meals" && (
                   <div className="space-y-6">
-                    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-6">
+                    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                       <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-gray-800">Nutrition Plans Management</h2>
-                        <button
-                          onClick={() => {
-                            setShowNutritionForm(true);
-                            setEditingItem(null);
-                            setNutritionForm({ name: "", description: "", duration: "", meals: [], price: 0, discount: false, discount_percentage: 0 });
-                          }}
-                          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
-                        >
-                          <Plus className="w-5 h-5" />
-                          Add Plan
-                        </button>
+                        <h2 className="text-xl font-bold text-[#354F52]">Meals Management</h2>
+                        <div className="text-sm text-gray-600">Total: {meals.length}</div>
+                      </div>
+
+                      <div className="mb-6">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Search meals by name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                          />
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {nutritionPlans.map((plan, idx) => (
-                          <div key={plan.id || idx} className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all">
-                            <h3 className="font-bold text-lg mb-2">{plan.name}</h3>
-                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{plan.description}</p>
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="text-lg font-bold text-blue-600">
-                                ${plan.discount ? (plan.price * (1 - plan.discount_percentage / 100)).toFixed(2) : plan.price}
-                                {plan.discount && <span className="text-xs text-gray-400 line-through ml-2">${plan.price}</span>}
-                              </span>
-                              {plan.discount && (
-                                <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
-                                  {plan.discount_percentage}% OFF
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => openEditNutrition(plan)}
-                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
-                              >
-                                <Edit className="w-4 h-4" />
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteNutrition(plan.id)}
-                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                              </button>
+                        {meals.filter(meal => 
+                          meal.name?.toLowerCase().includes(searchTerm.toLowerCase())
+                        ).map((meal, idx) => (
+                          <div key={meal.id || idx} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-200">
+                            {meal.image && (
+                              <div className="h-48 overflow-hidden">
+                                <img src={meal.image} alt={meal.name} className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                            <div className="p-4">
+                              <h3 className="font-bold text-lg text-[#354F52] mb-2">{meal.name}</h3>
+                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">{meal.description || "No description"}</p>
+                              <div className="flex items-center gap-2 mb-3">
+                                {meal.calories && (
+                                  <span className="px-2 py-1 bg-[#6BB371]/10 text-[#52796F] rounded text-xs font-medium">
+                                    {meal.calories} cal
+                                  </span>
+                                )}
+                                {meal.mealType && (
+                                  <span className="px-2 py-1 bg-[#52796F]/10 text-[#354F52] rounded text-xs font-medium capitalize">
+                                    {meal.mealType}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => openEditMeal(meal)}
+                                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#52796F]/10 text-[#52796F] rounded hover:bg-[#52796F]/20 transition-colors"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMeal(meal.id)}
+                                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))}
                       </div>
-                      {nutritionPlans.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">No nutrition plans found</div>
+                      {meals.length === 0 && (
+                        <div className="text-center py-12 text-gray-500">No meals found. Click "Add Meal" to create your first meal.</div>
                       )}
                     </div>
 
-                    {/* Nutrition Form Modal */}
-                    {showNutritionForm && (
+                    {/* Meal Form Modal */}
+                    {showMealForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-bold">{editingItem ? "Edit Nutrition Plan" : "Add New Nutrition Plan"}</h3>
-                            <button onClick={() => { setShowNutritionForm(false); setEditingItem(null); }}>
+                            <h3 className="text-xl font-bold text-[#354F52]">{editingItem ? "Edit Meal" : "Add New Meal"}</h3>
+                            <button onClick={() => { setShowMealForm(false); setEditingItem(null); }}>
                               <XIcon className="w-6 h-6 text-gray-600" />
                             </button>
                           </div>
-                          <form onSubmit={editingItem ? handleUpdateNutrition : handleAddNutrition} className="space-y-4">
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Name</label>
-                              <input
-                                type="text"
-                                value={nutritionForm.name}
-                                onChange={(e) => setNutritionForm({ ...nutritionForm, name: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg"
-                                required
-                              />
+                          <form onSubmit={editingItem ? handleUpdateMeal : handleAddMeal} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Meal Name</label>
+                                <input
+                                  type="text"
+                                  value={mealForm.name}
+                                  onChange={(e) => setMealForm({ ...mealForm, name: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Meal Type</label>
+                                <select
+                                  value={mealForm.mealType}
+                                  onChange={(e) => setMealForm({ ...mealForm, mealType: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                >
+                                  <option value="breakfast">Breakfast</option>
+                                  <option value="lunch">Lunch</option>
+                                  <option value="dinner">Dinner</option>
+                                  <option value="snacks">Snacks</option>
+                                </select>
+                              </div>
                             </div>
                             <div>
-                              <label className="block text-sm font-medium mb-1">Description</label>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Description</label>
                               <textarea
-                                value={nutritionForm.description}
-                                onChange={(e) => setNutritionForm({ ...nutritionForm, description: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg"
-                                rows="4"
+                                value={mealForm.description}
+                                onChange={(e) => setMealForm({ ...mealForm, description: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                rows="3"
                                 required
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Duration</label>
-                              <input
-                                type="text"
-                                value={nutritionForm.duration}
-                                onChange={(e) => setNutritionForm({ ...nutritionForm, duration: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg"
-                                placeholder="e.g., 30 days, 3 months"
                               />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-sm font-medium mb-1">Price ($)</label>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Calories</label>
                                 <input
                                   type="number"
-                                  step="0.01"
-                                  value={nutritionForm.price}
-                                  onChange={(e) => setNutritionForm({ ...nutritionForm, price: parseFloat(e.target.value) || 0 })}
-                                  className="w-full px-3 py-2 border rounded-lg"
+                                  value={mealForm.calories}
+                                  onChange={(e) => setMealForm({ ...mealForm, calories: parseInt(e.target.value) || 0 })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-1">Discount %</label>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Prep Time</label>
                                 <input
-                                  type="number"
-                                  value={nutritionForm.discount_percentage}
-                                  onChange={(e) => setNutritionForm({ ...nutritionForm, discount_percentage: parseFloat(e.target.value) || 0 })}
-                                  className="w-full px-3 py-2 border rounded-lg"
-                                  disabled={!nutritionForm.discount}
+                                  type="text"
+                                  value={mealForm.prepTime}
+                                  onChange={(e) => setMealForm({ ...mealForm, prepTime: e.target.value })}
+                                  placeholder="e.g., 10 min"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                 />
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="grid grid-cols-4 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Protein (g)</label>
+                                <input
+                                  type="number"
+                                  value={mealForm.protein}
+                                  onChange={(e) => setMealForm({ ...mealForm, protein: parseInt(e.target.value) || 0 })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Carbs (g)</label>
+                                <input
+                                  type="number"
+                                  value={mealForm.carbs}
+                                  onChange={(e) => setMealForm({ ...mealForm, carbs: parseInt(e.target.value) || 0 })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Fats (g)</label>
+                                <input
+                                  type="number"
+                                  value={mealForm.fats}
+                                  onChange={(e) => setMealForm({ ...mealForm, fats: parseInt(e.target.value) || 0 })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Fiber (g)</label>
+                                <input
+                                  type="number"
+                                  value={mealForm.fiber}
+                                  onChange={(e) => setMealForm({ ...mealForm, fiber: parseInt(e.target.value) || 0 })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Goal</label>
+                              <select
+                                value={mealForm.goal}
+                                onChange={(e) => setMealForm({ ...mealForm, goal: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                              >
+                                <option value="all">All Goals</option>
+                                <option value="lose-weight">Lose Weight</option>
+                                <option value="gain-weight">Gain Weight</option>
+                                <option value="muscle-gain">Muscle Gain</option>
+                                <option value="maintenance">Maintenance</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Image URL</label>
                               <input
-                                type="checkbox"
-                                checked={nutritionForm.discount}
-                                onChange={(e) => setNutritionForm({ ...nutritionForm, discount: e.target.checked })}
-                                className="w-4 h-4"
+                                type="text"
+                                value={mealForm.image}
+                                onChange={(e) => setMealForm({ ...mealForm, image: e.target.value })}
+                                placeholder="https://images.unsplash.com/..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                               />
-                              <label className="text-sm font-medium">Has Discount</label>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Ingredients</label>
+                              <div className="flex gap-2 mb-2">
+                                <input
+                                  type="text"
+                                  value={ingredientInput}
+                                  onChange={(e) => setIngredientInput(e.target.value)}
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      if (ingredientInput.trim()) {
+                                        setMealForm({ ...mealForm, ingredients: [...mealForm.ingredients, ingredientInput.trim()] });
+                                        setIngredientInput("");
+                                      }
+                                    }
+                                  }}
+                                  placeholder="Add ingredient and press Enter"
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (ingredientInput.trim()) {
+                                      setMealForm({ ...mealForm, ingredients: [...mealForm.ingredients, ingredientInput.trim()] });
+                                      setIngredientInput("");
+                                    }
+                                  }}
+                                  className="px-4 py-2 bg-[#52796F] text-white rounded-lg hover:bg-[#6BB371] transition-colors"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {mealForm.ingredients.map((ing, idx) => (
+                                  <span key={idx} className="px-3 py-1 bg-[#52796F]/10 text-[#354F52] rounded-full text-sm flex items-center gap-2">
+                                    {ing}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setMealForm({ ...mealForm, ingredients: mealForm.ingredients.filter((_, i) => i !== idx) });
+                                      }}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      <XIcon className="w-3 h-3" />
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                             <div className="flex gap-3">
-                              <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                              <button type="submit" className="flex-1 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white py-2 rounded-lg hover:from-[#6BB371] hover:to-[#52796F] transition-all shadow-lg hover:shadow-[#52796F]/30">
                                 <Save className="w-4 h-4 inline mr-2" />
-                                {editingItem ? "Update" : "Add"}
+                                {editingItem ? "Update" : "Add"} Meal
                               </button>
-                              <button type="button" onClick={() => { setShowNutritionForm(false); setEditingItem(null); }} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                              <button type="button" onClick={() => { setShowMealForm(false); setEditingItem(null); }} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
                                 Cancel
                               </button>
                             </div>
@@ -1160,7 +1533,7 @@ export default function AdminDashboard() {
                                 setLoading(false);
                               }
                             }}
-                            className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                            className="flex items-center gap-2 bg-gradient-to-r from-[#6BB371] to-[#52796F] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#6BB371]/30 transition-all"
                           >
                             <Plus className="w-5 h-5" />
                             Create Sample Programs
@@ -1186,7 +1559,7 @@ export default function AdminDashboard() {
                                 overview: ""
                               });
                             }}
-                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                            className="flex items-center gap-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#52796F]/30 transition-all"
                           >
                             <Plus className="w-5 h-5" />
                             Add Program
@@ -1213,7 +1586,7 @@ export default function AdminDashboard() {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => openEditProgram(program)}
-                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#52796F]/10 text-[#52796F] rounded hover:bg-[#52796F]/20 transition-colors"
                               >
                                 <Edit className="w-4 h-4" />
                                 Edit

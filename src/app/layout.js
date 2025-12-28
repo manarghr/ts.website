@@ -22,8 +22,8 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${montserrat.variable} ${inter.variable}`}>
       <body className="font-inter">
         <Navbar />
-        <main className="pt-[60px]">{children}</main> {/* space for fixed navbar */}
-        <Footer/>
+        <main className="pt-[60px]">{children}</main>
+        <Footer />
       </body>
     </html>
   );
