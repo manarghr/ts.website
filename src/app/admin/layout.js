@@ -1,4 +1,4 @@
 export default function AdminLayout({ children }) {
-  return <>{children}</>;
+  return children;
 }
 

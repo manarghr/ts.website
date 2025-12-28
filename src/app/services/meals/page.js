@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import MainLayout from "@/components/layout/MainLayout";
 import { 
   Search, 
   Filter, 
@@ -499,7 +500,8 @@ export default function MealsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <MainLayout>
+      <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="relative h-[500px] md:h-[600px] bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] overflow-hidden">
         <div 
@@ -702,6 +704,7 @@ export default function MealsPage() {
         )}
         </div>
       </div>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

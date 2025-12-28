@@ -1,12 +1,12 @@
+import MainLayout from "@/components/layout/MainLayout";
 import AboutHero from "@/components/about/AboutHero";
-
 
 export default function About() {
   return (
-    <div>
+    <MainLayout>
+      <div>
         <AboutHero/>
-       
-      
-    </div>
+      </div>
+    </MainLayout>
   );
 }

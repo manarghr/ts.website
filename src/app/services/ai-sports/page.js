@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import MainLayout from "@/components/layout/MainLayout";
 import { 
   FaVideo,
   FaTrophy,
@@ -77,7 +78,8 @@ export default function AISportsPage() {
   }, []);
 
   return (
-    <div className="w-full overflow-hidden">
+    <MainLayout>
+      <div className="w-full overflow-hidden">
       {/* Hero Section */}
       <section className="relative w-full h-[400px] md:h-[500px] overflow-hidden">
         <div 
@@ -169,7 +171,8 @@ export default function AISportsPage() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </MainLayout>
   );
 }
 
