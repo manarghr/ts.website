@@ -23,6 +23,8 @@ import {
   UtensilsCrossed,
   Activity,
   Zap,
+  MessageSquare,
+  Trash2,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -200,6 +202,8 @@ export default function ProfilePage({ userId }) {
     workouts: "public",
     meals: "public",
   })
+  const [editingComment, setEditingComment] = useState(null)
+  const [commentText, setCommentText] = useState("")
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -321,6 +325,45 @@ export default function ProfilePage({ userId }) {
     localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
 
     window.dispatchEvent(new Event("userUpdated"))
+  }
+
+  const handleUnlikeMeal = (mealId) => {
+    if (!isOwnProfile || !currentUser) return
+
+    const updatedFavorites = (currentUser.favoriteMeals || []).filter(m => m.id !== mealId)
+    const updatedUser = { ...currentUser, favoriteMeals: updatedFavorites }
+    setCurrentUser(updatedUser)
+    setProfileUser(updatedUser)
+
+    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
+
+    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
+    const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
+    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
+
+    window.dispatchEvent(new Event("userUpdated"))
+  }
+
+  const handleSaveComment = (mealId) => {
+    if (!isOwnProfile || !currentUser) return
+
+    const updatedFavorites = (currentUser.favoriteMeals || []).map(m => 
+      m.id === mealId ? { ...m, comment: commentText } : m
+    )
+    const updatedUser = { ...currentUser, favoriteMeals: updatedFavorites }
+    setCurrentUser(updatedUser)
+    setProfileUser(updatedUser)
+
+    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
+
+    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
+    const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
+    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
+
+    window.dispatchEvent(new Event("userUpdated"))
+    
+    setEditingComment(null)
+    setCommentText("")
   }
 
   const isContentVisible = (section) => {
@@ -1584,47 +1627,135 @@ export default function ProfilePage({ userId }) {
                   </div>
                   {isContentVisible("meals") ? (
                     profileUser?.favoriteMeals && profileUser.favoriteMeals.length > 0 ? (
-                      <div className="grid md:grid-cols-3 gap-4">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {profileUser.favoriteMeals.map((meal, index) => (
                           <motion.div
-                            key={index}
+                            key={meal.id || index}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            whileHover={{ scale: 1.05, y: -5 }}
-                            className="p-6 bg-white rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+                            whileHover={{ scale: 1.02, y: -5 }}
+                            className="bg-white rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                            <div className="flex items-start gap-4 relative z-10">
-                              <motion.div 
-                                className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform"
-                                whileHover={{ rotate: 360 }}
-                                transition={{ duration: 0.5 }}
-                              >
-                                <UtensilsCrossed className="w-8 h-8 text-white" />
-                              </motion.div>
-                              <div className="flex-1">
-                                <div className="font-extrabold text-slate-800 text-xl mb-2">
-                                  {meal.name || "Meal"}
-                                </div>
-                                <div className="text-sm text-slate-600 mb-3 font-medium">
-                                  {meal.description || "Delicious and nutritious meal"}
-                                </div>
-                                {meal.calories && (
-                                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                                    <div className="flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-lg">
-                                      <Zap className="w-3 h-3 text-emerald-600" />
-                                      <span className="font-semibold text-emerald-700">{meal.calories} cal</span>
-                                    </div>
-                                    {meal.category && (
-                                      <div className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-lg">
-                                        <Apple className="w-3 h-3 text-slate-600" />
-                                        <span className="font-semibold text-slate-700">{meal.category}</span>
-                </div>
-              )}
-            </div>
+                            {/* Meal Image */}
+                            {meal.image && (
+                              <div className="relative h-48 overflow-hidden">
+                                <img
+                                  src={meal.image}
+                                  alt={meal.name}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                  onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/400x200?text=Meal+Image'; }}
+                                />
+                                {isOwnProfile && (
+                                  <button
+                                    onClick={() => handleUnlikeMeal(meal.id)}
+                                    className="absolute top-3 right-3 p-2 bg-red-500/90 text-white rounded-full backdrop-blur-sm hover:bg-red-600 transition-all shadow-lg"
+                                  >
+                                    <Heart className="w-4 h-4 fill-current" />
+                                  </button>
                                 )}
-          </div>
+                              </div>
+                            )}
+                            
+                            <div className="p-6">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <h4 className="font-extrabold text-slate-800 text-xl mb-1">
+                                    {meal.name || "Meal"}
+                                  </h4>
+                                  <p className="text-sm text-slate-600 mb-3">
+                                    {meal.description || "Delicious and nutritious meal"}
+                                  </p>
+                                </div>
+                                {!meal.image && isOwnProfile && (
+                                  <button
+                                    onClick={() => handleUnlikeMeal(meal.id)}
+                                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-all"
+                                  >
+                                    <Heart className="w-5 h-5 fill-current" />
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Nutritional Info */}
+                              {meal.calories && (
+                                <div className="flex flex-wrap items-center gap-2 mb-4">
+                                  <div className="flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg">
+                                    <Zap className="w-3 h-3 text-emerald-600" />
+                                    <span className="font-semibold text-emerald-700 text-xs">{meal.calories} cal</span>
+                                  </div>
+                                  {meal.protein && (
+                                    <div className="flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-lg">
+                                      <span className="font-semibold text-blue-700 text-xs">{meal.protein}g protein</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Comment Section */}
+                              {isOwnProfile && (
+                                <div className="mt-4 pt-4 border-t border-slate-200">
+                                  {editingComment === meal.id ? (
+                                    <div className="space-y-2">
+                                      <textarea
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        placeholder="Add a comment about this recipe..."
+                                        className="w-full p-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                                        rows="3"
+                                      />
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => handleSaveComment(meal.id)}
+                                          className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-all text-sm"
+                                        >
+                                          Save
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setEditingComment(null);
+                                            setCommentText("");
+                                          }}
+                                          className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-300 transition-all text-sm"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      {meal.comment ? (
+                                        <div className="mb-2">
+                                          <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg mb-2">
+                                            {meal.comment}
+                                          </p>
+                                          <button
+                                            onClick={() => {
+                                              setEditingComment(meal.id);
+                                              setCommentText(meal.comment || "");
+                                            }}
+                                            className="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+                                          >
+                                            <Edit2 className="w-3 h-3" />
+                                            Edit comment
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => {
+                                            setEditingComment(meal.id);
+                                            setCommentText("");
+                                          }}
+                                          className="w-full text-sm text-slate-600 hover:text-emerald-600 font-medium flex items-center justify-center gap-2 py-2 border border-slate-200 rounded-lg hover:border-emerald-300 transition-all"
+                                        >
+                                          <MessageSquare className="w-4 h-4" />
+                                          Add a comment
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </motion.div>
                         ))}

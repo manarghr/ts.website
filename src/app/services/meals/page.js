@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Search, 
@@ -12,13 +12,78 @@ import {
   Coffee,
   Sun,
   Moon,
-  Cookie
+  Cookie,
+  Heart
 } from "lucide-react";
 
 export default function MealsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGoal, setSelectedGoal] = useState("all");
   const [selectedMealType, setSelectedMealType] = useState("all");
+  const [favoriteMeals, setFavoriteMeals] = useState([]);
+
+  // Load favorite meals from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const currentUser = localStorage.getItem("trainsight_current_user");
+      if (currentUser) {
+        try {
+          const userData = JSON.parse(currentUser);
+          const favorites = userData.favoriteMeals || [];
+          setFavoriteMeals(favorites);
+        } catch (error) {
+          console.error("Error loading favorite meals:", error);
+        }
+      }
+    }
+  }, []);
+
+  // Toggle favorite meal
+  const toggleFavorite = (meal) => {
+    if (typeof window === "undefined") return;
+    
+    const currentUser = localStorage.getItem("trainsight_current_user");
+    if (!currentUser) {
+      alert("Please login to favorite meals");
+      return;
+    }
+
+    const userData = JSON.parse(currentUser);
+    const favorites = userData.favoriteMeals || [];
+    const mealIndex = favorites.findIndex(f => f.id === meal.id);
+
+    let updatedFavorites;
+    if (mealIndex >= 0) {
+      // Remove from favorites
+      updatedFavorites = favorites.filter(f => f.id !== meal.id);
+    } else {
+      // Add to favorites
+      updatedFavorites = [...favorites, {
+        ...meal,
+        likedAt: new Date().toISOString(),
+        comment: ""
+      }];
+    }
+
+    const updatedUser = {
+      ...userData,
+      favoriteMeals: updatedFavorites
+    };
+
+    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
+    
+    // Update users array
+    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
+    const updatedUsers = users.map(u => u.id === userData.id ? updatedUser : u);
+    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
+
+    setFavoriteMeals(updatedFavorites);
+    window.dispatchEvent(new Event("userUpdated"));
+  };
+
+  const isFavorite = (mealId) => {
+    return favoriteMeals.some(f => f.id === mealId);
+  };
 
   const goals = [
     { id: "all", label: "All Goals", icon: Filter },
@@ -247,7 +312,7 @@ export default function MealsPage() {
       fats: 10,
       fiber: 5,
       ingredients: ["Protein powder", "Dates", "Almonds", "Coconut", "Cocoa powder"],
-      image: "https://images.unsplash.com/photo-1606312619070-d48b4bc98f48?w=400",
+      image: "https://images.unsplash.com/photo-1616663040245-0c5e0c0c8c8c?w=400",
       prepTime: "10 min",
       description: "High-protein pre/post workout snack"
     },
@@ -318,6 +383,21 @@ export default function MealsPage() {
           <Clock className="w-3 h-3" />
           {meal.prepTime}
         </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(meal);
+          }}
+          className={`absolute top-3 left-3 p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
+            isFavorite(meal.id)
+              ? "bg-red-500/90 text-white shadow-lg"
+              : "bg-white/90 text-gray-600 hover:bg-white"
+          }`}
+        >
+          <Heart 
+            className={`w-4 h-4 ${isFavorite(meal.id) ? "fill-current" : ""}`}
+          />
+        </button>
       </div>
       
       <div className="p-5">
