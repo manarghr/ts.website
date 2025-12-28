@@ -1,7 +1,7 @@
 // Message Helper Functions
 // File: backend/utils/message-helpers.js
 
-import { getCollection } from '../../src/lib/mongodb';
+import { getCollection } from '@/lib/mongodb';
 
 /**
  * Send message to coach

@@ -2,7 +2,7 @@
 // File: backend/utils/db-helpers.js
 // Note: These functions import from src/lib/mongodb.js (the actual connection file)
 
-import { getCollection } from '../../src/lib/mongodb';
+import { getCollection } from '@/lib/mongodb';
 
 /**
  * Get coach by ID

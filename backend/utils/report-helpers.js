@@ -1,7 +1,7 @@
 // Report Helper Functions
 // File: backend/utils/report-helpers.js
 
-import { getCollection } from '../../src/lib/mongodb';
+import { getCollection } from '@/lib/mongodb';
 
 /**
  * Submit a report

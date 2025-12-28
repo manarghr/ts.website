@@ -1,12 +1,28 @@
 "use client";
-import Image from "next/image";
+import { motion } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import Card from "./Card";
 import {
   IoIosArrowBack,
   IoIosArrowForward,
 } from "react-icons/io";
+import { FaDumbbell, FaRunning, FaYinYang, FaFutbol, FaHeartbeat, FaAppleAlt, FaFire } from "react-icons/fa";
 import picture from "../assets/elements.png";
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 60 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-100px" },
+  transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
+};
+
+const staggerContainer = {
+  initial: {},
+  whileInView: { 
+    transition: { staggerChildren: 0.1 } 
+  },
+  viewport: { once: true }
+};
 
 export default function Services() {
   const scrollRef = useRef(null);
@@ -38,23 +54,51 @@ export default function Services() {
   }, []);
 
   const services = [
-    { title: "Strength Training", para: "Build muscle and increase power with personalized programs." },
-    { title: "Cardio Workouts", para: "Improve endurance and cardiovascular health." },
-    { title: "Flexibility & Mobility", para: "Enhance range of motion and prevent injuries." },
-    { title: "Sports-Specific Training", para: "Tailored programs for your chosen sport." },
-    { title: "Recovery & Rehabilitation", para: "Smart recovery plans to get you back stronger." },
-    { title: "Nutrition Guidance", para: "Fuel your body for optimal performance." },
+    { 
+      title: "Strength Training", 
+      para: "Build muscle and increase power with personalized programs designed for your fitness level.",
+      icon: FaDumbbell,
+      gradient: "from-[#354F52] to-[#52796F]"
+    },
+    { 
+      title: "Cardio Workouts", 
+      para: "Improve endurance and cardiovascular health with dynamic, high-energy training sessions.",
+      icon: FaRunning,
+      gradient: "from-[#52796F] to-[#6BB371]"
+    },
+    { 
+      title: "Flexibility & Mobility", 
+      para: "Enhance range of motion and prevent injuries with targeted stretching and mobility work.",
+      icon: FaYinYang,
+      gradient: "from-[#6BB371] to-[#52796F]"
+    },
+    { 
+      title: "Sports-Specific Training", 
+      para: "Tailored programs for your chosen sport, focusing on performance and skill development.",
+      icon: FaFutbol,
+      gradient: "from-[#354F52] to-[#6BB371]"
+    },
+    { 
+      title: "Recovery & Rehabilitation", 
+      para: "Smart recovery plans to get you back stronger, faster, and ready for your next challenge.",
+      icon: FaHeartbeat,
+      gradient: "from-[#52796F] to-[#354F52]"
+    },
+    { 
+      title: "Nutrition Guidance", 
+      para: "Fuel your body for optimal performance with personalized meal plans and expert advice.",
+      icon: FaAppleAlt,
+      gradient: "from-[#6BB371] to-[#354F52]"
+    },
   ];
 
-  // --- Fonction de défilement manuel ---
   const scroll = (direction) => {
     const container = scrollRef.current;
     if (!container || !container.children[0]) return;
 
-    // Get card width including gap (gap-6 = 24px)
     const cardElement = container.children[0];
     const cardWidth = cardElement.offsetWidth;
-    const gap = 24; // gap-6 = 24px
+    const gap = 24;
     const scrollAmount = cardWidth + gap;
 
     let newIndex =
@@ -69,7 +113,6 @@ export default function Services() {
     });
   };
 
-  // --- Mettre à jour l'index quand on scroll manuellement ---
   const handleScroll = () => {
     const container = scrollRef.current;
     if (!container || !container.children[0]) return;
@@ -77,53 +120,72 @@ export default function Services() {
     const scrollLeft = container.scrollLeft;
     const cardElement = container.children[0];
     const cardWidth = cardElement.offsetWidth;
-    const gap = 24; // gap-6 = 24px
+    const gap = 24;
     const scrollAmount = cardWidth + gap;
     const index = Math.round(scrollLeft / scrollAmount);
     
-    // Clamp index to valid range
     const clampedIndex = Math.max(0, Math.min(index, services.length - 1));
     if (clampedIndex !== currentIndex) {
       setCurrentIndex(clampedIndex);
     }
   };
 
-  // --- Slider automatique ---
-
-
-  // --- Render ---
   return (
-    <section ref={sectionRef} className="bg-white py-20 md:py-28 text-center relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 bg-pattern-waves opacity-10"></div>
-      <div className="absolute top-0 right-0 w-96 h-96 bg-[#52796F]/5 rounded-full blur-3xl animate-float"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#354F52]/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+    <section ref={sectionRef} className="relative py-32 md:py-40 bg-gradient-to-b from-[#F8F9F7] via-white to-[#F8F9F7] overflow-hidden">
+      {/* Premium Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#52796F]/6 rounded-full blur-[200px] animate-float"></div>
+        <div className="absolute bottom-0 left-0 w-[700px] h-[700px] bg-[#354F52]/6 rounded-full blur-[180px] animate-float" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#6BB371]/5 rounded-full blur-[150px] animate-pulse-glow"></div>
+        <div className="absolute inset-0 bg-pattern-dots opacity-5"></div>
+      </div>
       
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
-        <div className={`mb-16 fade-in-on-scroll ${isVisible ? 'visible' : ''}`}>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+        {/* Enhanced Header */}
+        <motion.div
+          variants={fadeInUp}
+          initial="initial"
+          whileInView="whileInView"
+          viewport={{ once: true }}
+          className="text-center mb-20"
+        >
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#52796F]/10 border border-[#52796F]/20 rounded-full text-[#52796F] text-sm font-bold uppercase tracking-wider mb-8">
+            <FaFire className="text-[#6BB371] animate-pulse-glow" />
+            <span>Comprehensive Training</span>
+          </div>
+          
+          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black mb-8 leading-tight tracking-tight">
             <span className="text-[#354F52]">Our</span>{" "}
-            <span className="text-[#52796F]">Training Services</span>
+            <span className="bg-gradient-to-r from-[#52796F] via-[#6BB371] to-[#52796F] bg-clip-text text-transparent animate-gradient">
+              Training Services
+            </span>
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Comprehensive fitness solutions designed to help you achieve your goals
+          
+          <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-medium">
+            Comprehensive fitness solutions designed to help you achieve your goals, 
+            whether you're building strength, improving endurance, or recovering from injury
           </p>
-        </div>
+        </motion.div>
 
+        {/* Enhanced Cards Container */}
         <div className="relative">
-          {/* Scrollable cards container */}
-          <div
+          <motion.div
             ref={scrollRef}
-            className="flex gap-6 overflow-x-auto scroll-smooth no-scrollbar px-4 py-6 flex-nowrap snap-x snap-mandatory"
             onScroll={handleScroll}
+            className="flex gap-6 overflow-x-auto scroll-smooth no-scrollbar px-4 py-6 flex-nowrap snap-x snap-mandatory"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="whileInView"
+            viewport={{ once: true }}
           >
             {services.map((service, index) => (
-              <div
+              <motion.div
                 key={index}
-                className={`snap-center transition-all duration-500 ease-in-out min-w-[280px] md:min-w-[320px] ${
+                variants={fadeInUp}
+                className={`snap-center transition-all duration-500 ease-in-out min-w-[320px] md:min-w-[360px] ${
                   currentIndex === index
-                    ? "scale-105"
-                    : "opacity-80 scale-95"
+                    ? "scale-105 z-10"
+                    : "opacity-85 scale-95"
                 }`}
               >
                 <Card
@@ -131,24 +193,32 @@ export default function Services() {
                   title={service.title}
                   para={service.para}
                   isActive={currentIndex === index}
+                  icon={service.icon}
+                  gradient={service.gradient}
                 />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          {/* Navigation Arrows */}
-          <div className="flex justify-center items-center gap-8 mt-12">
+          {/* Enhanced Navigation */}
+          <motion.div
+            variants={fadeInUp}
+            initial="initial"
+            whileInView="whileInView"
+            viewport={{ once: true }}
+            className="flex justify-center items-center gap-8 mt-16"
+          >
             <button
               onClick={() => scroll("left")}
               aria-label="Scroll left"
               disabled={currentIndex === 0}
-              className="p-3 rounded-full bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
             >
-              <IoIosArrowBack size={24} />
+              <IoIosArrowBack size={24} className="group-hover:-translate-x-1 transition-transform" />
             </button>
 
-            {/* Dots Indicator */}
-            <div className="flex gap-2">
+            {/* Enhanced Dots Indicator */}
+            <div className="flex gap-3 items-center">
               {services.map((_, index) => (
                 <button
                   key={index}
@@ -157,7 +227,7 @@ export default function Services() {
                     if (!container || !container.children[0]) return;
                     const cardElement = container.children[0];
                     const cardWidth = cardElement.offsetWidth;
-                    const gap = 24; // gap-6 = 24px
+                    const gap = 24;
                     const scrollAmount = cardWidth + gap;
                     setCurrentIndex(index);
                     container.scrollTo({
@@ -165,10 +235,10 @@ export default function Services() {
                       behavior: "smooth",
                     });
                   }}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  className={`h-2 rounded-full transition-all duration-300 ${
                     currentIndex === index
-                      ? "bg-[#354F52] w-8"
-                      : "bg-[#C8CDC5] hover:bg-[#52796F]"
+                      ? "bg-[#354F52] w-12 shadow-lg"
+                      : "bg-[#C8CDC5] w-2 hover:bg-[#52796F] hover:w-4"
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
                 />
@@ -179,11 +249,11 @@ export default function Services() {
               onClick={() => scroll("right")}
               aria-label="Scroll right"
               disabled={currentIndex === services.length - 1}
-              className="p-3 rounded-full bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
             >
-              <IoIosArrowForward size={24} />
+              <IoIosArrowForward size={24} className="group-hover:translate-x-1 transition-transform" />
             </button>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

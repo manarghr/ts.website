@@ -1,7 +1,7 @@
 // Authentication Helper Functions
 // File: backend/utils/auth-helpers.js
 
-import { getCollection } from '../../src/lib/mongodb';
+import { getCollection } from '@/lib/mongodb';
 import bcrypt from 'bcrypt';
 
 /**
