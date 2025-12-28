@@ -25,19 +25,36 @@ export default function Coaches() {
     const fetchCoaches = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/coaches');
-        if (!response.ok) {
-          throw new Error('Failed to fetch coaches');
-        }
-        const data = await response.json();
+        setError(null);
+        console.log('=== CLIENT: Fetching coaches ===');
         
-        if (data.success && data.coaches) {
+        const response = await fetch('/api/coaches');
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Response error data:', errorData);
+          throw new Error(errorData.error || `Failed to fetch coaches: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('=== CLIENT: Response data ===');
+        console.log('Success:', data.success);
+        console.log('Coaches count:', data.coaches?.length || 0);
+        console.log('Coaches data:', data.coaches);
+        
+        if (data.success && Array.isArray(data.coaches)) {
           setCoaches(data.coaches);
+          console.log('Coaches set successfully:', data.coaches.length);
         } else {
+          console.warn('Invalid response format:', data);
           setCoaches([]);
         }
       } catch (err) {
-        console.error('Error fetching coaches:', err);
+        console.error('=== CLIENT: Error fetching coaches ===');
+        console.error('Error:', err);
+        console.error('Error message:', err.message);
         setError(err.message);
         setCoaches([]);
       } finally {

@@ -40,25 +40,44 @@ export async function createCoach(coachData) {
  * Get all coaches with optional filters
  */
 export async function getCoaches(filters = {}) {
-  const coachesCollection = await getCollection('coaches');
-  const query = {};
-  
-  if (filters.category) {
-    query.category = filters.category;
+  try {
+    console.log('=== DB-HELPER: getCoaches called ===');
+    console.log('Filters:', filters);
+    
+    const coachesCollection = await getCollection('coaches');
+    console.log('Collection obtained');
+    
+    const query = {};
+    
+    if (filters.category) {
+      query.category = filters.category;
+    }
+    
+    if (filters.minRating) {
+      query.rating = { $gte: parseFloat(filters.minRating) };
+    }
+    
+    if (filters.search) {
+      query.$or = [
+        { name: { $regex: filters.search, $options: 'i' } },
+        { bio: { $regex: filters.search, $options: 'i' } }
+      ];
+    }
+    
+    console.log('Query:', JSON.stringify(query));
+    
+    const coaches = await coachesCollection.find(query).toArray();
+    console.log('Coaches found:', coaches.length);
+    console.log('First coach sample:', coaches[0]);
+    
+    return coaches;
+  } catch (error) {
+    console.error('=== DB-HELPER: Error in getCoaches ===');
+    console.error('Error:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    throw error;
   }
-  
-  if (filters.minRating) {
-    query.rating = { $gte: parseFloat(filters.minRating) };
-  }
-  
-  if (filters.search) {
-    query.$or = [
-      { name: { $regex: filters.search, $options: 'i' } },
-      { bio: { $regex: filters.search, $options: 'i' } }
-    ];
-  }
-  
-  return await coachesCollection.find(query).toArray();
 }
 
 /**

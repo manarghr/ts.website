@@ -9,8 +9,9 @@ const uri = process.env.MONGODB_URI;
 const options = {
   // Add connection options for better reliability
   maxPoolSize: 10,
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 10000, // Increased to 10 seconds
   socketTimeoutMS: 45000,
+  connectTimeoutMS: 10000, // Connection timeout
 };
 
 let client;
@@ -41,9 +42,19 @@ export default clientPromise;
  * Get database instance
  */
 export async function getDatabase() {
-  const client = await clientPromise;
-  const dbName = process.env.MONGODB_DB || 'trainsight';
-  return client.db(dbName);
+  try {
+    if (!uri) {
+      throw new Error('MongoDB URI is not configured. Please add MONGODB_URI to .env.local');
+    }
+    const client = await clientPromise;
+    const dbName = process.env.MONGODB_DB || 'trainsight';
+    return client.db(dbName);
+  } catch (error) {
+    console.error('=== MONGODB: getDatabase error ===');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+    throw error;
+  }
 }
 
 /**
@@ -51,11 +62,33 @@ export async function getDatabase() {
  */
 export async function getCollection(collectionName) {
   try {
+    console.log('=== MONGODB: getCollection called ===');
+    console.log('Collection name:', collectionName);
+    console.log('MongoDB URI configured:', !!uri);
+    
     const db = await getDatabase();
-    return db.collection(collectionName);
+    console.log('Database obtained');
+    const collection = db.collection(collectionName);
+    console.log('Collection obtained:', collectionName);
+    return collection;
   } catch (error) {
-    console.error('MongoDB connection error:', error.message);
-    throw new Error('Database connection failed. Please check your MongoDB configuration.');
+    console.error('=== MONGODB: getCollection error ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Provide more specific error messages
+    let errorMessage = 'Database connection failed.';
+    if (error.message.includes('timed out')) {
+      errorMessage = 'MongoDB connection timed out. Please check if MongoDB is running and the connection string is correct.';
+    } else if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
+      errorMessage = 'Cannot connect to MongoDB server. Please check your MONGODB_URI in .env.local and ensure MongoDB is running.';
+    } else if (error.message.includes('authentication')) {
+      errorMessage = 'MongoDB authentication failed. Please check your username and password in MONGODB_URI.';
+    } else {
+      errorMessage = `Database connection failed: ${error.message}. Please check your MongoDB configuration.`;
+    }
+    
+    throw new Error(errorMessage);
   }
 }
 

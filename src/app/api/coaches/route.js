@@ -7,10 +7,28 @@ import { getCoaches, createCoach } from '../../../../backend/utils/db-helpers';
 // GET /api/coaches - list coaches with optional filters
 export async function GET(request) {
   try {
+    console.log('=== COACHES API: Starting fetch ===');
+    
+    // Check MongoDB URI first
+    if (!process.env.MONGODB_URI) {
+      console.error('MongoDB URI is not configured');
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Database not configured', 
+          details: 'MongoDB URI is missing. Please add MONGODB_URI to .env.local',
+          coaches: [] 
+        },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const minRating = searchParams.get('minRating');
     const search = searchParams.get('search');
+
+    console.log('Filters:', { category, minRating, search });
 
     const coaches = await getCoaches({
       category: category || undefined,
@@ -18,11 +36,34 @@ export async function GET(request) {
       search: search || undefined,
     });
 
-    return NextResponse.json({ success: true, coaches });
+    console.log('Coaches fetched:', coaches?.length || 0);
+    console.log('Coaches data:', coaches);
+
+    return NextResponse.json({ success: true, coaches: coaches || [] });
   } catch (error) {
-    console.error('Error fetching coaches:', error);
+    console.error('=== COACHES API ERROR ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Ensure we always return valid JSON
+    const errorMessage = error.message || 'Unknown error occurred';
+    const errorDetails = error.stack ? error.stack.split('\n')[0] : 'No stack trace available';
+    
+    // Provide user-friendly error message
+    let userMessage = 'Failed to fetch coaches';
+    if (errorMessage.includes('timed out') || errorMessage.includes('connection')) {
+      userMessage = 'Database connection failed. Please ensure MongoDB is running and check your connection settings.';
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { 
+        success: false,
+        error: userMessage, 
+        details: errorMessage,
+        stack: process.env.NODE_ENV === 'development' ? errorDetails : undefined,
+        coaches: [] 
+      },
       { status: 500 }
     );
   }
