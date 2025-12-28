@@ -782,25 +782,27 @@ export default function AISportsPage() {
                     <img
                       src={playlist.thumbnail}
                       alt={playlist.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
+                        !playlist.isFree && (!currentUser || !currentUser.isPremium) ? 'blur-sm' : ''
+                      }`}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     
                     {/* Free/Premium Badge */}
                     {playlist.isFree ? (
-                      <div className="absolute top-3 right-3 bg-[#6BB371] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                      <div className="absolute top-3 right-3 bg-[#6BB371] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
                         <CheckCircle className="w-3 h-3" />
                         FREE
                       </div>
                     ) : (
-                      <div className="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                      <div className="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
                         <Crown className="w-3 h-3" />
                         PREMIUM
                       </div>
                     )}
 
                     {/* Play Button Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
                       <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
                         {playlist.isFree || (currentUser && currentUser.isPremium) ? (
                           <Play className="w-8 h-8 text-white" fill="white" />
@@ -811,7 +813,7 @@ export default function AISportsPage() {
                     </div>
 
                     {/* Duration */}
-                    <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-semibold flex items-center gap-1">
+                    <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 z-10">
                       <Clock className="w-3 h-3" />
                       {playlist.duration}
                     </div>
@@ -850,11 +852,6 @@ export default function AISportsPage() {
                       </div>
                     )}
                   </div>
-
-                  {/* Blur overlay for locked content */}
-                  {!playlist.isFree && (!currentUser || !currentUser.isPremium) && (
-                    <div className="absolute inset-0 bg-white/5 backdrop-blur-[2px] pointer-events-none" />
-                  )}
                 </motion.div>
               ))}
             </div>
