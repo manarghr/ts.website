@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import picture from "../assets/picture.png";
 import { FaBrain, FaChartLine, FaShieldAlt, FaUserMd, FaRocket, FaBolt } from "react-icons/fa";
@@ -21,6 +22,32 @@ const staggerContainer = {
 };
 
 export default function AIHome() {
+  const sectionRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
   const features = [
     {
       icon: FaBrain,
@@ -62,24 +89,10 @@ export default function AIHome() {
       </svg>
       
       {/* Animated Background Elements */}
-      <div className="absolute inset-0 bg-pattern-grid opacity-20"></div>
       <div className="absolute top-10 right-10 w-64 h-64 bg-[#52796F]/10 rounded-full blur-3xl animate-float"></div>
       <div className="absolute bottom-10 left-10 w-80 h-80 bg-[#354F52]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
       <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-[#6BB371]/10 rounded-full blur-2xl animate-pulse-glow"></div>
       
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
-        {/* Section Header */}
-        <div className={`text-center mb-16 fade-in-on-scroll ${isVisible ? 'visible' : ''}`}>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#354F52] mb-4">
-            Real-Time AI Coaching That
-            <span className="block text-[#52796F]">Perfects Every Move</span>
-          </h2>
-          <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            TrainSight tracks your posture in real time and gives instant feedback
-            to help you move safely and train smarter.
-          </p>
-        </div>
-
       <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
         {/* Header Section */}
         <motion.div
