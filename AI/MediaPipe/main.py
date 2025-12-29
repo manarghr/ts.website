@@ -3,7 +3,6 @@ import mediapipe as mp
 import numpy as np
 import os
 from pathlib import Path
-from posture_utils import AngleSmoother
 from posture_utils import RepCounter
 from exercises.squat import analyse_squat
 from exercises.pushup import analyse_pushup
@@ -17,8 +16,8 @@ from exercises.dips import analyse_dips
 from exercises.hip_thrust import analyse_hip_thrust
 
 # Configuration de l'exercice et du chemin de la vidéo
-EXO = "biceps_curl"  # Choisis l'exercice
-VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\biceps_curl.mp4"
+EXO = "hip_thrust"  # Choisis l'exercice
+VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\hip_thrust.mp4"
 
 
 # Vérification du chemin de la vidéo
