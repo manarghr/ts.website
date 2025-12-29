@@ -3,7 +3,6 @@ import mediapipe as mp
 import numpy as np
 import os
 from pathlib import Path
-from posture_utils import RepCounter
 from exercises.squat import analyse_squat
 from exercises.pushup import analyse_pushup
 from exercises.deadlift import analyse_deadlift
@@ -37,8 +36,6 @@ if not cap.isOpened():
 repetition_count = 0
 last_feedback = None
 
-
-angle_smoother = AngleSmoother(window_size=7)
 
 # Boucle principale
 with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
