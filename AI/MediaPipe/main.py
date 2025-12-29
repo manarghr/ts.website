@@ -13,10 +13,12 @@ from exercises.shoulder_press import analyse_shoulder_press
 from exercises.biceps_curl import analyse_biceps_curl
 from exercises.dips import analyse_dips
 from exercises.hip_thrust import analyse_hip_thrust
+from exercises.jumping_jacks import analyse_jumping_jacks
+
 
 # Configuration de l'exercice et du chemin de la vidéo
-EXO = "hip_thrust"  # Choisis l'exercice
-VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\hip_thrust.mp4"
+EXO = "jumping_jacks"  # Choisis l'exercice
+VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\jumping_jacks.mp4"
 
 
 # Vérification du chemin de la vidéo
