@@ -17,10 +17,11 @@ from exercises.jumping_jack import analyse_jumping_jack
 from exercises.mountain_climbers import analyse_mountain_climber
 from exercises.triceps_extension import analyse_triceps_extension
 from exercises.lateral_raise import analyse_lateral_raise
+from exercises.leg_raise import analyse_leg_raise
 
 # Configuration de l'exercice et du chemin de la vidéo
-EXO = "lateral_raise"  # Choisis l'exercice
-VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\lateral_raise.mp4"
+EXO = "leg_raise"  # Choisis l'exercice
+VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\leg_raise.mp4"
 
 
 # Vérification du chemin de la vidéo
@@ -88,6 +89,8 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
                     feedback = analyse_triceps_extension(landmarks, mp_pose)
                 elif EXO == "lateral_raise":
                     feedback = analyse_lateral_raise(landmarks, mp_pose)
+                elif EXO == "leg_raise":
+                    feedback = analyse_leg_raise(landmarks, mp_pose)
                 else:
                     feedback = ["Exercice inconnu."]
             except Exception as e:
