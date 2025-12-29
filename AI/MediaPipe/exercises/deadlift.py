@@ -16,4 +16,4 @@ def analyse_deadlift(landmarks, mp_pose):
     else:
         feedback.append(" Bonne position du dos !")
     
-    return feedback
+    return feedback, back_angle

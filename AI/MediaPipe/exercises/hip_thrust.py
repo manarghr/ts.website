@@ -16,4 +16,4 @@ def analyse_hip_thrust(landmarks, mp_pose):
         feedback.append("Trop cambré — redresse le dos")
     else:
         feedback.append("Hip Thrust correct")
-    return feedback
+    return feedback , angle

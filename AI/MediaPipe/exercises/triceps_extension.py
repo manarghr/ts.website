@@ -18,4 +18,4 @@ def analyse_triceps_extension(landmarks, mp_pose):
     else:
         feedback.append("Remonte le bras lentement")
 
-    return feedback
+    return feedback , angle

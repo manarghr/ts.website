@@ -18,4 +18,4 @@ def analyse_mountain_climber(landmarks, mp_pose):
     else:
         feedback.append("Accelere le mouvement")
 
-    return feedback
+    return feedback , angle

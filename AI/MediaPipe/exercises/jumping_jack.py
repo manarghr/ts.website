@@ -18,4 +18,4 @@ def analyse_jumping_jack(landmarks, mp_pose):
     else:
         feedback.append("Continue le jumping jack")
 
-    return feedback
+    return feedback , angle

@@ -16,4 +16,4 @@ def analyse_leg_raise(landmarks, mp_pose):
     else:
         feedback.append("Leg raise correct")
 
-    return feedback
+    return feedback , angle

@@ -10,10 +10,13 @@ def analyse_biceps_curl(landmarks, mp_pose):
 
     angle = calculate_angle(shoulder, elbow, wrist)
     feedback = []
+
     if angle > 160:
-        feedback.append("Bras trop tendu — plie légèrement le coude")
+        feedback.append("Descends le bras")
     elif angle < 40:
-        feedback.append("Bras trop plié — remonte doucement")
+        feedback.append("Remonte le bras")
     else:
-        feedback.append("Biceps Curl correct")
-    return feedback
+        feedback.append("Biceps curl correct")
+
+    return feedback, angle
+

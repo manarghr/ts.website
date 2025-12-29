@@ -18,4 +18,4 @@ def analyse_squat(landmarks, mp_pose):
     else:
         feedback.append("Bonne profondeur de squat !")
     
-    return feedback
+    return feedback , angle

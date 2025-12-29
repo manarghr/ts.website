@@ -18,4 +18,4 @@ def analyse_pushup(landmarks, mp_pose):
     else:
         feedback.append("Bonne amplitude de mouvement !")
     
-    return feedback
+    return feedback , angle

@@ -16,4 +16,4 @@ def analyse_plank(landmarks, mp_pose):
         feedback.append("Dos trop creusé — redresse légèrement")
     else:
         feedback.append("Planche correcte")
-    return feedback
+    return feedback , back_angle

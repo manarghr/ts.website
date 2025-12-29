@@ -16,4 +16,4 @@ def analyse_dips(landmarks, mp_pose):
         feedback.append("Remonte légèrement")
     else:
         feedback.append("Dips correct")
-    return feedback
+    return feedback , angle
