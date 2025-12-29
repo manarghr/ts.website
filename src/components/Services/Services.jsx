@@ -131,14 +131,21 @@ export default function Services() {
   };
 
   return (
-    <section ref={sectionRef} className="relative py-32 md:py-40 bg-gradient-to-b from-[#F8F9F7] via-white to-[#F8F9F7] overflow-hidden">
-      {/* Premium Background Elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#52796F]/6 rounded-full blur-[200px] animate-float"></div>
-        <div className="absolute bottom-0 left-0 w-[700px] h-[700px] bg-[#354F52]/6 rounded-full blur-[180px] animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#6BB371]/5 rounded-full blur-[150px] animate-pulse-glow"></div>
-        <div className="absolute inset-0 bg-pattern-dots opacity-5"></div>
-      </div>
+    <section ref={sectionRef} className="bg-white py-20 md:py-28 text-center relative overflow-hidden">
+      {/* Hand-drawn Grid Background */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid-pattern-services" width="80" height="80" patternUnits="userSpaceOnUse">
+            <path d="M 80 0 Q 76 4, 80 8 Q 84 12, 80 16 Q 76 20, 80 24 Q 84 28, 80 32 Q 76 36, 80 40 Q 84 44, 80 48 Q 76 52, 80 56 Q 84 60, 80 64 Q 76 68, 80 72 Q 84 76, 80 80" stroke="#52796F" strokeWidth="1" fill="none" opacity="0.35"/>
+            <path d="M 0 0 Q 4 4, 8 0 Q 12 -4, 16 0 Q 20 4, 24 0 Q 28 -4, 32 0 Q 36 4, 40 0 Q 44 -4, 48 0 Q 52 4, 56 0 Q 60 -4, 64 0 Q 68 4, 72 0 Q 76 -4, 80 0" stroke="#52796F" strokeWidth="1" fill="none" opacity="0.35"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid-pattern-services)" opacity="0.5" />
+      </svg>
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 bg-pattern-waves opacity-10"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#52796F]/5 rounded-full blur-3xl animate-float"></div>
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#354F52]/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
       
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
         {/* Enhanced Header */}
