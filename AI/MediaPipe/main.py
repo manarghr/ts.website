@@ -13,12 +13,12 @@ from exercises.shoulder_press import analyse_shoulder_press
 from exercises.biceps_curl import analyse_biceps_curl
 from exercises.dips import analyse_dips
 from exercises.hip_thrust import analyse_hip_thrust
-from exercises.jumping_jacks import analyse_jumping_jacks
+from exercises.jumping_jack import analyse_jumping_jack
 from exercises.mountain_climbers import analyse_mountain_climber
 
 # Configuration de l'exercice et du chemin de la vidéo
-EXO = "mountain_climbers"  # Choisis l'exercice
-VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\mountain_climbers.mp4"
+EXO = "jumping_jack"  # Choisis l'exercice
+VIDEO_PATH = "C:\\Users\\zine\\Documents\\NIT\\genie logiciel\\projet\\ts.website\\AI\\MediaPipe\\videos\\jumping_jack.mp4"
 
 
 # Vérification du chemin de la vidéo
@@ -78,8 +78,8 @@ with mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tra
                     feedback = analyse_dips(landmarks, mp_pose)
                 elif EXO == "hip_thrust":
                     feedback = analyse_hip_thrust(landmarks, mp_pose)
-                elif EXO == "jumping_jacks":
-                    feedback = analyse_jumping_jacks(landmarks, mp_pose)
+                elif EXO == "jumping_jack":
+                    feedback = analyse_jumping_jack(landmarks, mp_pose)
                 elif EXO == "mountain_climbers":
                     feedback = analyse_mountain_climber(landmarks, mp_pose)
                 else:
