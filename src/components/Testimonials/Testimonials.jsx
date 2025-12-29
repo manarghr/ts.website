@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import picture from "../assets/Ellipse 3.png";
 import { FaStar, FaQuoteLeft, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { Dumbbell, Heart, Trophy, Target, Zap, Award, TrendingUp, Activity } from "lucide-react";
 
 const testimonials = [
   {
@@ -68,13 +69,47 @@ export default function TestimonialSection() {
 
   return (
     <section ref={sectionRef} className="w-full bg-gradient-to-br from-[#354F52] to-[#2F3E46] text-white py-20 md:py-28 px-6 md:px-16 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }}></div>
+      {/* Floating Icons Background */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        {/* Dumbbell Icons */}
+        <div className="absolute top-[15%] left-[8%] opacity-15 animate-float">
+          <Dumbbell className="w-12 h-12 text-[#6BB371]" />
+        </div>
+        <div className="absolute bottom-[20%] right-[12%] opacity-15 animate-float" style={{ animationDelay: '2s', animationDuration: '7s' }}>
+          <Dumbbell className="w-14 h-14 text-[#52796F]" />
+        </div>
+
+        {/* Heart Icons */}
+        <div className="absolute top-[30%] right-[10%] opacity-20 animate-pulse-glow" style={{ animationDelay: '0.5s' }}>
+          <Heart className="w-11 h-11 text-[#6BB371]" />
+        </div>
+
+        {/* Trophy Icon */}
+        <div className="absolute top-[60%] left-[12%] opacity-20 animate-float" style={{ animationDelay: '1.5s', animationDuration: '8s' }}>
+          <Trophy className="w-12 h-12 text-[#52796F]" />
+        </div>
+
+        {/* Target Icon */}
+        <div className="absolute bottom-[15%] left-[25%] opacity-15 animate-float" style={{ animationDelay: '2.5s', animationDuration: '7.5s' }}>
+          <Target className="w-11 h-11 text-[#6BB371]" />
+        </div>
+
+        {/* Zap Icon */}
+        <div className="absolute top-[45%] right-[20%] opacity-15 animate-pulse-glow" style={{ animationDelay: '1.2s' }}>
+          <Zap className="w-10 h-10 text-[#52796F]" />
+        </div>
+
+        {/* Award Icon */}
+        <div className="absolute bottom-[35%] right-[8%] opacity-20 animate-float" style={{ animationDelay: '1.8s', animationDuration: '6.8s' }}>
+          <Award className="w-12 h-12 text-[#6BB371]" />
+        </div>
+
+        {/* Activity Icon */}
+        <div className="absolute top-[25%] left-[35%] opacity-15 animate-pulse-glow" style={{ animationDelay: '0.8s' }}>
+          <Activity className="w-10 h-10 text-[#52796F]" />
+        </div>
       </div>
+
       {/* Animated Background Elements */}
       <div className="absolute top-10 left-10 w-96 h-96 bg-[#6BB371]/10 rounded-full blur-3xl animate-float"></div>
       <div className="absolute bottom-10 right-10 w-80 h-80 bg-[#52796F]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }}></div>

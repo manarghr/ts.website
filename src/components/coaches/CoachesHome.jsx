@@ -79,6 +79,16 @@ export default function CoachesHome() {
 
   return (
     <section ref={sectionRef} className="text-center bg-gradient-to-b from-white to-[#C8CDC5]/30 py-20 md:py-28 relative overflow-hidden">
+      {/* Hand-drawn Grid Background */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid-pattern-coaches" width="80" height="80" patternUnits="userSpaceOnUse">
+            <path d="M 80 0 Q 76 4, 80 8 Q 84 12, 80 16 Q 76 20, 80 24 Q 84 28, 80 32 Q 76 36, 80 40 Q 84 44, 80 48 Q 76 52, 80 56 Q 84 60, 80 64 Q 76 68, 80 72 Q 84 76, 80 80" stroke="#52796F" strokeWidth="1" fill="none" opacity="0.35"/>
+            <path d="M 0 0 Q 4 4, 8 0 Q 12 -4, 16 0 Q 20 4, 24 0 Q 28 -4, 32 0 Q 36 4, 40 0 Q 44 -4, 48 0 Q 52 4, 56 0 Q 60 -4, 64 0 Q 68 4, 72 0 Q 76 -4, 80 0" stroke="#52796F" strokeWidth="1" fill="none" opacity="0.35"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid-pattern-coaches)" opacity="0.5" />
+      </svg>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 bg-pattern-dots opacity-15"></div>
       <div className="absolute top-20 left-20 w-72 h-72 bg-[#52796F]/8 rounded-full blur-3xl animate-float"></div>
