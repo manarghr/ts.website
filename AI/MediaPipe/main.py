@@ -2,18 +2,25 @@ import cv2
 import mediapipe as mp
 from pathlib import Path
 from exercise_registry import EXERCISE_FUNCTIONS
+from posture_utils import RepetitionCounter, EXERCISE_CONFIG
 
 
 
-VIDEO_PATH = r"C:\Users\zine\Documents\NIT\genie logiciel\projet\ts.website\AI\MediaPipe\videos\pushup.mp4"
+VIDEO_PATH = r"C:\Users\zine\Documents\NIT\genie logiciel\projet\ts.website\AI\MediaPipe\videos\biceps_curl.mp4"
 
 if not Path(VIDEO_PATH).exists():
     raise FileNotFoundError(f"Vidéo introuvable : {VIDEO_PATH}")
 
-
-EXO = Path(VIDEO_PATH).stem  
+EXO = Path(VIDEO_PATH).stem
 print(f"Exercice détecté : {EXO}")
 
+
+
+
+counter = RepetitionCounter(
+    EXERCISE_CONFIG[EXO]["min_angle"],
+    EXERCISE_CONFIG[EXO]["max_angle"]
+)
 
 
 mp_pose = mp.solutions.pose
@@ -23,14 +30,12 @@ cap = cv2.VideoCapture(VIDEO_PATH)
 if not cap.isOpened():
     raise IOError("Impossible d'ouvrir la vidéo")
 
-
-
-repetition_count = 0
-last_feedback = None
-
 analyse_function = EXERCISE_FUNCTIONS.get(EXO)
 if analyse_function is None:
     raise ValueError(f"Exercice '{EXO}' non supporté")
+
+repetition_count = 0
+
 
 
 with mp_pose.Pose(
@@ -54,7 +59,10 @@ with mp_pose.Pose(
             landmarks = results.pose_landmarks.landmark
 
             try:
-                feedback = analyse_function(landmarks, mp_pose)
+                
+                feedback, angle = analyse_function(landmarks, mp_pose)
+                repetition_count = counter.update(angle)
+
             except Exception as e:
                 feedback = [f"Erreur analyse : {str(e)}"]
 
@@ -63,14 +71,6 @@ with mp_pose.Pose(
                 results.pose_landmarks,
                 mp_pose.POSE_CONNECTIONS
             )
-
-            # Exemple simple de comptage (à adapter par exercice)
-            if feedback and feedback[0] != last_feedback:
-                if "correct" in feedback[0].lower():
-                    repetition_count += 1
-                    last_feedback = feedback[0]
-
-     
 
         y0, dy = 30, 30
         for i, text in enumerate(feedback):
@@ -101,7 +101,6 @@ with mp_pose.Pose(
 
         if cv2.waitKey(25) & 0xFF == 27:
             break
-
 
 cap.release()
 cv2.destroyAllWindows()
