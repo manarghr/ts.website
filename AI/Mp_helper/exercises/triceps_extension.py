@@ -1,6 +1,6 @@
 from posture_utils import calculate_angle
 
-def analyse_biceps_curl(landmarks, mp_pose):
+def analyse_triceps_extension(landmarks, mp_pose):
     shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,
                 landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
     elbow = [landmarks[mp_pose.PoseLandmark.RIGHT_ELBOW.value].x,
@@ -12,11 +12,10 @@ def analyse_biceps_curl(landmarks, mp_pose):
     feedback = []
 
     if angle > 160:
-        feedback.append("Descends le bras")
-    elif angle < 40:
-        feedback.append("Remonte le bras")
+        feedback.append("Bras trop tendu — plie le coude")
+    elif angle < 60:
+        feedback.append("Extension correcte des triceps")
     else:
-        feedback.append("Biceps curl correct")
+        feedback.append("Remonte le bras lentement")
 
-    return feedback, angle
-
+    return feedback , angle

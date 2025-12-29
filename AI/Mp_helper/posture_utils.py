@@ -41,9 +41,81 @@ def get_best_point(landmarks, left_id, right_id):
         return [right.x, right.y, right.z]
 
 
+class RepetitionCounter:
+    def __init__(self, min_angle, max_angle):
+        self.min_angle = min_angle
+        self.max_angle = max_angle
+        self.state = "down"
+        self.count = 0
+
+    def update(self, angle):
+        if angle > self.max_angle:
+            self.state = "down"
+
+        if angle < self.min_angle and self.state == "down":
+            self.state = "up"
+            self.count += 1
+
+        return self.count
 
 
+EXERCISE_CONFIG = {
 
-
-
-
+    "biceps_curl": {
+        "min_angle": 40,
+        "max_angle": 160
+    },
+    "triceps_extension": {
+        "min_angle": 50,
+        "max_angle": 170
+    },
+    "lateral_raise": {
+        "min_angle": 25,
+        "max_angle": 90
+    },
+    "pushup": {
+        "min_angle": 60,
+        "max_angle": 160
+    },
+    "dips": {
+        "min_angle": 60,
+        "max_angle": 160
+    },
+    "pullup": {
+        "min_angle": 50,
+        "max_angle": 170
+    },
+    "shoulder_press": {
+        "min_angle": 60,
+        "max_angle": 170
+    },
+    "squat": {
+        "min_angle": 70,
+        "max_angle": 170
+    },
+    "deadlift": {
+        "min_angle": 80,
+        "max_angle": 170
+    },
+    "lunge": {
+        "min_angle": 75,
+        "max_angle": 170
+    },
+    "hip_thrust": {
+        "min_angle": 90,
+        "max_angle": 170
+    },
+    "leg_raise": {
+        "min_angle": 60,
+        "max_angle": 170
+    },
+    "mountain_climbers": {
+        "min_angle": 70,
+        "max_angle": 170
+    },
+    "jumping_jack": {
+        "min_angle": 40,
+        "max_angle": 130
+    },
+    "plank": None
+}

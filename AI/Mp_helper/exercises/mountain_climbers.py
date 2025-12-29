@@ -1,6 +1,6 @@
 from posture_utils import calculate_angle
 
-def analyse_deadlift(landmarks, mp_pose):
+def analyse_mountain_climber(landmarks, mp_pose):
     shoulder = [landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].x,
                 landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value].y]
     hip = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,
@@ -8,12 +8,14 @@ def analyse_deadlift(landmarks, mp_pose):
     knee = [landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].x,
             landmarks[mp_pose.PoseLandmark.RIGHT_KNEE.value].y]
 
-    back_angle = calculate_angle(shoulder, hip, knee)
+    angle = calculate_angle(shoulder, hip, knee)
     feedback = []
-    
-    if back_angle < 150:
-        feedback.append(" Dos trop penché — redresse un peu ton buste.")
+
+    if angle > 160:
+        feedback.append("Genou trop loin — ramène vers la poitrine")
+    elif angle < 90:
+        feedback.append("Mountain climber correct")
     else:
-        feedback.append(" Bonne position du dos !")
-    
-    return feedback, back_angle
+        feedback.append("Accelere le mouvement")
+
+    return feedback , angle

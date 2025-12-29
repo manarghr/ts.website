@@ -16,4 +16,4 @@ def analyse_pullup(landmarks, mp_pose):
         feedback.append("Redescends légèrement")
     else:
         feedback.append("Pull-up correct")
-    return feedback
+    return feedback , angle

@@ -16,4 +16,4 @@ def analyse_lunge(landmarks, mp_pose):
         feedback.append("Descends un peu plus")
     else:
         feedback.append("Fente correcte")
-    return feedback
+    return feedback , angle

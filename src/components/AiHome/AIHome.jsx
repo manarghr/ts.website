@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import picture from "../assets/picture.png";
 import { FaBrain, FaChartLine, FaShieldAlt, FaUserMd, FaRocket, FaBolt } from "react-icons/fa";
@@ -21,6 +22,32 @@ const staggerContainer = {
 };
 
 export default function AIHome() {
+  const sectionRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
   const features = [
     {
       icon: FaBrain,
@@ -49,15 +76,23 @@ export default function AIHome() {
   ];
 
   return (
-    <section className="relative py-12 md:py-16 overflow-hidden">
-      {/* Premium Background Elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#52796F]/8 rounded-full blur-[200px] animate-float"></div>
-        <div className="absolute bottom-0 left-0 w-[700px] h-[700px] bg-[#354F52]/8 rounded-full blur-[180px] animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#6BB371]/6 rounded-full blur-[150px] animate-pulse-glow"></div>
-        <div className="absolute inset-0 bg-pattern-dots opacity-5"></div>
-      </div>
-
+    <section ref={sectionRef} className="relative bg-gradient-to-b from-[#C8CDC5]/30 to-white py-20 md:py-28 overflow-hidden">
+      {/* Hand-drawn Grid Background */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid-pattern-ai" width="80" height="80" patternUnits="userSpaceOnUse">
+            <path d="M 80 0 Q 76 4, 80 8 Q 84 12, 80 16 Q 76 20, 80 24 Q 84 28, 80 32 Q 76 36, 80 40 Q 84 44, 80 48 Q 76 52, 80 56 Q 84 60, 80 64 Q 76 68, 80 72 Q 84 76, 80 80" stroke="#52796F" strokeWidth="1" fill="none" opacity="0.35"/>
+            <path d="M 0 0 Q 4 4, 8 0 Q 12 -4, 16 0 Q 20 4, 24 0 Q 28 -4, 32 0 Q 36 4, 40 0 Q 44 -4, 48 0 Q 52 4, 56 0 Q 60 -4, 64 0 Q 68 4, 72 0 Q 76 -4, 80 0" stroke="#52796F" strokeWidth="1" fill="none" opacity="0.35"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid-pattern-ai)" opacity="0.5" />
+      </svg>
+      
+      {/* Animated Background Elements */}
+      <div className="absolute top-10 right-10 w-64 h-64 bg-[#52796F]/10 rounded-full blur-3xl animate-float"></div>
+      <div className="absolute bottom-10 left-10 w-80 h-80 bg-[#354F52]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
+      <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-[#6BB371]/10 rounded-full blur-2xl animate-pulse-glow"></div>
+      
       <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
         {/* Header Section */}
         <motion.div

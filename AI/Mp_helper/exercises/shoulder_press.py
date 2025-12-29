@@ -16,4 +16,4 @@ def analyse_shoulder_press(landmarks, mp_pose):
         feedback.append("Bras trop tendus — baisse légèrement")
     else:
         feedback.append("Shoulder Press correct")
-    return feedback
+    return feedback , angle

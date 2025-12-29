@@ -31,8 +31,7 @@ export default function Achievement() {
   }, []);
 
   return (
-    <section className="bg-[#DADDD8] h-[550px] py-5 px-5 flex md:flex-row items-center justify-between gap-15 ">
-
+    <section className="relative bg-[#DADDD8] h-[550px] py-5 px-5 flex md:flex-row items-center justify-between gap-15 overflow-hidden">
       {/* Left side - Text and Stats */}
       <div className="flex-1 relative bottom- left-[100px] ">
         <h2 className="text-6xl font-bold text-[#84A98C] mb-4">
