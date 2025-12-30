@@ -217,5 +217,19 @@ export default function BlogGrid({ searchTerm, selectedCategory }) {
     },
   ];
 
+  // Filter blog posts based on search term and category
+  const filteredPosts = allBlogPosts.filter(post => {
+    const matchesSearch = 
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.author.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = 
+      selectedCategory === "all" || 
+      post.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
+
   
 }
