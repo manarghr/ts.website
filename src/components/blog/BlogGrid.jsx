@@ -1,30 +1,26 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import { FaArrowRight, FaUser, FaClock } from "react-icons/fa";
-import Image from "next/image";
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import Link from "next/link"
+import { FaArrowRight, FaUser, FaClock } from "react-icons/fa"
+import Image from "next/image"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -20 },
-  transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
-};
+  transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+}
 
-export default function BlogGrid({ searchTerm, 
-    selectedCategory,
-    onClearFilters }) {
-
-  const POSTS_PER_PAGE = 9;
-  const [currentPage, setCurrentPage] = useState(1);
+export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters }) {
+  const POSTS_PER_PAGE = 9
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedCategory]);
+    setCurrentPage(1)
+  }, [searchTerm, selectedCategory])
 
-      
   // Extended blog posts with more categories
   const allBlogPosts = [
     // Training Articles
@@ -36,7 +32,7 @@ export default function BlogGrid({ searchTerm,
       date: "March 15, 2024",
       readTime: "5 min read",
       image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
-      category: "training"
+      category: "training",
     },
     {
       id: 4,
@@ -46,7 +42,7 @@ export default function BlogGrid({ searchTerm,
       date: "March 8, 2024",
       readTime: "8 min read",
       image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
-      category: "training"
+      category: "training",
     },
     {
       id: 7,
@@ -56,9 +52,9 @@ export default function BlogGrid({ searchTerm,
       date: "February 28, 2024",
       readTime: "6 min read",
       image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800",
-      category: "training"
+      category: "training",
     },
-    
+
     // Nutrition Articles
     {
       id: 2,
@@ -68,7 +64,7 @@ export default function BlogGrid({ searchTerm,
       date: "March 12, 2024",
       readTime: "7 min read",
       image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800",
-      category: "nutrition"
+      category: "nutrition",
     },
     {
       id: 5,
@@ -78,7 +74,7 @@ export default function BlogGrid({ searchTerm,
       date: "March 5, 2024",
       readTime: "6 min read",
       image: "https://images.unsplash.com/photo-1547496502-affa22d38842?w=800",
-      category: "nutrition"
+      category: "nutrition",
     },
     {
       id: 8,
@@ -88,9 +84,9 @@ export default function BlogGrid({ searchTerm,
       date: "February 25, 2024",
       readTime: "9 min read",
       image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800",
-      category: "nutrition"
+      category: "nutrition",
     },
-    
+
     // Technology Articles
     {
       id: 3,
@@ -100,7 +96,7 @@ export default function BlogGrid({ searchTerm,
       date: "March 10, 2024",
       readTime: "6 min read",
       image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
-      category: "technology"
+      category: "technology",
     },
     {
       id: 6,
@@ -110,7 +106,7 @@ export default function BlogGrid({ searchTerm,
       date: "March 2, 2024",
       readTime: "5 min read",
       image: "https://images.unsplash.com/photo-1576243345690-4e4b79b63288?w=800",
-      category: "technology"
+      category: "technology",
     },
     {
       id: 9,
@@ -120,9 +116,9 @@ export default function BlogGrid({ searchTerm,
       date: "February 22, 2024",
       readTime: "7 min read",
       image: "https://images.unsplash.com/photo-1593642532842-98d0fd5ebc1a?w=800",
-      category: "technology"
+      category: "technology",
     },
-    
+
     // Wellness Articles
     {
       id: 10,
@@ -132,7 +128,7 @@ export default function BlogGrid({ searchTerm,
       date: "February 20, 2024",
       readTime: "5 min read",
       image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800",
-      category: "wellness"
+      category: "wellness",
     },
     {
       id: 11,
@@ -142,7 +138,7 @@ export default function BlogGrid({ searchTerm,
       date: "February 18, 2024",
       readTime: "8 min read",
       image: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800",
-      category: "wellness"
+      category: "wellness",
     },
     {
       id: 12,
@@ -152,9 +148,9 @@ export default function BlogGrid({ searchTerm,
       date: "February 15, 2024",
       readTime: "6 min read",
       image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
-      category: "wellness"
+      category: "wellness",
     },
-    
+
     // Mindset Articles
     {
       id: 13,
@@ -164,7 +160,7 @@ export default function BlogGrid({ searchTerm,
       date: "February 12, 2024",
       readTime: "7 min read",
       image: "https://images.unsplash.com/photo-1552196563-55cd4e45efb3?w=800",
-      category: "mindset"
+      category: "mindset",
     },
     {
       id: 14,
@@ -174,7 +170,7 @@ export default function BlogGrid({ searchTerm,
       date: "February 10, 2024",
       readTime: "5 min read",
       image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800",
-      category: "mindset"
+      category: "mindset",
     },
     {
       id: 15,
@@ -184,9 +180,9 @@ export default function BlogGrid({ searchTerm,
       date: "February 8, 2024",
       readTime: "9 min read",
       image: "https://images.unsplash.com/photo-1499728603263-13726abce5fd?w=800",
-      category: "mindset"
+      category: "mindset",
     },
-    
+
     // Progress Articles
     {
       id: 16,
@@ -196,7 +192,7 @@ export default function BlogGrid({ searchTerm,
       date: "February 5, 2024",
       readTime: "6 min read",
       image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
-      category: "progress"
+      category: "progress",
     },
     {
       id: 17,
@@ -206,7 +202,7 @@ export default function BlogGrid({ searchTerm,
       date: "February 2, 2024",
       readTime: "7 min read",
       image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
-      category: "progress"
+      category: "progress",
     },
     {
       id: 18,
@@ -216,31 +212,25 @@ export default function BlogGrid({ searchTerm,
       date: "January 30, 2024",
       readTime: "5 min read",
       image: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=800",
-      category: "progress"
+      category: "progress",
     },
-  ];
+  ]
 
   // Filter blog posts based on search term and category
-  const filteredPosts = allBlogPosts.filter(post => {
-    const matchesSearch = 
+  const filteredPosts = allBlogPosts.filter((post) => {
+    const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.author.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = 
-      selectedCategory === "all" || 
-      post.category === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  });
+      post.author.toLowerCase().includes(searchTerm.toLowerCase())
 
-  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+    const matchesCategory = selectedCategory === "all" || post.category === selectedCategory
 
-  const paginatedPosts = filteredPosts.slice(
-    (currentPage - 1) * POSTS_PER_PAGE,
-    currentPage * POSTS_PER_PAGE
-  );
+    return matchesSearch && matchesCategory
+  })
 
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE)
+
+  const paginatedPosts = filteredPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE)
 
   // Group posts by category for display
   const getCategoryName = (category) => {
@@ -250,19 +240,22 @@ export default function BlogGrid({ searchTerm,
       technology: "Technology",
       wellness: "Wellness",
       mindset: "Mindset",
-      progress: "Progress"
-    };
-    return names[category] || category;
-  };
+      progress: "Progress",
+    }
+    return names[category] || category
+  }
 
   return (
     <section className="relative py-12 bg-white overflow-hidden">
       {/* Grid Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/5 via-transparent to-[#6BB371]/5"></div>
-      <div className="absolute inset-0 opacity-35" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.4;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
-        backgroundSize: '60px 60px'
-      }}></div>
+      <div
+        className="absolute inset-0 opacity-35"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.4;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
+          backgroundSize: "60px 60px",
+        }}
+      ></div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
         {/* Results Count */}
@@ -272,9 +265,20 @@ export default function BlogGrid({ searchTerm,
               <span>No articles found matching your criteria</span>
             ) : (
               <span>
-                Found <strong className="text-[#52796F]">{filteredPosts.length}</strong> article{filteredPosts.length !== 1 ? 's' : ''}
-                {searchTerm && <span> for "<strong>{searchTerm}</strong>"</span>}
-                {selectedCategory !== "all" && <span> in <strong>{getCategoryName(selectedCategory)}</strong></span>}
+                Found <strong className="text-[#52796F]">{filteredPosts.length}</strong> article
+                {filteredPosts.length !== 1 ? "s" : ""}
+                {searchTerm && (
+                  <span>
+                    {" "}
+                    for "<strong>{searchTerm}</strong>"
+                  </span>
+                )}
+                {selectedCategory !== "all" && (
+                  <span>
+                    {" "}
+                    in <strong>{getCategoryName(selectedCategory)}</strong>
+                  </span>
+                )}
               </span>
             )}
           </p>
@@ -282,67 +286,107 @@ export default function BlogGrid({ searchTerm,
 
         {/* Blog Posts Grid */}
         {filteredPosts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <AnimatePresence mode="wait">
-              {paginatedPosts.map((post, index) => (
-                <motion.article
-                  key={`${post.id}-${selectedCategory}-${searchTerm}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 overflow-hidden"
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <AnimatePresence mode="wait">
+                {paginatedPosts.map((post, index) => (
+                  <motion.article
+                    key={`${post.id}-${selectedCategory}-${searchTerm}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.4, delay: index * 0.05 }}
+                    className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 overflow-hidden"
+                  >
+                    {/* Image */}
+                    <div className="relative h-48 overflow-hidden">
+                      <Image
+                        src={post.image || "/placeholder.svg"}
+                        alt={post.title}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        onError={(e) => {
+                          e.target.onerror = null
+                          e.target.src = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800"
+                        }}
+                      />
+                      <div className="absolute top-4 left-4 px-3 py-1 bg-[#52796F] text-white text-xs font-semibold rounded-full capitalize">
+                        {getCategoryName(post.category)}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-[#354F52] mb-3 group-hover:text-[#52796F] transition-colors line-clamp-2">
+                        {post.title}
+                      </h3>
+                      <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">{post.excerpt}</p>
+
+                      {/* Meta Info */}
+                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <div className="flex items-center gap-1">
+                          <FaUser className="w-3 h-3" />
+                          <span>{post.author}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <FaClock className="w-3 h-3" />
+                          <span>{post.readTime}</span>
+                        </div>
+                      </div>
+
+                      <Link
+                        href={`/blog/${post.id}`}
+                        className="inline-flex items-center gap-2 text-[#52796F] font-semibold hover:text-[#354F52] transition-colors group-hover:gap-3"
+                      >
+                        Read More
+                        <FaArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
+                  </motion.article>
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-12 flex-wrap">
+                {/* Prev */}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 rounded-lg border border-[#52796F] text-[#52796F] text-sm font-semibold transition-all duration-200 hover:bg-[#52796F] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {/* Image */}
-                  <div className="relative h-48 overflow-hidden">
-                    <Image
-                      src={post.image}
-                      alt={post.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800';
-                      }}
-                    />
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-[#52796F] text-white text-xs font-semibold rounded-full capitalize">
-                      {getCategoryName(post.category)}
-                    </div>
-                  </div>
+                  &lt;
+                </button>
 
-                  {/* Content */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-[#354F52] mb-3 group-hover:text-[#52796F] transition-colors line-clamp-2">
-                      {post.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">
-                      {post.excerpt}
-                    </p>
-
-                    {/* Meta Info */}
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                      <div className="flex items-center gap-1">
-                        <FaUser className="w-3 h-3" />
-                        <span>{post.author}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <FaClock className="w-3 h-3" />
-                        <span>{post.readTime}</span>
-                      </div>
-                    </div>
-
-                    <Link
-                      href={`/blog/${post.id}`}
-                      className="inline-flex items-center gap-2 text-[#52796F] font-semibold hover:text-[#354F52] transition-colors group-hover:gap-3"
+                {/* Page Numbers */}
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const page = i + 1
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        currentPage === page
+                          ? "bg-[#52796F] text-white shadow-md"
+                          : "border border-[#52796F] text-[#52796F] hover:bg-[#52796F]/5"
+                      }`}
                     >
-                      Read More
-                      <FaArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
-                </motion.article>
-              ))}
-            </AnimatePresence>
-          </div>
+                      {page}
+                    </button>
+                  )
+                })}
+
+                {/* Next */}
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 rounded-lg border border-[#52796F] text-[#52796F] text-sm font-semibold transition-all duration-200 hover:bg-[#52796F] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  &gt;
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           // Empty State
           <motion.div
@@ -358,10 +402,9 @@ export default function BlogGrid({ searchTerm,
             </p>
             <button
               onClick={() => {
-                onClearFilters();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-
+                onClearFilters()
+                window.scrollTo({ top: 0, behavior: "smooth" })
+              }}
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#52796F] text-white font-semibold rounded-xl hover:bg-[#354F52] transition-all duration-300"
             >
               Clear Filters
@@ -369,47 +412,6 @@ export default function BlogGrid({ searchTerm,
           </motion.div>
         )}
       </div>
-      {totalPages > 1 && (
-  <div className="flex justify-center items-center gap-2 mt-12">
-    {/* Prev */}
-    <button
-      onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-      disabled={currentPage === 1}
-      className="px-3 py-2 rounded-lg border text-sm disabled:opacity-40"
-    >
-      &lt;
-    </button>
-
-    {/* Page Numbers */}
-    {Array.from({ length: totalPages }).map((_, i) => {
-      const page = i + 1;
-      return (
-        <button
-          key={page}
-          onClick={() => setCurrentPage(page)}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition
-            ${
-              currentPage === page
-                ? "bg-[#52796F] text-white"
-                : "border hover:bg-gray-100"
-            }`}
-        >
-          {page}
-        </button>
-      );
-    })}
-
-    {/* Next */}
-    <button
-      onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-      disabled={currentPage === totalPages}
-      className="px-3 py-2 rounded-lg border text-sm disabled:opacity-40"
-    >
-      &gt;
-    </button>
-  </div>
-)}
-
     </section>
-  );
+  )
 }
