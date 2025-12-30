@@ -4,6 +4,7 @@ import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import BlogHero from "@/components/blog/BlogHero";
 import BlogFilters from "@/components/blog/BlogFilters";
+import BlogGrid from "@/components/blog/BlogGrid";
 
 export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,8 +19,10 @@ export default function BlogPage() {
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
       />
-      
-      
+      <BlogGrid 
+        searchTerm={searchTerm}
+        selectedCategory={selectedCategory}
+      />
     </MainLayout>
   );
 }

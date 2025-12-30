@@ -244,4 +244,6 @@ export default function BlogGrid({ searchTerm, selectedCategory }) {
     return names[category] || category;
   };
   
+
+  
 }
