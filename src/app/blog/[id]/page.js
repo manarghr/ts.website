@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
+import BlogPost from "@/components/blog/BlogPost";
 
 
 export default function BlogPostPage() {
