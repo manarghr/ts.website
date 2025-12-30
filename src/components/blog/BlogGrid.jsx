@@ -16,6 +16,15 @@ const fadeInUp = {
 export default function BlogGrid({ searchTerm, 
     selectedCategory,
     onClearFilters }) {
+
+  const POSTS_PER_PAGE = 9;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory]);
+
+      
   // Extended blog posts with more categories
   const allBlogPosts = [
     // Training Articles
@@ -225,6 +234,14 @@ export default function BlogGrid({ searchTerm,
     return matchesSearch && matchesCategory;
   });
 
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+
+  const paginatedPosts = filteredPosts.slice(
+    (currentPage - 1) * POSTS_PER_PAGE,
+    currentPage * POSTS_PER_PAGE
+  );
+
+
   // Group posts by category for display
   const getCategoryName = (category) => {
     const names = {
@@ -267,7 +284,7 @@ export default function BlogGrid({ searchTerm,
         {filteredPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <AnimatePresence mode="wait">
-              {filteredPosts.map((post, index) => (
+              {paginatedPosts.map((post, index) => (
                 <motion.article
                   key={`${post.id}-${selectedCategory}-${searchTerm}`}
                   initial={{ opacity: 0, y: 20 }}
@@ -352,6 +369,47 @@ export default function BlogGrid({ searchTerm,
           </motion.div>
         )}
       </div>
+      {totalPages > 1 && (
+  <div className="flex justify-center items-center gap-2 mt-12">
+    {/* Prev */}
+    <button
+      onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+      disabled={currentPage === 1}
+      className="px-3 py-2 rounded-lg border text-sm disabled:opacity-40"
+    >
+      &lt;
+    </button>
+
+    {/* Page Numbers */}
+    {Array.from({ length: totalPages }).map((_, i) => {
+      const page = i + 1;
+      return (
+        <button
+          key={page}
+          onClick={() => setCurrentPage(page)}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition
+            ${
+              currentPage === page
+                ? "bg-[#52796F] text-white"
+                : "border hover:bg-gray-100"
+            }`}
+        >
+          {page}
+        </button>
+      );
+    })}
+
+    {/* Next */}
+    <button
+      onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+      disabled={currentPage === totalPages}
+      className="px-3 py-2 rounded-lg border text-sm disabled:opacity-40"
+    >
+      &gt;
+    </button>
+  </div>
+)}
+
     </section>
   );
 }
