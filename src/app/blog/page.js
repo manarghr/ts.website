@@ -19,12 +19,7 @@ export default function BlogPage() {
         setSelectedCategory={setSelectedCategory}
       />
       
-      {/* Add your blog content/cards here */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <p className="text-center text-gray-600">
-          Blog content will go here. Search: "{searchTerm}" | Category: "{selectedCategory}"
-        </p>
-      </div>
+      
     </MainLayout>
   );
 }
