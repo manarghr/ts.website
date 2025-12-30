@@ -13,7 +13,9 @@ const fadeInUp = {
   transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
 };
 
-export default function BlogGrid({ searchTerm, selectedCategory }) {
+export default function BlogGrid({ searchTerm, 
+    selectedCategory,
+    onClearFilters }) {
   // Extended blog posts with more categories
   const allBlogPosts = [
     // Training Articles
@@ -339,8 +341,10 @@ export default function BlogGrid({ searchTerm, selectedCategory }) {
             </p>
             <button
               onClick={() => {
+                onClearFilters();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+                }}
+
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#52796F] text-white font-semibold rounded-xl hover:bg-[#354F52] transition-all duration-300"
             >
               Clear Filters

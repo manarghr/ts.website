@@ -10,6 +10,11 @@ export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("all");
+  };
+
   return (
     <MainLayout>
       <BlogHero />
@@ -19,9 +24,10 @@ export default function BlogPage() {
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
       />
-      <BlogGrid 
+      <BlogGrid
         searchTerm={searchTerm}
         selectedCategory={selectedCategory}
+        onClearFilters={clearFilters}
       />
     </MainLayout>
   );
