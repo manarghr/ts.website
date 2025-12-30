@@ -266,13 +266,23 @@ export default function BlogPost({ postId }) {
     .filter(p => p.category === post.category && p.id !== post.id)
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Grid Background - Same as BlogGrid */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/5 via-transparent to-[#6BB371]/5"></div>
+      <div
+        className="absolute inset-0 opacity-35"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.4;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
+          backgroundSize: "60px 60px",
+        }}
+      ></div>
+
       {/* Hero Section with Image */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="relative h-[400px] md:h-[500px] overflow-hidden"
+        className="relative h-[400px] md:h-[500px] overflow-hidden z-10"
       >
         <Image
           src={post.image}
@@ -320,12 +330,15 @@ export default function BlogPost({ postId }) {
         </div>
       </motion.div>
 
-      {/* Article Content */}
-      <div className="relative bg-white">
-        {/* Decorative Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/5 via-transparent to-[#6BB371]/5 pointer-events-none" />
-        
-        <div className="relative max-w-4xl mx-auto px-6 md:px-12 py-16 md:py-20">
+      {/* Article Content - White Rectangle */}
+      <div className="relative z-10 py-12 md:py-16">
+        <div className="max-w-4xl mx-auto px-6 md:px-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="bg-white rounded-2xl shadow-sm p-8 md:p-12 lg:p-16"
+          >
           <motion.article
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -359,22 +372,23 @@ export default function BlogPost({ postId }) {
                 </p>
               )
             })}
-          </motion.article>
+            </motion.article>
 
-          {/* Back Button */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.8 }}
-            className="mt-16 pt-8 border-t border-[#C8CDC5]/50"
-          >
-            <Link
-              href="/blog"
-              className="inline-flex items-center gap-2 text-[#52796F] hover:text-[#354F52] font-semibold text-lg transition-colors group"
+            {/* Back Button */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.8 }}
+              className="mt-12 pt-8 border-t border-[#C8CDC5]/50"
             >
-              <FaArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-              Back to All Articles
-            </Link>
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-2 text-[#52796F] hover:text-[#354F52] font-semibold text-lg transition-colors group"
+              >
+                <FaArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                Back to All Articles
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </div>
@@ -385,9 +399,18 @@ export default function BlogPost({ postId }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.8 }}
-          className="bg-gradient-to-br from-[#f5f1e8] to-white py-16 md:py-20 border-t border-[#C8CDC5]/50"
+          className="relative bg-[#CAE5C4]/50 py-10 md:py-10 border-t border-[#CAE5C4]/50"
         >
-          <div className="max-w-7xl mx-auto px-6 md:px-12">
+          {/* Subtle pattern overlay */}
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.3;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
+              backgroundSize: "60px 60px",
+            }}
+          ></div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12">
             <div className="flex items-center justify-between mb-10">
               <div>
                 <h2 className="text-3xl md:text-4xl font-bold text-[#354F52] mb-2">
@@ -446,6 +469,40 @@ export default function BlogPost({ postId }) {
                 </motion.div>
               ))}
             </div>
+
+            {/* Show "View All" button if there are more articles */}
+            {relatedPosts.length > 6 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.6, duration: 0.5 }}
+                className="mt-12 text-center"
+              >
+                <Link
+                  href={`/blog?category=${post.category}`}
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-[#52796F] text-white rounded-xl font-semibold hover:bg-[#354F52] transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  View All {getCategoryName(post.category)} Articles ({relatedPosts.length})
+                  <FaArrowLeft className="w-5 h-5 rotate-180" />
+                </Link>
+              </motion.div>
+            )}
+
+            {/* Mobile "View All Articles" button */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.7, duration: 0.5 }}
+              className="mt-8 md:hidden text-center"
+            >
+              <Link 
+                href="/blog"
+                className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#52796F] text-[#52796F] rounded-xl font-semibold hover:bg-[#52796F] hover:text-white transition-all duration-300"
+              >
+                View All Articles
+                <FaArrowLeft className="w-4 h-4 rotate-180" />
+              </Link>
+            </motion.div>
           </div>
         </motion.div>
       )}
