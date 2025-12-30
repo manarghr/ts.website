@@ -21,7 +21,7 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
     setCurrentPage(1)
   }, [searchTerm, selectedCategory])
 
-  // Extended blog posts with more categories
+
   const allBlogPosts = [
     // Training Articles
     {
