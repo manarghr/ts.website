@@ -231,5 +231,17 @@ export default function BlogGrid({ searchTerm, selectedCategory }) {
     return matchesSearch && matchesCategory;
   });
 
+    // Group posts by category for display
+  const getCategoryName = (category) => {
+    const names = {
+      training: "Training",
+      nutrition: "Nutrition",
+      technology: "Technology",
+      wellness: "Wellness",
+      mindset: "Mindset",
+      progress: "Progress"
+    };
+    return names[category] || category;
+  };
   
 }
