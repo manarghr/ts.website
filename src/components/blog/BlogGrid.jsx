@@ -214,6 +214,16 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
       image: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=800",
       category: "progress",
     },
+    {
+      id: 19,
+      title: "Setting Realistic Fitness Goals",
+      excerpt: "How to set achievable goals that keep you motivated and on track.",
+      author: "Tom Anderson",
+      date: "January 30, 2024",
+      readTime: "5 min read",
+      image: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=800",
+      category: "progress",
+    },
   ]
 
   // Filter blog posts based on search term and category
