@@ -16,26 +16,32 @@ export const allBlogPosts = [
     readTime: "5 min read",
     image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
     category: "training",
-    content: `# 10 Essential Exercises for Perfect Form
+    content: `**10 Essential Exercises for Perfect Form**
 
 Proper form is the foundation of any successful fitness journey. Whether you're a beginner or an experienced athlete, mastering these fundamental exercises will help you build strength safely and effectively.
 
-## 1. Squats
+**1. Squats**
+
 Squats are the king of lower-body exercises. Stand with feet shoulder-width apart, toes slightly pointed out. As you descend, imagine sitting back into a chair, keeping your chest up and core engaged. Drive through your heels to return to standing. Proper form ensures your knees track over your toes and prevents injury.
 
-## 2. Deadlifts
+**2. Deadlifts**
+
 Deadlifts work your entire posterior chain. Begin with feet hip-width apart and barbell over mid-foot. Hinge at the hips, keeping your back flat and chest proud. Grip the bar outside your legs, then lift with controlled motion. Deadlifts build strength in the back, glutes, and hamstrings.
 
-## 3. Push-Ups
+**3. Push-Ups**
+
 A proper push-up starts in a plank position with hands slightly wider than shoulders. Lower your chest toward the ground, keeping elbows at 45 degrees. Push back up with control. This strengthens the chest, triceps, and core while improving shoulder stability.
 
-## 4. Rows
+**4. Rows**
+
 Rows target the back and improve posture. Focus on squeezing shoulder blades together during the pull. Keep core tight and avoid using momentum. Rows can be done with dumbbells, barbells, or cables.
 
-## 5. Overhead Press
+**5. Overhead Press**
+
 Stand with feet hip-width apart, core engaged. Press the weight overhead in a straight line, finishing with your biceps by your ears. Avoid arching your lower back. This strengthens shoulders, arms, and stabilizes the core.
 
-## 6-10. Additional Exercises
+**6-10. Additional Exercises**
+
 Include lunges, planks, pull-ups, hip bridges, and kettlebell swings. Each builds functional strength and targets different muscle groups. Progressive overload and proper recovery ensure continuous improvement.
 
 Perfect form takes practice. Focus on control, technique, and gradual progression. Consulting a qualified trainer can help accelerate results and prevent injuries.`
@@ -49,23 +55,28 @@ Perfect form takes practice. Focus on control, technique, and gradual progressio
     readTime: "8 min read",
     image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
     category: "training",
-    content: `# Building Strength: A Complete Guide
+    content: `**Building Strength: A Complete Guide**
 
 Strength training is essential for improving muscle mass, bone density, and overall fitness. This guide covers exercises, programming, and recovery strategies suitable for all levels.
 
-## Core Lifts
+**Core Lifts**
+
 Focus on compound lifts like squats, deadlifts, and bench press. These movements recruit multiple muscles, promoting growth and functional strength. Ensure proper technique and start with manageable weights.
 
-## Accessory Work
+**Accessory Work**
+
 Add exercises to strengthen weak points and balance your physique. Examples include lunges, rows, tricep extensions, and lateral raises. Accessory work improves overall stability and prevents injuries.
 
-## Programming
+**Programming**
+
 Structure workouts using sets, reps, and rest intervals. Beginners may start with 3 sets of 8-12 reps, while advanced athletes can use varied rep ranges and intensity techniques like drop sets and supersets.
 
-## Recovery
+**Recovery**
+
 Strength gains happen outside the gym. Sleep, nutrition, and active recovery are vital. Include deload weeks periodically to allow muscles and joints to recover.
 
-## Nutrition
+**Nutrition**
+
 Protein intake, sufficient calories, and balanced macros support muscle repair and growth. Hydration and micronutrients optimize performance and recovery.
 
 Strength training is a journey. Consistency, proper form, and intelligent programming are keys to sustainable progress.`
@@ -220,6 +231,7 @@ AI coaches analyze performance and provide personalized guidance. Users can adju
 
 Virtual training will continue evolving, offering accessibility, motivation, and innovation for all fitness enthusiasts.`
   },
+  
 ];
 
 
