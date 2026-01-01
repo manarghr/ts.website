@@ -1,10 +1,10 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Card from "./Cardes";
 import Image from "next/image";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { FaDumbbell, FaRunning, FaLeaf } from "react-icons/fa";
+import { FaDumbbell, FaRunning, FaLeaf, FaSearch, FaTimes, FaFilter } from "react-icons/fa";
 
 // Images (fallback)
 import picture1 from "../assets/picture1.png";
@@ -19,6 +19,11 @@ export default function Coaches() {
   const [coaches, setCoaches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Fetch coaches from MongoDB API
   useEffect(() => {
@@ -116,6 +121,67 @@ export default function Coaches() {
   // Create a sorted list of category names
   const categoryNames = Object.keys(allCategories).sort();
   
+  // Filter coaches based on search query and selected categories
+  const filteredCategories = useMemo(() => {
+    // Create a deep copy of categories to avoid mutating the original
+    const filtered = {};
+    Object.keys(allCategories).forEach(cat => {
+      filtered[cat] = [...(allCategories[cat] || [])];
+    });
+    
+    let result = { ...filtered };
+    
+    // Filter by selected categories
+    if (selectedCategories.length > 0) {
+      const filteredByCategory = {};
+      selectedCategories.forEach(cat => {
+        if (result[cat]) {
+          filteredByCategory[cat] = result[cat];
+        }
+      });
+      result = filteredByCategory;
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const filteredBySearch = {};
+      Object.keys(result).forEach(cat => {
+        const matchingCoaches = result[cat].filter(coach => {
+          const name = (coach.name || '').toLowerCase();
+          const bio = (coach.bio || coach.description || '').toLowerCase();
+          const query = searchQuery.toLowerCase();
+          return name.includes(query) || bio.includes(query);
+        });
+        if (matchingCoaches.length > 0) {
+          filteredBySearch[cat] = matchingCoaches;
+        }
+      });
+      result = filteredBySearch;
+    }
+    
+    return result;
+  }, [coaches, selectedCategories, searchQuery]);
+  
+  const filteredCategoryNames = Object.keys(filteredCategories).sort();
+  
+  // Toggle category filter
+  const toggleCategory = (category) => {
+    setSelectedCategories(prev => 
+      prev.includes(category)
+        ? prev.filter(cat => cat !== category)
+        : [...prev, category]
+    );
+  };
+  
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedCategories([]);
+  };
+  
+  // Check if any filters are active
+  const hasActiveFilters = searchQuery.trim() !== "" || selectedCategories.length > 0;
+  
   // Debug: Log categories and coaches
   useEffect(() => {
     if (coaches.length > 0) {
@@ -164,14 +230,14 @@ export default function Coaches() {
 
   // Initialize carousel state for all categories
   useEffect(() => {
-    if (categoryNames.length === 0) return;
+    if (filteredCategoryNames.length === 0) return;
     
     const newIndices = {};
-    categoryNames.forEach(cat => {
+    filteredCategoryNames.forEach(cat => {
       newIndices[cat] = carouselIndices[cat] || 0;
     });
     setCarouselIndices(prev => ({ ...prev, ...newIndices }));
-  }, [coaches.length]);
+  }, [filteredCategoryNames.length, coaches.length]);
 
   const scrollCarousel = (category, direction) => {
     const container = scrollRefs.current[category];
@@ -217,32 +283,56 @@ export default function Coaches() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-[#C8CDC5]/10 to-white">
-      {/* Banner Section */}
-      <section className="relative bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] text-white py-28 md:py-40 overflow-hidden">
-        {/* Animated Background Elements */}
+    <div className="min-h-screen bg-gradient-to-br from-[#E8EDEB] via-[#F2F5F3] to-[#E3E8E6] relative">
+      {/* Beautiful Animated Background with more color */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Main colored gradient overlay - more visible */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#DAE4DF]/60 via-[#E8EDEB]/40 to-[#D4DFD9]/50"></div>
+        
+        {/* Large animated gradient orbs - more colorful and visible */}
+        <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-gradient-to-br from-[#52796F]/20 to-[#6BB371]/15 rounded-full blur-[300px] animate-float"></div>
+        <div className="absolute bottom-0 left-0 w-[900px] h-[900px] bg-gradient-to-tr from-[#354F52]/18 to-[#52796F]/15 rounded-full blur-[280px] animate-float" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-[#6BB371]/18 to-[#4A7C59]/12 rounded-full blur-[250px] animate-pulse-glow"></div>
+        <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-[#6BB371]/15 rounded-full blur-[220px] animate-float" style={{ animationDelay: '4s' }}></div>
+        <div className="absolute bottom-1/3 left-1/3 w-[550px] h-[550px] bg-[#52796F]/12 rounded-full blur-[200px] animate-float" style={{ animationDelay: '1s' }}></div>
+        
+        {/* Grid Pattern Overlay - more visible */}
+        <div 
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, #354F52 1px, transparent 1px),
+              linear-gradient(to bottom, #354F52 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px'
+          }}
+        ></div>
+        
+        {/* Dot Pattern - more visible */}
+        <div 
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #52796F 1.5px, transparent 1.5px)',
+            backgroundSize: '35px 35px'
+          }}
+        ></div>
+      </div>
+      {/* Enhanced Banner Section */}
+      <section className="relative bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] text-white py-32 md:py-48 overflow-hidden z-10">
+        {/* Enhanced Animated Background Elements */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 right-20 w-96 h-96 bg-[#6BB371]/10 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#52796F]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-20 right-20 w-[500px] h-[500px] bg-[#6BB371]/15 rounded-full blur-[150px] animate-float"></div>
+          <div className="absolute bottom-20 left-20 w-[400px] h-[400px] bg-[#52796F]/15 rounded-full blur-[120px] animate-float" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#6BB371]/10 rounded-full blur-[200px] animate-pulse-glow"></div>
+          
+          {/* Subtle geometric shapes */}
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-white/5 rounded-full"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-24 h-24 border border-white/5 rotate-45"></div>
         </div>
 
-        {/* Repeating COACHES pattern background */}
+        {/* Coach Image Background */}
         <div 
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `repeating-linear-gradient(
-              45deg,
-              transparent,
-              transparent 100px,
-              rgba(255,255,255,0.03) 100px,
-              rgba(255,255,255,0.03) 200px
-            )`,
-          }}
-        />
-        
-        {/* Coach Image Background - Horizontal Transparent */}
-        <div 
-          className="absolute inset-0 z-[1] opacity-20"
+          className="absolute inset-0 z-[1] opacity-15"
           style={{
             backgroundImage: "url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400')",
             backgroundSize: "cover",
@@ -252,35 +342,149 @@ export default function Coaches() {
           }}
         />
         
-        {/* COACHES Text - Above the image */}
+        {/* COACHES Text Background */}
         <div className="absolute inset-0 flex items-center justify-center z-[2]">
-          <div className="text-[180px] md:text-[280px] lg:text-[350px] font-black text-white opacity-[0.05] select-none" style={{
+          <div className="text-[200px] md:text-[300px] lg:text-[400px] font-black text-white opacity-[0.04] select-none" style={{
             fontFamily: 'var(--font-montserrat), sans-serif',
-            letterSpacing: '20px',
-            animation: 'heartbeat 4s ease-in-out infinite',
+            letterSpacing: '25px',
           }}>
             COACHES
           </div>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 animate-fadeInUp">
-            Meet Our <span className="text-[#6F8676]">Coaches</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto animate-fadeInUp mb-8" style={{ animationDelay: '0.2s' }}>
-            Professional trainers dedicated to your fitness journey
-          </p>
           <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: 96 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="h-1 bg-[#6BB371] mx-auto"
-          />
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white text-sm font-semibold mb-8">
+              <span>Expert Trainers</span>
+            </div>
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-black text-white mb-6 tracking-tight">
+              Meet Our <span className="block mt-2 bg-gradient-to-r from-[#6BB371] to-[#52796F] bg-clip-text text-transparent">Coaches</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-10 leading-relaxed">
+              Professional trainers dedicated to your fitness journey
+            </p>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: 120 }}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="h-1.5 bg-gradient-to-r from-[#6BB371] to-[#52796F] mx-auto rounded-full"
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Filter Section */}
+      <section className="sticky top-0 z-50 bg-[#F2F5F3]/85 backdrop-blur-xl border-b border-[#C8CDC5]/50 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
+          >
+            {/* Search Bar */}
+            <div className="relative">
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search coaches by name or specialty..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-12 py-4 bg-white border-2 border-[#C8CDC5]/50 rounded-2xl focus:outline-none focus:border-[#52796F] transition-all shadow-md hover:shadow-lg text-gray-700 placeholder-gray-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#52796F] transition-colors"
+                >
+                  <FaTimes className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
+            {/* Category Filters */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FaFilter className="text-[#52796F] w-5 h-5" />
+                  <h3 className="text-lg font-bold text-[#354F52]">Filter by Category</h3>
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-sm text-[#52796F] hover:text-[#354F52] font-semibold flex items-center gap-2 transition-colors"
+                  >
+                    Clear all
+                    <FaTimes className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                {categoryNames.map((category) => {
+                  const isSelected = selectedCategories.includes(category);
+                  const categoryColor = getCategoryColor(category, categoryNames.indexOf(category));
+                  return (
+                    <motion.button
+                      key={category}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => toggleCategory(category)}
+                      className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2 ${
+                        isSelected
+                          ? "bg-gradient-to-r from-[#354F52] to-[#52796F] text-white shadow-xl"
+                          : "bg-white text-[#354F52] hover:bg-[#52796F] hover:text-white border-2 border-[#C8CDC5] hover:border-[#52796F]"
+                      }`}
+                    >
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                        isSelected ? "bg-white/20" : ""
+                      }`} style={isSelected ? {} : { color: categoryColor }}>
+                        {getCategoryIcon(category)}
+                      </div>
+                      <span>{category}</span>
+                      {isSelected && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="ml-1"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </motion.span>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+              
+              {/* Results Count */}
+              {hasActiveFilters && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-sm text-gray-600"
+                >
+                  Showing {filteredCategoryNames.reduce((sum, cat) => sum + (filteredCategories[cat]?.length || 0), 0)} coaches
+                  {selectedCategories.length > 0 && ` in ${selectedCategories.length} ${selectedCategories.length === 1 ? 'category' : 'categories'}`}
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Coaches Sections - Dynamic */}
-      <div className="py-16 md:py-24">
+      <div className="py-16 md:py-24 relative">
+        {/* Additional Background Accents */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-[#52796F]/4 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-1/4 left-0 w-[350px] h-[350px] bg-[#6BB371]/4 rounded-full blur-[100px]"></div>
+        </div>
+        
+        <div className="relative z-10">
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="text-[#354F52] text-lg">Loading coaches...</div>
@@ -289,34 +493,49 @@ export default function Coaches() {
           <div className="flex justify-center items-center py-20">
             <div className="text-gray-500 text-lg">No coaches available</div>
           </div>
-        ) : categoryNames.length === 0 ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="text-gray-500 text-lg">
-              No categories found. Coaches: {coaches.length}
+        ) : filteredCategoryNames.length === 0 ? (
+          <div className="flex flex-col justify-center items-center py-20">
+            <div className="text-gray-500 text-lg mb-4">
+              {hasActiveFilters ? "No coaches found matching your filters" : "No categories found. Coaches: " + coaches.length}
             </div>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="px-6 py-3 bg-[#354F52] text-white font-semibold rounded-xl hover:bg-[#52796F] transition-all shadow-lg hover:shadow-xl"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
         ) : (
-          categoryNames.map((categoryName, categoryIndex) => {
-            const categoryCoaches = categories[categoryName] || [];
+          filteredCategoryNames.map((categoryName, categoryIndex) => {
+            const categoryCoaches = filteredCategories[categoryName] || [];
             const categoryId = categoryName.toLowerCase().replace(/\s+/g, '-');
             const categoryColor = getCategoryColor(categoryName, categoryIndex);
             
             return (
-              <section key={categoryName} data-section id={categoryId} className="mb-20">
-                <div className="bg-gradient-to-r from-[#C8CDC5] via-[#CAD2C5] to-[#C8CDC5] py-5 mb-10 shadow-md">
-                  <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl" style={{ backgroundColor: categoryColor }}>
+              <section key={categoryName} data-section id={categoryId} className="mb-16">
+                {/* Simplified Category Header */}
+                <div className="max-w-7xl mx-auto px-6 md:px-12 mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg shadow-lg" style={{ backgroundColor: categoryColor }}>
                       {getCategoryIcon(categoryName)}
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-[#354F52] uppercase tracking-wide">
-                      {categoryName.toUpperCase()}
-                    </h2>
+                    <div className="flex-1">
+                      <h2 className="text-2xl md:text-3xl font-bold text-[#354F52]">
+                        {categoryName}
+                      </h2>
+                      <p className="text-gray-600 text-sm mt-0.5">
+                        {categoryCoaches.length} {categoryCoaches.length === 1 ? 'coach' : 'coaches'} available
+                      </p>
+                    </div>
+                    <div className="h-px bg-gradient-to-r from-[#C8CDC5] to-transparent flex-1 max-w-32"></div>
                   </div>
                 </div>
                 
                 <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
                   {categoryCoaches.length === 0 ? (
-                    <div className="flex justify-center items-center py-20">
+                    <div className="flex justify-center items-center py-20 bg-white/60 backdrop-blur-sm rounded-3xl shadow-lg border border-[#C8CDC5]/30">
                       <div className="text-gray-500 text-lg">No {categoryName} coaches available</div>
                     </div>
                   ) : (
@@ -327,15 +546,15 @@ export default function Coaches() {
                             scrollRefs.current[categoryName] = el;
                           }
                         }}
-                        className="flex gap-8 overflow-x-auto scroll-smooth no-scrollbar snap-x snap-mandatory pb-4"
-                        style={{ minHeight: '400px' }}
+                        className="flex gap-6 overflow-x-auto scroll-smooth no-scrollbar snap-x snap-mandatory pb-6"
+                        style={{ minHeight: '520px' }}
                       >
                         {categoryCoaches.map((coach, index) => {
                           if (!coach) return null;
                           return (
                             <div 
                               key={coach.id || coach._id || `coach-${categoryName}-${index}`} 
-                              className="snap-center min-w-[320px]"
+                              className="snap-center flex-shrink-0"
                             >
                               <Card
                                 id={coach.id}
@@ -348,42 +567,24 @@ export default function Coaches() {
                         })}
                       </div>
 
-                      {/* Navigation Arrows */}
+                      {/* Enhanced Navigation Arrows */}
                       {categoryCoaches.length > 1 && (
                         <>
                           <button
                             onClick={() => scrollCarousel(categoryName, "left")}
                             disabled={(carouselIndices[categoryName] || 0) === 0}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 w-14 h-14 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 w-16 h-16 text-white rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 hover:shadow-3xl transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-md border-2 border-white/20"
                             style={{ backgroundColor: categoryColor }}
-                            onMouseEnter={(e) => {
-                              if (!e.currentTarget.disabled) {
-                                e.currentTarget.style.backgroundColor = categoryColor;
-                                e.currentTarget.style.opacity = '0.8';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = categoryColor;
-                            }}
                           >
-                            <IoIosArrowBack size={26} />
+                            <IoIosArrowBack size={28} />
                           </button>
                           <button
                             onClick={() => scrollCarousel(categoryName, "right")}
                             disabled={(carouselIndices[categoryName] || 0) === categoryCoaches.length - 1}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 w-14 h-14 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-sm"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 w-16 h-16 text-white rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 hover:shadow-3xl transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-md border-2 border-white/20"
                             style={{ backgroundColor: categoryColor }}
-                            onMouseEnter={(e) => {
-                              if (!e.currentTarget.disabled) {
-                                e.currentTarget.style.backgroundColor = categoryColor;
-                                e.currentTarget.style.opacity = '0.8';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = categoryColor;
-                            }}
                           >
-                            <IoIosArrowForward size={26} />
+                            <IoIosArrowForward size={28} />
                           </button>
                         </>
                       )}
@@ -394,39 +595,55 @@ export default function Coaches() {
             );
           })
         )}
+        </div>
       </div>
 
-      {/* Newsletter Section */}
-      <section data-section id="newsletter" className="bg-gradient-to-br from-[#C8CDC5] via-[#CAD2C5] to-[#C8CDC5] py-20 md:py-24 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-pattern-dots opacity-10"></div>
-        <div className="absolute top-10 right-10 w-64 h-64 bg-[#52796F]/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-10 left-10 w-56 h-56 bg-[#354F52]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
+      {/* Enhanced Newsletter Section */}
+      <section data-section id="newsletter" className="bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#354F52] py-24 md:py-32 relative overflow-hidden z-10">
+        {/* Enhanced Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-pattern-dots opacity-5"></div>
+          <div className="absolute top-10 right-10 w-96 h-96 bg-[#6BB371]/10 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute bottom-10 left-10 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
+          
+          {/* Geometric accents */}
+          <div className="absolute top-1/2 right-1/4 w-40 h-40 border border-white/5 rounded-full"></div>
+          <div className="absolute bottom-1/4 left-1/4 w-32 h-32 border border-white/5 rotate-45"></div>
+        </div>
         
         <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-12 text-center">
-          <div className={`fade-in-on-scroll ${isVisible.newsletter ? 'visible' : ''}`}>
-            <div className="inline-block mb-4 px-4 py-2 bg-[#354F52]/10 backdrop-blur-sm border border-[#52796F]/30 rounded-full text-sm font-medium text-[#354F52]">
-              Stay Connected
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white text-sm font-semibold mb-8">
+              <span>Stay Connected</span>
             </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#354F52] mb-4">
-              Join Our Fitness Community
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6">
+              Join Our Fitness <span className="text-[#6BB371]">Community</span>
             </h2>
-            <p className="text-lg md:text-xl text-gray-700 mb-10 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
               Receive expert insights and exclusive fitness content every week
             </p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
               <input
                 type="email"
-                placeholder="enter your email address"
-                className="flex-1 px-6 py-4 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-[#354F52] text-gray-700 bg-white shadow-md transition-all hover:shadow-lg"
+                placeholder="Enter your email address"
+                className="flex-1 px-6 py-4 rounded-xl border-2 border-white/20 focus:outline-none focus:border-white/40 text-gray-900 bg-white/95 backdrop-blur-sm shadow-xl transition-all hover:shadow-2xl placeholder-gray-500"
               />
-              <button className="px-8 py-4 bg-[#354F52] text-white font-semibold rounded-lg hover:bg-[#52796F] transition-all shadow-lg hover:shadow-xl hover:scale-105 transform">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-10 py-4 bg-[#6BB371] text-white font-bold rounded-xl hover:bg-[#52796F] transition-all shadow-xl hover:shadow-2xl"
+              >
                 Subscribe
-              </button>
+              </motion.button>
             </div>
+          </motion.div>
         </div>
-      </div>
-    </section>
+      </section>
     </div>
   );
 }
