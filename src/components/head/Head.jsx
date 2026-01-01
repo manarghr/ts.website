@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import AuthModal from "@/components/auth/AuthModal";
-import { FaPlay, FaArrowRight } from "react-icons/fa";
+import CoachAuthModal from "@/components/auth/CoachAuthModal";
+import { FaPlay, FaArrowRight, FaUserTie } from "react-icons/fa";
 
 export default function Head() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCoachAuthModalOpen, setIsCoachAuthModalOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -70,8 +72,12 @@ export default function Head() {
                     <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
                   </span>
                 </button>
-                <button className="px-8 py-4 text-lg font-semibold text-white border-2 border-white/30 rounded-lg backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:border-white/50 hover:scale-105">
-                  Watch Demo
+                <button 
+                  onClick={() => setIsCoachAuthModalOpen(true)}
+                  className="group px-8 py-4 text-lg font-semibold text-white border-2 border-white/30 rounded-lg backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:border-white/50 hover:scale-105 flex items-center justify-center gap-2"
+                >
+                  <FaUserTie className="group-hover:scale-110 transition-transform" />
+                  Join Us as Coach
                 </button>
               </div>
 
@@ -90,6 +96,7 @@ export default function Head() {
       </section>
       
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <CoachAuthModal isOpen={isCoachAuthModalOpen} onClose={() => setIsCoachAuthModalOpen(false)} />
     </>
   );
 }
