@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Lock, User, Phone, Award, Briefcase, FileText } from "lucide-react";
+import { X, Mail, Lock, User, Phone, Award, Briefcase, FileText, Upload } from "lucide-react";
 
 export default function CoachAuthModal({ isOpen, onClose }) {
   const [isLogin, setIsLogin] = useState(false);
@@ -14,11 +14,26 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     specialization: "",
     experience: "",
     certification: "",
-    bio: ""
+    bio: "",
+    certificateFile: null
   });
+  const [certificatePreview, setCertificatePreview] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, certificateFile: file });
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCertificatePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -283,6 +298,53 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent outline-none transition-all"
                           placeholder="e.g., NASM-CPT, ACE, ISSA"
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Upload Certificate *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            id="certificate-upload"
+                            accept="image/*,.pdf"
+                            onChange={handleFileChange}
+                            required
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="certificate-upload"
+                            className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-[#6BB371] transition-all cursor-pointer group"
+                          >
+                            <div className="text-center">
+                              <Upload className="w-8 h-8 text-gray-400 group-hover:text-[#6BB371] mx-auto mb-2 transition-colors" />
+                              <p className="text-sm text-gray-600 group-hover:text-[#52796F] transition-colors">
+                                {formData.certificateFile ? formData.certificateFile.name : "Click to upload certificate (PDF or Image)"}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">Max size: 5MB</p>
+                            </div>
+                          </label>
+                        </div>
+                        {certificatePreview && (
+                          <div className="mt-3 relative">
+                            <img
+                              src={certificatePreview}
+                              alt="Certificate preview"
+                              className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData({ ...formData, certificateFile: null });
+                                setCertificatePreview(null);
+                              }}
+                              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <div>
