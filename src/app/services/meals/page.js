@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import MainLayout from "@/components/layout/MainLayout";
+import { useRouter } from "next/navigation";
+
 import { 
   Search, 
   Filter, 
@@ -18,6 +20,7 @@ import {
 } from "lucide-react";
 
 export default function MealsPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGoal, setSelectedGoal] = useState("all");
   const [selectedMealType, setSelectedMealType] = useState("all");
@@ -492,9 +495,12 @@ export default function MealsPage() {
           </div>
         </div>
         
-        <button className="w-full bg-gradient-to-r from-[#6BB371] to-[#52796F] text-white py-2 rounded-lg font-semibold hover:from-[#52796F] hover:to-[#6BB371] transition-all duration-300">
-          View Recipe
-        </button>
+        <button 
+        onClick={() => router.push(`/services/meals/${meal.id}`)}
+        className="w-full bg-gradient-to-r from-[#6BB371] to-[#52796F] text-white py-2 rounded-lg font-semibold hover:from-[#52796F] hover:to-[#6BB371] transition-all duration-300"
+      >
+        View Recipe
+      </button>
       </div>
     </motion.div>
   );
