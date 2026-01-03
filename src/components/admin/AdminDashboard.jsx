@@ -163,20 +163,19 @@ export default function AdminDashboard() {
         const data = await res.json()
         if (data.success) setPrograms(data.programs || [])
       } else if (activeSection === "meals") {
-        // Meals are stored in localStorage, fetch from there
-        const allUsers = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-        const allMeals = []
-        allUsers.forEach((user) => {
-          if (user.favoriteMeals && Array.isArray(user.favoriteMeals)) {
-            user.favoriteMeals.forEach((meal) => {
-              if (!allMeals.find((m) => m.id === meal.id)) {
-                allMeals.push(meal)
-              }
-            })
+          // Load meals from localStorage admin_meals
+          const adminMeals = localStorage.getItem("admin_meals");
+          if (adminMeals) {
+            try {
+              setMeals(JSON.parse(adminMeals));
+            } catch (error) {
+              console.error("Error parsing admin meals:", error);
+              setMeals([]);
+            }
+          } else {
+            setMeals([]);
           }
-        })
-        setMeals(allMeals)
-      }
+        }
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {
