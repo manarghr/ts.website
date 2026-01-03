@@ -18,6 +18,7 @@ import {
   Cookie,
   Heart
 } from "lucide-react";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 export default function MealsPage() {
   const router = useRouter();
@@ -25,6 +26,14 @@ export default function MealsPage() {
   const [selectedGoal, setSelectedGoal] = useState("all");
   const [selectedMealType, setSelectedMealType] = useState("all");
   const [favoriteMeals, setFavoriteMeals] = useState([]);
+
+const MEALS_PER_PAGE = 4; // 2 rows of 4 cards
+const [currentPages, setCurrentPages] = useState({
+  breakfast: 1,
+  lunch: 1,
+  dinner: 1,
+  snacks: 1
+});
 
   // Load favorite meals from localStorage
   useEffect(() => {
@@ -87,6 +96,14 @@ export default function MealsPage() {
 
   const isFavorite = (mealId) => {
     return favoriteMeals.some(f => f.id === mealId);
+  };
+
+
+  const handlePageChange = (mealType, page) => {
+    setCurrentPages(prev => ({
+      ...prev,
+      [mealType]: page
+    }));
   };
 
   const goals = [
@@ -164,6 +181,38 @@ useEffect(() => {
     lunch: filteredMeals.filter(m => m.mealType === "lunch"),
     dinner: filteredMeals.filter(m => m.mealType === "dinner"),
     snacks: filteredMeals.filter(m => m.mealType === "snacks"),
+  };
+
+  // Paginated meals
+  const paginatedMealsByType = {
+    breakfast: {
+      meals: mealsByType.breakfast.slice(
+        (currentPages.breakfast - 1) * MEALS_PER_PAGE,
+        currentPages.breakfast * MEALS_PER_PAGE
+      ),
+      totalPages: Math.ceil(mealsByType.breakfast.length / MEALS_PER_PAGE)
+    },
+    lunch: {
+      meals: mealsByType.lunch.slice(
+        (currentPages.lunch - 1) * MEALS_PER_PAGE,
+        currentPages.lunch * MEALS_PER_PAGE
+      ),
+      totalPages: Math.ceil(mealsByType.lunch.length / MEALS_PER_PAGE)
+    },
+    dinner: {
+      meals: mealsByType.dinner.slice(
+        (currentPages.dinner - 1) * MEALS_PER_PAGE,
+        currentPages.dinner * MEALS_PER_PAGE
+      ),
+      totalPages: Math.ceil(mealsByType.dinner.length / MEALS_PER_PAGE)
+    },
+    snacks: {
+      meals: mealsByType.snacks.slice(
+        (currentPages.snacks - 1) * MEALS_PER_PAGE,
+        currentPages.snacks * MEALS_PER_PAGE
+      ),
+      totalPages: Math.ceil(mealsByType.snacks.length / MEALS_PER_PAGE)
+    }
   };
 
   const MealCard = ({ meal, index }) => (
@@ -254,6 +303,59 @@ useEffect(() => {
       </div>
     </motion.div>
   );
+
+
+  const PaginationControls = ({ mealType, currentPage, totalPages }) => {
+  if (totalPages < 1) return null;
+  
+  return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="flex justify-center items-center gap-8 mt-8"
+        >
+          {/* Previous Button */}
+          <button
+            onClick={() => handlePageChange(mealType, Math.max(currentPage - 1, 1))}
+            disabled={currentPage === 1}
+            aria-label="Previous page"
+            className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+          >
+            <IoIosArrowBack size={24} className="group-hover:-translate-x-1 transition-transform" />
+          </button>
+
+          {/* Page Dots Indicator */}
+          <div className="flex gap-3 items-center">
+            {Array.from({ length: totalPages }).map((_, index) => {
+              const page = index + 1;
+              return (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(mealType, page)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    currentPage === page
+                      ? "bg-[#354F52] w-12 shadow-lg"
+                      : "bg-[#C8CDC5] w-2 hover:bg-[#52796F] hover:w-4"
+                  }`}
+                  aria-label={`Go to page ${page}`}
+                />
+              );
+            })}
+      </div>
+
+            {/* Next Button */}
+            <button
+              onClick={() => handlePageChange(mealType, Math.min(currentPage + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              aria-label="Next page"
+              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+            >
+              <IoIosArrowForward size={24} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
+        );
+    };
 
   return (
     <MainLayout>
@@ -392,10 +494,16 @@ useEffect(() => {
                 </div>
                 <p className="text-gray-600 mb-6">Start your day with nutritious breakfast options</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {mealsByType.breakfast.map((meal, index) => (
+                  {paginatedMealsByType.breakfast.meals.map((meal, index) => (
                     <MealCard key={meal.id} meal={meal} index={index} />
                   ))}
                 </div>
+                {/*PAGINATION */}
+                <PaginationControls 
+                  mealType="breakfast" 
+                  currentPage={currentPages.breakfast} 
+                  totalPages={paginatedMealsByType.breakfast.totalPages} 
+                />
               </div>
             )}
 
@@ -409,10 +517,16 @@ useEffect(() => {
                 </div>
                 <p className="text-gray-600 mb-6">Fuel your afternoon with balanced lunch meals</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {mealsByType.lunch.map((meal, index) => (
+                  {paginatedMealsByType.lunch.meals.map((meal, index) => (
                     <MealCard key={meal.id} meal={meal} index={index} />
                   ))}
                 </div>
+                {/*PAGINATION */}
+                <PaginationControls 
+                  mealType="lunch" 
+                  currentPage={currentPages.lunch} 
+                  totalPages={paginatedMealsByType.lunch.totalPages} 
+                />
               </div>
             )}
 
@@ -426,10 +540,16 @@ useEffect(() => {
                 </div>
                 <p className="text-gray-600 mb-6">End your day with satisfying dinner options</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {mealsByType.dinner.map((meal, index) => (
+                  {paginatedMealsByType.dinner.meals.map((meal, index) => (
                     <MealCard key={meal.id} meal={meal} index={index} />
                   ))}
                 </div>
+                {/* ADD PAGINATION */}
+                <PaginationControls 
+                  mealType="dinner" 
+                  currentPage={currentPages.dinner} 
+                  totalPages={paginatedMealsByType.dinner.totalPages} 
+                />
               </div>
             )}
 
@@ -443,20 +563,44 @@ useEffect(() => {
                 </div>
                 <p className="text-gray-600 mb-6">Healthy snacks to keep you energized throughout the day</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {mealsByType.snacks.map((meal, index) => (
+                  {paginatedMealsByType.snacks.meals.map((meal, index) => (
                     <MealCard key={meal.id} meal={meal} index={index} />
                   ))}
                 </div>
+                {/* ADD PAGINATION */}
+                <PaginationControls 
+                  mealType="snacks" 
+                  currentPage={currentPages.snacks} 
+                  totalPages={paginatedMealsByType.snacks.totalPages} 
+                />
               </div>
             )}
           </>
         ) : (
           // Filtered View - Show only selected meal type
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredMeals.map((meal, index) => (
-              <MealCard key={meal.id} meal={meal} index={index} />
-            ))}
+            {(() => {
+              const currentPage = currentPages[selectedMealType] || 1;
+              const totalPages = Math.ceil(filteredMeals.length / MEALS_PER_PAGE);
+              const paginatedMeals = filteredMeals.slice(
+                (currentPage - 1) * MEALS_PER_PAGE,
+                currentPage * MEALS_PER_PAGE
+              );
+              
+              return paginatedMeals.map((meal, index) => (
+                <MealCard key={meal.id} meal={meal} index={index} />
+              ));
+            })()}
           </div>
+          {selectedMealType !== "all" && (
+            <PaginationControls 
+              mealType={selectedMealType} 
+              currentPage={currentPages[selectedMealType] || 1} 
+              totalPages={Math.ceil(filteredMeals.length / MEALS_PER_PAGE)} 
+            />
+          )}
+        </>
         )}
         </div>
       </div>
