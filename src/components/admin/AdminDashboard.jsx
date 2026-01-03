@@ -1825,6 +1825,19 @@ const handleUpdateMeal = async (e) => {
                               </div>
                             </div>
 
+                            {/* Description Field */}
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Description</label>
+                              <textarea
+                                value={mealForm.description}
+                                onChange={(e) => setMealForm({ ...mealForm, description: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                rows="3"
+                                placeholder="Brief description of the meal"
+                                required
+                              />
+                            </div>
+
                             <div className="grid grid-cols-4 gap-4">
                               <div>
                                 <label className="block text-sm font-medium mb-1 text-[#354F52]">Servings</label>
