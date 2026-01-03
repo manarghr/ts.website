@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { FaArrowRight, FaCalendarAlt, FaUser, FaClock } from "react-icons/fa";
+import { FaArrowRight, FaCalendarAlt, FaUser, FaClock, FaDumbbell, FaAppleAlt, FaCarrot, FaFish, FaBreadSlice, FaHeartbeat, FaBicycle, FaRunning } from "react-icons/fa";
 import Image from "next/image";
 
 const fadeInUp = {
@@ -55,6 +55,46 @@ const blogPosts = [
 export default function BlogHome() {
   return (
     <section className="relative py-12 bg-white overflow-hidden z-10">
+      {/* Floating Gym and Food Icons Background */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        {/* Gym Icons */}
+        <div className="absolute top-[10%] left-[5%] opacity-10 animate-float">
+          <FaDumbbell className="w-12 h-12 text-[#52796F]" />
+        </div>
+        <div className="absolute top-[60%] left-[8%] opacity-15 animate-float" style={{ animationDelay: '1s', animationDuration: '6s' }}>
+          <FaRunning className="w-10 h-10 text-[#354F52]" />
+        </div>
+        <div className="absolute bottom-[15%] right-[10%] opacity-12 animate-float" style={{ animationDelay: '2.5s', animationDuration: '7s' }}>
+          <FaDumbbell className="w-14 h-14 text-[#6BB371]" />
+        </div>
+        <div className="absolute top-[40%] right-[5%] opacity-15 animate-float" style={{ animationDelay: '1.5s', animationDuration: '8s' }}>
+          <FaBicycle className="w-11 h-11 text-[#52796F]" />
+        </div>
+        <div className="absolute top-[25%] left-[15%] opacity-10 animate-pulse-glow" style={{ animationDelay: '0.5s' }}>
+          <FaHeartbeat className="w-10 h-10 text-[#6BB371]" />
+        </div>
+
+        {/* Food Icons */}
+        <div className="absolute top-[30%] right-[12%] opacity-15 animate-pulse-glow" style={{ animationDelay: '0.8s' }}>
+          <FaAppleAlt className="w-10 h-10 text-[#52796F]" />
+        </div>
+        <div className="absolute bottom-[30%] left-[12%] opacity-12 animate-pulse-glow" style={{ animationDelay: '2s' }}>
+          <FaCarrot className="w-12 h-12 text-[#6BB371]" />
+        </div>
+        <div className="absolute top-[50%] left-[20%] opacity-15 animate-float" style={{ animationDelay: '1.2s', animationDuration: '6.5s' }}>
+          <FaFish className="w-11 h-11 text-[#354F52]" />
+        </div>
+        <div className="absolute bottom-[20%] right-[15%] opacity-10 animate-float" style={{ animationDelay: '2.2s', animationDuration: '7.5s' }}>
+          <FaBreadSlice className="w-12 h-12 text-[#52796F]" />
+        </div>
+        <div className="absolute top-[70%] right-[25%] opacity-15 animate-pulse-glow" style={{ animationDelay: '1.8s' }}>
+          <FaAppleAlt className="w-9 h-9 text-[#6BB371]" />
+        </div>
+        <div className="absolute bottom-[40%] right-[8%] opacity-12 animate-float" style={{ animationDelay: '3s', animationDuration: '6.8s' }}>
+          <FaCarrot className="w-10 h-10 text-[#354F52]" />
+        </div>
+      </div>
+
       <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
         {/* Header */}
         <motion.div
