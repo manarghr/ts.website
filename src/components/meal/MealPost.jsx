@@ -27,38 +27,38 @@ export default function MealPost({ postId }) {
   const [activeTab, setActiveTab] = useState("ingredients");
 
   useEffect(() => {
-    // Load meal data from localStorage
-    const loadMeal = () => {
-      const adminMeals = localStorage.getItem("admin_meals");
+  // Load meal data from MongoDB API
+  const loadMeal = async () => {
+    try {
+      const res = await fetch("/api/admin/meals");
+      const data = await res.json();
       
-      if (adminMeals) {
-        try {
-          const parsedAdminMeals = JSON.parse(adminMeals);
-          const foundMeal = parsedAdminMeals.find(m => m.id === parseInt(postId));
-          
-          if (foundMeal) {
-            setMeal(foundMeal);
-          }
-        } catch (error) {
-          console.error("Error parsing admin meals:", error);
+      if (data.success && data.meals) {
+        const foundMeal = data.meals.find(m => m.id === postId);
+        
+        if (foundMeal) {
+          setMeal(foundMeal);
         }
       }
-    };
-
-    loadMeal();
-
-    // Check if meal is favorited
-    const currentUser = localStorage.getItem("trainsight_current_user");
-    if (currentUser) {
-      try {
-        const userData = JSON.parse(currentUser);
-        const favorites = userData.favoriteMeals || [];
-        setIsFavorite(favorites.some(f => f.id === parseInt(postId)));
-      } catch (error) {
-        console.error("Error loading favorites:", error);
-      }
+    } catch (error) {
+      console.error("Error loading meal:", error);
     }
-  }, [postId]);
+  };
+
+  loadMeal();
+
+  // Check if meal is favorited
+  const currentUser = localStorage.getItem("trainsight_current_user");
+  if (currentUser) {
+    try {
+      const userData = JSON.parse(currentUser);
+      const favorites = userData.favoriteMeals || [];
+      setIsFavorite(favorites.some(f => f.id === postId));
+    } catch (error) {
+      console.error("Error loading favorites:", error);
+    }
+  }
+}, [postId]);
 
   const toggleFavorite = () => {
     if (typeof window === "undefined") return;

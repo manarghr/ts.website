@@ -108,27 +108,7 @@ export default function MealsPage() {
   // Default meals
   const defaultMeals = [];
 
-  // // Load meals from localStorage (admin-added meals) and merge with default meals
-  // const [meals, setMeals] = useState(() => {
-  //   if (typeof window !== "undefined") {
-  //     const adminMeals = localStorage.getItem("admin_meals");
-  //     if (adminMeals) {
-  //       try {
-  //         const parsedAdminMeals = JSON.parse(adminMeals);
-  //         // Merge admin meals with default meals, avoiding duplicates by id
-  //         const existingIds = new Set(parsedAdminMeals.map(m => m.id));
-  //         const uniqueDefaultMeals = defaultMeals.filter(m => !existingIds.has(m.id));
-  //         return [...parsedAdminMeals, ...uniqueDefaultMeals];
-  //       } catch (error) {
-  //         console.error("Error parsing admin meals:", error);
-  //         return defaultMeals;
-  //       }
-  //     }
-  //   }
-  //   return defaultMeals;
-  // });
 
-  // Load meals from API instead of localStorage
 const [meals, setMeals] = useState(defaultMeals);
 
 useEffect(() => {
@@ -154,35 +134,21 @@ useEffect(() => {
   fetchMeals();
 }, []);
 
-  // Update meals when admin_meals changes
+  // Refetch meals when they're updated in admin
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const handleStorageChange = () => {
-        const adminMeals = localStorage.getItem("admin_meals");
-        if (adminMeals) {
-          try {
-            const parsedAdminMeals = JSON.parse(adminMeals);
-            const existingIds = new Set(parsedAdminMeals.map(m => m.id));
-            const uniqueDefaultMeals = defaultMeals.filter(m => !existingIds.has(m.id));
-            setMeals([...parsedAdminMeals, ...uniqueDefaultMeals]);
-          } catch (error) {
-            console.error("Error parsing admin meals:", error);
+    const handleMealsUpdate = () => {
+      fetch("/api/admin/meals")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.meals) {
+            setMeals(data.meals);
           }
-        } else {
-          setMeals(defaultMeals);
-        }
-      };
+        })
+        .catch(err => console.error("Error refetching meals:", err));
+    };
 
-      window.addEventListener("storage", handleStorageChange);
-      // Also listen for custom event when meals are updated
-      window.addEventListener("mealsUpdated", handleStorageChange);
-      
-      return () => {
-        window.removeEventListener("storage", handleStorageChange);
-        window.removeEventListener("mealsUpdated", handleStorageChange);
-      };
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    window.addEventListener("mealsUpdated", handleMealsUpdate);
+    return () => window.removeEventListener("mealsUpdated", handleMealsUpdate);
   }, []);
 
   const filteredMeals = meals.filter(meal => {
