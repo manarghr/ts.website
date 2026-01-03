@@ -796,38 +796,76 @@ const handleUpdateMeal = async (e) => {
     setShowVideoForm(true)
   }
 
-  const openEditMeal = (meal) => {
-    setEditingItem(meal)
-    setMealForm({
-      id: meal.id,
-      name: meal.name || "",
-      mealType: meal.mealType || "breakfast",
-      goal: meal.goal || "all",
-      calories: meal.calories || 0,
-      protein: meal.protein || 0,
-      carbs: meal.carbs || 0,
-      fats: meal.fats || 0,
-      fiber: meal.fiber || 0,
-      sugar: meal.sugar || 0,
-      sodium: meal.sodium || 0,
-      servings: meal.servings || 1,
-      difficulty: meal.difficulty || "Easy",
-      prepTime: meal.prepTime || 0,
-      steps: meal.steps || [],
-      tips: meal.tips || [],
-      equipment: meal.equipment || [],
-      ingredients: meal.ingredients || [],
-      detailedIngredients: meal.detailedIngredients || [],
-      image: meal.image || "",
-    })
-    setIngredientInput("")
-    setStepInput("")
-    setTipInput("")
-    setEquipmentInput("")
-    setDetailedIngredientInput({ item: "", amount: "", notes: "" })
-    setShowMealForm(true)
-  }
+  // const openEditMeal = (meal) => {
+  //   setEditingItem(meal)
+  //   setMealForm({
+  //     id: meal.id,
+  //     name: meal.name || "",
+  //     mealType: meal.mealType || "breakfast",
+  //     goal: meal.goal || "all",
+  //     calories: meal.calories || 0,
+  //     protein: meal.protein || 0,
+  //     carbs: meal.carbs || 0,
+  //     fats: meal.fats || 0,
+  //     fiber: meal.fiber || 0,
+  //     sugar: meal.sugar || 0,
+  //     sodium: meal.sodium || 0,
+  //     servings: meal.servings || 1,
+  //     difficulty: meal.difficulty || "Easy",
+  //     prepTime: meal.prepTime || 0,
+  //     steps: meal.steps || [],
+  //     tips: meal.tips || [],
+  //     equipment: meal.equipment || [],
+  //     ingredients: meal.ingredients || [],
+  //     detailedIngredients: meal.detailedIngredients || [],
+  //     image: meal.image || "",
+  //   })
+  //   setIngredientInput("")
+  //   setStepInput("")
+  //   setTipInput("")
+  //   setEquipmentInput("")
+  //   setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+  //   setShowMealForm(true)
+  // }
 
+  const openEditMeal = (meal) => {
+  setEditingItem(meal)
+  
+  // Extract prepTime number from "X min" format
+  const prepTimeNum = typeof meal.prepTime === 'string' 
+    ? parseInt(meal.prepTime.replace(' min', '')) 
+    : meal.prepTime || 0
+  
+  setMealForm({
+    id: meal.id,
+    name: meal.name || "",
+    mealType: meal.mealType || "breakfast",
+    goal: meal.goal || "all",
+    description: meal.description || "",
+    calories: meal.calories || meal.nutritionDetails?.calories || 0,
+    protein: meal.protein || meal.nutritionDetails?.protein || 0,
+    carbs: meal.carbs || meal.nutritionDetails?.carbs || 0,
+    fats: meal.fats || meal.nutritionDetails?.fats || 0,
+    fiber: meal.fiber || meal.nutritionDetails?.fiber || 0,
+    sugar: meal.sugar || meal.nutritionDetails?.sugar || 0,
+    sodium: meal.sodium || meal.nutritionDetails?.sodium || 0,
+    servings: meal.servings || 1,
+    difficulty: meal.difficulty || "Easy",
+    prepTime: prepTimeNum,
+    steps: meal.steps || [],
+    tips: meal.tips || [],
+    equipment: meal.equipment || [],
+    ingredients: meal.ingredients || [],
+    detailedIngredients: meal.detailedIngredients || [],
+    image: meal.image || "",
+  })
+  setIngredientInput("")
+  setStepInput("")
+  setTipInput("")
+  setEquipmentInput("")
+  setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+  setShowMealForm(true)
+}
   const openEditProgram = (program) => {
     setEditingItem(program)
     setProgramForm({
