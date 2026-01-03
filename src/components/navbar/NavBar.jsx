@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { FaRegBell } from "react-icons/fa6"
-import { FaSearch, FaUser, FaSignOutAlt } from "react-icons/fa"
+import { FaSearch, FaUser, FaSignOutAlt, FaDumbbell, FaBrain, FaUtensils } from "react-icons/fa"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 
 export default function Navbar() {
   const router = useRouter()
+  const pathname = usePathname()
   const [showDropdown, setShowDropdown] = useState(false)
+  const [showServicesDropdown, setShowServicesDropdown] = useState(false)
 
   // Use lazy initializer to avoid setState in effect
   const [currentUser, setCurrentUser] = useState(() => {
@@ -68,19 +70,49 @@ export default function Navbar() {
       if (showDropdown && !event.target.closest(".profile-dropdown-container")) {
         setShowDropdown(false)
       }
+      if (showServicesDropdown && !event.target.closest(".services-dropdown-container")) {
+        setShowServicesDropdown(false)
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [showDropdown])
+  }, [showDropdown, showServicesDropdown])
 
   const links = [
     { name: "Home", href: "/" },
     { name: "About us", href: "/about" },
     { name: "Blog", href: "/blog" },
     { name: "Coaches", href: "/coaches" },
-    { name: "Services", href: "/services" },
   ]
+
+  const services = [
+    { 
+      name: "Our Programs", 
+      href: "/services/programs",
+      icon: FaDumbbell,
+      color: "#354F52"
+    },
+    { 
+      name: "AI Sports", 
+      href: "/services/ai-sports",
+      icon: FaBrain,
+      color: "#52796F"
+    },
+    { 
+      name: "Meal Prep", 
+      href: "/services/meals",
+      icon: FaUtensils,
+      color: "#52796F"
+    },
+  ]
+
+  const isActive = (href) => {
+    if (href === "/") {
+      return pathname === "/"
+    }
+    return pathname.startsWith(href)
+  }
 
   return (
     <header className="fixed top-0 left-0 w-full h-[60px] flex justify-between items-center px-6 bg-[#354F52] text-white shadow-md z-50">
@@ -89,14 +121,99 @@ export default function Navbar() {
           TrainSight
         </Link>
 
-        <ul className="flex gap-10 ml-80">
+        <ul className="flex gap-10 ml-80 items-center">
           {links.map((link, i) => (
             <li key={i}>
-              <Link href={link.href} className="text-white hover:text-[#C1B8AE] transition-colors duration-300">
+              <Link 
+                href={link.href} 
+                className={`text-white hover:text-[#C1B8AE] transition-colors duration-300 relative pb-1 ${
+                  isActive(link.href) ? 'text-[#6BB371]' : ''
+                }`}
+              >
                 {link.name}
+                {isActive(link.href) && (
+                  <motion.div
+                    layoutId="activeNav"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6BB371]"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
               </Link>
             </li>
           ))}
+          
+          {/* Services Link with Dropdown */}
+          <li 
+            className="relative services-dropdown-container"
+            onMouseEnter={() => setShowServicesDropdown(true)}
+            onMouseLeave={() => setShowServicesDropdown(false)}
+          >
+            <Link 
+              href="/services"
+              className={`text-white hover:text-[#C1B8AE] transition-colors duration-300 relative pb-1 ${
+                pathname.startsWith('/services') ? 'text-[#6BB371]' : ''
+              }`}
+            >
+              Services
+              {pathname.startsWith('/services') && (
+                <motion.div
+                  layoutId="activeNav"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6BB371]"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </Link>
+
+            <AnimatePresence>
+              {showServicesDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-2xl py-2 z-50 overflow-hidden border border-gray-100"
+                >
+                  {services.map((service, i) => {
+                    const Icon = service.icon
+                    return (
+                      <Link
+                        key={i}
+                        href={service.href}
+                        className={`flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-all group ${
+                          pathname === service.href ? 'bg-gray-50' : ''
+                        }`}
+                        onClick={() => setShowServicesDropdown(false)}
+                      >
+                        <div 
+                          className="mr-3 p-2 rounded-lg transition-colors"
+                          style={{ 
+                            backgroundColor: pathname === service.href ? service.color : '#f3f4f6',
+                            color: pathname === service.href ? 'white' : service.color
+                          }}
+                        >
+                          <Icon size={16} />
+                        </div>
+                        <span className={`font-medium ${pathname === service.href ? 'text-[#354F52]' : ''}`}>
+                          {service.name}
+                        </span>
+                        {pathname === service.href && (
+                          <motion.div
+                            layoutId="activeService"
+                            className="ml-auto w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: service.color }}
+                            initial={false}
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          />
+                        )}
+                      </Link>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </li>
         </ul>
       </div>
 

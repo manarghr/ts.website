@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { FaArrowRight, FaUser, FaClock } from "react-icons/fa"
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io"
 import Image from "next/image"
 
 const fadeInUp = {
@@ -20,7 +21,6 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm, selectedCategory])
-
 
   const allBlogPosts = [
     // Training Articles
@@ -214,6 +214,16 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
       image: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=800",
       category: "progress",
     },
+    {
+      id: 19,
+      title: "Setting Realistic Fitness Goals",
+      excerpt: "How to set achievable goals that keep you motivated and on track.",
+      author: "Tom Anderson",
+      date: "January 30, 2024",
+      readTime: "5 min read",
+      image: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=800",
+      category: "progress",
+    },
   ]
 
   // Filter blog posts based on search term and category
@@ -243,6 +253,11 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
       progress: "Progress",
     }
     return names[category] || category
+  }
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   return (
@@ -347,44 +362,53 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
               </AnimatePresence>
             </div>
 
+            {/*Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-12 flex-wrap">
-                {/* Prev */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="flex justify-center items-center gap-8 mt-16"
+              >
+                {/* Previous Button */}
                 <button
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-2 rounded-lg border border-[#52796F] text-[#52796F] text-sm font-semibold transition-all duration-200 hover:bg-[#52796F] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Previous page"
+                  className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
                 >
-                  &lt;
+                  <IoIosArrowBack size={24} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
 
-                {/* Page Numbers */}
-                {Array.from({ length: totalPages }).map((_, i) => {
-                  const page = i + 1
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                        currentPage === page
-                          ? "bg-[#52796F] text-white shadow-md"
-                          : "border border-[#52796F] text-[#52796F] hover:bg-[#52796F]/5"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  )
-                })}
+                {/* Page Dots Indicator */}
+                <div className="flex gap-3 items-center">
+                  {Array.from({ length: totalPages }).map((_, index) => {
+                    const page = index + 1
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          currentPage === page
+                            ? "bg-[#354F52] w-12 shadow-lg"
+                            : "bg-[#C8CDC5] w-2 hover:bg-[#52796F] hover:w-4"
+                        }`}
+                        aria-label={`Go to page ${page}`}
+                      />
+                    )
+                  })}
+                </div>
 
-                {/* Next */}
+                {/* Next Button */}
                 <button
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-2 rounded-lg border border-[#52796F] text-[#52796F] text-sm font-semibold transition-all duration-200 hover:bg-[#52796F] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Next page"
+                  className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
                 >
-                  &gt;
+                  <IoIosArrowForward size={24} className="group-hover:translate-x-1 transition-transform" />
                 </button>
-              </div>
+              </motion.div>
             )}
           </>
         ) : (
@@ -395,7 +419,7 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
             transition={{ duration: 0.4 }}
             className="text-center py-16"
           >
-            <div className="text-6xl mb-4">📝</div>
+            <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-bold text-[#354F52] mb-2">No articles found</h3>
             <p className="text-gray-600 mb-6">
               Try adjusting your search terms or filters to find what you're looking for.

@@ -1,11 +1,10 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 import {
   Users,
   UserCog,
   Video,
-  UtensilsCrossed,
   Dumbbell,
   Menu,
   X,
@@ -14,80 +13,105 @@ import {
   Edit,
   Trash2,
   Save,
-  X as XIcon,
+  XIcon,
   LogOut,
   Upload,
-  Image as ImageIcon,
   TrendingUp,
   UserPlus,
   Activity,
   BarChart3,
   Cookie,
-  Coffee,
-  Sun,
-  Moon,
-  Clock,
-} from "lucide-react";
-import { motion } from "framer-motion";
+} from "lucide-react"
+import { motion } from "framer-motion"
 
 export default function AdminDashboard() {
-  const [activeSection, setActiveSection] = useState("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [users, setUsers] = useState([]);
-  const [coaches, setCoaches] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [programs, setPrograms] = useState([]);
-  const [meals, setMeals] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statsLoading, setStatsLoading] = useState(true);
-  
+  const [activeSection, setActiveSection] = useState("dashboard")
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [users, setUsers] = useState([])
+  const [coaches, setCoaches] = useState([])
+  const [videos, setVideos] = useState([])
+  const [programs, setPrograms] = useState([])
+  const [meals, setMeals] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statsLoading, setStatsLoading] = useState(true)
+
   // Form states
-  const [showCoachForm, setShowCoachForm] = useState(false);
-  const [showVideoForm, setShowVideoForm] = useState(false);
-  const [showMealForm, setShowMealForm] = useState(false);
-  const [ingredientInput, setIngredientInput] = useState("");
-  const [showProgramForm, setShowProgramForm] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  
+  const [showCoachForm, setShowCoachForm] = useState(false)
+  const [showVideoForm, setShowVideoForm] = useState(false)
+  const [showMealForm, setShowMealForm] = useState(false)
+  const [ingredientInput, setIngredientInput] = useState("")
+  const [stepInput, setStepInput] = useState("")
+  const [tipInput, setTipInput] = useState("")
+  const [equipmentInput, setEquipmentInput] = useState("")
+  const [detailedIngredientInput, setDetailedIngredientInput] = useState({ item: "", amount: "", notes: "" })
+  const [showProgramForm, setShowProgramForm] = useState(false)
+  const [editingItem, setEditingItem] = useState(null)
+
   // Image upload states
-  const [coachImagePreview, setCoachImagePreview] = useState("");
-  const [coachImageFile, setCoachImageFile] = useState(null);
-  const [coachImageUploading, setCoachImageUploading] = useState(false);
-  const [videoThumbnailPreview, setVideoThumbnailPreview] = useState("");
-  const [videoThumbnailFile, setVideoThumbnailFile] = useState(null);
-  const [videoThumbnailUploading, setVideoThumbnailUploading] = useState(false);
+  const [coachImagePreview, setCoachImagePreview] = useState("")
+  const [coachImageFile, setCoachImageFile] = useState(null)
+  const [coachImageUploading, setCoachImageUploading] = useState(false)
+  const [videoThumbnailPreview, setVideoThumbnailPreview] = useState("")
+  const [videoThumbnailFile, setVideoThumbnailFile] = useState(null)
+  const [videoThumbnailUploading, setVideoThumbnailUploading] = useState(false)
 
   // Form data
-  const [coachForm, setCoachForm] = useState({ id: "", name: "", category: "", bio: "", image_url: "" });
-  const [videoForm, setVideoForm] = useState({ title: "", description: "", video_url: "", thumbnail_url: "", bio: "", price: 0, discount: false, discount_percentage: 0 });
-  const [mealForm, setMealForm] = useState({ 
-    id: "", 
-    name: "", 
-    mealType: "breakfast", 
-    goal: "all", 
-    calories: 0, 
-    protein: 0, 
-    carbs: 0, 
-    fats: 0, 
-    fiber: 0, 
-    ingredients: [], 
-    image: "", 
-    prepTime: "", 
-    description: "" 
-  });
-  const [programForm, setProgramForm] = useState({ name: "", description: "", duration: "", schedule: [], exercises: [], price: 0, discount: false, discount_percentage: 0 });
+  const [coachForm, setCoachForm] = useState({ id: "", name: "", category: "", bio: "", image_url: "" })
+  const [videoForm, setVideoForm] = useState({
+    title: "",
+    description: "",
+    video_url: "",
+    thumbnail_url: "",
+    bio: "",
+    price: 0,
+    discount: false,
+    discount_percentage: 0,
+  })
+  const [mealForm, setMealForm] = useState({
+    id: "",
+    name: "",
+    mealType: "breakfast",
+    goal: "all",
+    description: "",
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+    fiber: 0,
+    sugar: 0,
+    sodium: 0,
+    servings: 1,
+    difficulty: "Easy",
+    prepTime: 0,
+    steps: [],
+    tips: [],
+    equipment: [],
+    ingredients: [],
+    detailedIngredients: [],
+    image: "",
+  })
+  const [programForm, setProgramForm] = useState({
+    name: "",
+    description: "",
+    duration: "",
+    schedule: [],
+    exercises: [],
+    price: 0,
+    discount: false,
+    discount_percentage: 0,
+  })
 
   useEffect(() => {
     if (activeSection === "dashboard") {
-      fetchStats();
+      fetchStats()
     } else {
-      fetchData();
+      fetchData()
     }
-  }, [activeSection]);
+  }, [activeSection])
 
   const fetchStats = async () => {
-    setStatsLoading(true);
+    setStatsLoading(true)
     try {
       // Fetch all data for stats
       const [usersRes, coachesRes, videosRes, programsRes] = await Promise.all([
@@ -95,455 +119,773 @@ export default function AdminDashboard() {
         fetch("/api/coaches"),
         fetch("/api/admin/videos"),
         fetch("/api/admin/programs"),
-      ]);
-      
-      const usersData = await usersRes.json();
-      const coachesData = await coachesRes.json();
-      const videosData = await videosRes.json();
-      const programsData = await programsRes.json();
-      
-      if (usersData.success) setUsers(usersData.users || []);
-      if (coachesData.success) setCoaches(coachesData.coaches || []);
-      if (videosData.success) setVideos(videosData.videos || []);
-      if (programsData.success) setPrograms(programsData.programs || []);
-      
+      ])
+
+      const usersData = await usersRes.json()
+      const coachesData = await coachesRes.json()
+      const videosData = await videosRes.json()
+      const programsData = await programsRes.json()
+
+      if (usersData.success) setUsers(usersData.users || [])
+      if (coachesData.success) setCoaches(coachesData.coaches || [])
+      if (videosData.success) setVideos(videosData.videos || [])
+      if (programsData.success) setPrograms(programsData.programs || [])
+
       // Load meals from localStorage
-      const storedMeals = localStorage.getItem("admin_meals");
+      const storedMeals = localStorage.getItem("admin_meals")
       if (storedMeals) {
-        setMeals(JSON.parse(storedMeals));
+        setMeals(JSON.parse(storedMeals))
       }
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      console.error("Error fetching stats:", error)
     } finally {
-      setStatsLoading(false);
+      setStatsLoading(false)
     }
-  };
+  }
 
   const fetchData = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       if (activeSection === "users") {
-        const res = await fetch("/api/admin/users");
-        const data = await res.json();
-        if (data.success) setUsers(data.users || []);
+        const res = await fetch("/api/admin/users")
+        const data = await res.json()
+        if (data.success) setUsers(data.users || [])
       } else if (activeSection === "coaches") {
-        const res = await fetch("/api/coaches");
-        const data = await res.json();
-        if (data.success) setCoaches(data.coaches || []);
+        const res = await fetch("/api/coaches")
+        const data = await res.json()
+        if (data.success) setCoaches(data.coaches || [])
       } else if (activeSection === "videos") {
-        const res = await fetch("/api/admin/videos");
-        const data = await res.json();
-        if (data.success) setVideos(data.videos || []);
+        const res = await fetch("/api/admin/videos")
+        const data = await res.json()
+        if (data.success) setVideos(data.videos || [])
       } else if (activeSection === "programs") {
-        const res = await fetch("/api/admin/programs");
-        const data = await res.json();
-        if (data.success) setPrograms(data.programs || []);
+        const res = await fetch("/api/admin/programs")
+        const data = await res.json()
+        if (data.success) setPrograms(data.programs || [])
       } else if (activeSection === "meals") {
-        // Meals are stored in localStorage, fetch from there
-        const allUsers = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
-        const allMeals = [];
-        allUsers.forEach(user => {
-          if (user.favoriteMeals && Array.isArray(user.favoriteMeals)) {
-            user.favoriteMeals.forEach(meal => {
-              if (!allMeals.find(m => m.id === meal.id)) {
-                allMeals.push(meal);
-              }
-            });
+          // Load meals from localStorage admin_meals
+          const adminMeals = localStorage.getItem("admin_meals");
+          if (adminMeals) {
+            try {
+              setMeals(JSON.parse(adminMeals));
+            } catch (error) {
+              console.error("Error parsing admin meals:", error);
+              setMeals([]);
+            }
+          } else {
+            setMeals([]);
           }
-        });
-        setMeals(allMeals);
-      }
+        }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching data:", error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleLogout = () => {
-    localStorage.removeItem("admin_authenticated");
-    window.location.reload();
-  };
+    localStorage.removeItem("admin_authenticated")
+    window.location.reload()
+  }
 
   // Image upload handler
   const handleImageUpload = async (file, type) => {
-    if (!file) return null;
+    if (!file) return null
 
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
     if (!validTypes.includes(file.type)) {
-      alert('Invalid file type. Please upload an image (JPEG, PNG, GIF, or WebP).');
-      return null;
+      alert("Invalid file type. Please upload an image (JPEG, PNG, GIF, or WebP).")
+      return null
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('File size too large. Maximum size is 5MB.');
-      return null;
+      alert("File size too large. Maximum size is 5MB.")
+      return null
     }
 
     try {
-      if (type === 'coach') {
-        setCoachImageUploading(true);
-      } else if (type === 'video') {
-        setVideoThumbnailUploading(true);
+      if (type === "coach") {
+        setCoachImageUploading(true)
+      } else if (type === "video") {
+        setVideoThumbnailUploading(true)
       }
 
-      const formData = new FormData();
-      formData.append('file', file);
+      const formData = new FormData()
+      formData.append("file", file)
 
-      const res = await fetch('/api/upload/image', {
-        method: 'POST',
+      const res = await fetch("/api/upload/image", {
+        method: "POST",
         body: formData,
-      });
+      })
 
-      const data = await res.json();
+      const data = await res.json()
 
       if (data.success) {
-        return data.imageUrl;
+        return data.imageUrl
       } else {
-        alert(data.error || 'Failed to upload image');
-        return null;
+        alert(data.error || "Failed to upload image")
+        return null
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
-      return null;
+      console.error("Error uploading image:", error)
+      alert("Failed to upload image. Please try again.")
+      return null
     } finally {
-      if (type === 'coach') {
-        setCoachImageUploading(false);
-      } else if (type === 'video') {
-        setVideoThumbnailUploading(false);
+      if (type === "coach") {
+        setCoachImageUploading(false)
+      } else if (type === "video") {
+        setVideoThumbnailUploading(false)
       }
     }
-  };
+  }
 
   // Coach image handler
   const handleCoachImageChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
     // Show preview
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onloadend = () => {
-      setCoachImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-    setCoachImageFile(file);
+      setCoachImagePreview(reader.result)
+    }
+    reader.readAsDataURL(file)
+    setCoachImageFile(file)
 
     // Upload image
-    const imageUrl = await handleImageUpload(file, 'coach');
+    const imageUrl = await handleImageUpload(file, "coach")
     if (imageUrl) {
-      setCoachForm({ ...coachForm, image_url: imageUrl });
+      setCoachForm({ ...coachForm, image_url: imageUrl })
     }
-  };
+  }
 
   // Video thumbnail handler
   const handleVideoThumbnailChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
     // Show preview
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onloadend = () => {
-      setVideoThumbnailPreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-    setVideoThumbnailFile(file);
+      setVideoThumbnailPreview(reader.result)
+    }
+    reader.readAsDataURL(file)
+    setVideoThumbnailFile(file)
 
     // Upload image
-    const imageUrl = await handleImageUpload(file, 'video');
+    const imageUrl = await handleImageUpload(file, "video")
     if (imageUrl) {
-      setVideoForm({ ...videoForm, thumbnail_url: imageUrl });
+      setVideoForm({ ...videoForm, thumbnail_url: imageUrl })
     }
-  };
+  }
 
   const handleAddCoach = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       const res = await fetch("/api/coaches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(coachForm),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        setShowCoachForm(false);
-        setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" });
-        setCoachImagePreview("");
-        setCoachImageFile(null);
-        fetchData();
+        setShowCoachForm(false)
+        setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" })
+        setCoachImagePreview("")
+        setCoachImageFile(null)
+        fetchData()
       }
     } catch (error) {
-      console.error("Error adding coach:", error);
+      console.error("Error adding coach:", error)
     }
-  };
+  }
 
   const handleUpdateCoach = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       const res = await fetch("/api/coaches", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(coachForm),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        setShowCoachForm(false);
-        setEditingItem(null);
-        setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" });
-        setCoachImagePreview("");
-        setCoachImageFile(null);
-        fetchData();
+        setShowCoachForm(false)
+        setEditingItem(null)
+        setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" })
+        setCoachImagePreview("")
+        setCoachImageFile(null)
+        fetchData()
       }
     } catch (error) {
-      console.error("Error updating coach:", error);
+      console.error("Error updating coach:", error)
     }
-  };
+  }
 
   const handleDeleteCoach = async (id) => {
-    if (!confirm("Are you sure you want to delete this coach?")) return;
+    if (!confirm("Are you sure you want to delete this coach?")) return
     try {
-      const res = await fetch(`/api/coaches?id=${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) fetchData();
+      const res = await fetch(`/api/coaches?id=${id}`, { method: "DELETE" })
+      const data = await res.json()
+      if (data.success) fetchData()
     } catch (error) {
-      console.error("Error deleting coach:", error);
+      console.error("Error deleting coach:", error)
     }
-  };
+  }
 
   const handleAddVideo = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       const res = await fetch("/api/admin/videos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(videoForm),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        setShowVideoForm(false);
-        setVideoForm({ title: "", description: "", video_url: "", thumbnail_url: "", bio: "", price: 0, discount: false, discount_percentage: 0 });
-        setVideoThumbnailPreview("");
-        setVideoThumbnailFile(null);
-        fetchData();
+        setShowVideoForm(false)
+        setVideoForm({
+          title: "",
+          description: "",
+          video_url: "",
+          thumbnail_url: "",
+          bio: "",
+          price: 0,
+          discount: false,
+          discount_percentage: 0,
+        })
+        setVideoThumbnailPreview("")
+        setVideoThumbnailFile(null)
+        fetchData()
       }
     } catch (error) {
-      console.error("Error adding video:", error);
+      console.error("Error adding video:", error)
     }
-  };
+  }
 
   const handleUpdateVideo = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       const res = await fetch("/api/admin/videos", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...videoForm, id: editingItem.id }),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        setShowVideoForm(false);
-        setEditingItem(null);
-        setVideoForm({ title: "", description: "", video_url: "", thumbnail_url: "", bio: "", price: 0, discount: false, discount_percentage: 0 });
-        setVideoThumbnailPreview("");
-        setVideoThumbnailFile(null);
-        fetchData();
+        setShowVideoForm(false)
+        setEditingItem(null)
+        setVideoForm({
+          title: "",
+          description: "",
+          video_url: "",
+          thumbnail_url: "",
+          bio: "",
+          price: 0,
+          discount: false,
+          discount_percentage: 0,
+        })
+        setVideoThumbnailPreview("")
+        setVideoThumbnailFile(null)
+        fetchData()
       }
     } catch (error) {
-      console.error("Error updating video:", error);
+      console.error("Error updating video:", error)
     }
-  };
+  }
 
   const handleDeleteVideo = async (id) => {
-    if (!confirm("Are you sure you want to delete this video?")) return;
+    if (!confirm("Are you sure you want to delete this video?")) return
     try {
-      const res = await fetch(`/api/admin/videos?id=${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) fetchData();
+      const res = await fetch(`/api/admin/videos?id=${id}`, { method: "DELETE" })
+      const data = await res.json()
+      if (data.success) fetchData()
     } catch (error) {
-      console.error("Error deleting video:", error);
+      console.error("Error deleting video:", error)
     }
-  };
+  }
+
+  // const handleAddMeal = async (e) => {
+  //   e.preventDefault()
+  //   try {
+  //     if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
+  //       alert("Prep time must be a positive number greater than 0")
+  //       return
+  //     }
+
+  //     const existingIds = meals.map((m) => (typeof m.id === "number" ? m.id : Number.parseInt(m.id) || 0))
+  //     const maxId = Math.max(10000, ...existingIds, Date.now())
+  //     const newMeal = {
+  //       ...mealForm,
+  //       id: mealForm.id || maxId + 1,
+  //       prepTime: Number.parseInt(mealForm.prepTime),
+  //     }
+  //     const updatedMeals = [...meals, newMeal]
+  //     setMeals(updatedMeals)
+  //     localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
+  //     setShowMealForm(false)
+  //     setMealForm({
+  //       id: "",
+  //       name: "",
+  //       mealType: "breakfast",
+  //       goal: "all",
+  //       calories: 0,
+  //       protein: 0,
+  //       carbs: 0,
+  //       fats: 0,
+  //       fiber: 0,
+  //       sugar: 0,
+  //       sodium: 0,
+  //       servings: 1,
+  //       difficulty: "Easy",
+  //       prepTime: 0,
+  //       steps: [],
+  //       tips: [],
+  //       equipment: [],
+  //       ingredients: [],
+  //       detailedIngredients: [],
+  //       image: "",
+  //     })
+  //     setIngredientInput("")
+  //     setStepInput("")
+  //     setTipInput("")
+  //     setEquipmentInput("")
+  //     setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+  //     fetchData()
+  //   } catch (error) {
+  //     console.error("Error adding meal:", error)
+  //   }
+  // }
+
+  // const handleUpdateMeal = async (e) => {
+  //   e.preventDefault()
+  //   try {
+  //     if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
+  //       alert("Prep time must be a positive number greater than 0")
+  //       return
+  //     }
+
+  //     const updatedMeals = meals.map((m) =>
+  //       m.id === editingItem.id ? { ...mealForm, prepTime: Number.parseInt(mealForm.prepTime) } : m,
+  //     )
+  //     setMeals(updatedMeals)
+  //     localStorage.setItem("admin_meals", JSON.JSON.stringify(updatedMeals))
+  //     window.dispatchEvent(new Event("mealsUpdated"))
+  //     setShowMealForm(false)
+  //     setEditingItem(null)
+  //     setMealForm({
+  //       id: "",
+  //       name: "",
+  //       mealType: "breakfast",
+  //       goal: "all",
+  //       calories: 0,
+  //       protein: 0,
+  //       carbs: 0,
+  //       fats: 0,
+  //       fiber: 0,
+  //       sugar: 0,
+  //       sodium: 0,
+  //       servings: 1,
+  //       difficulty: "Easy",
+  //       prepTime: 0,
+  //       steps: [],
+  //       tips: [],
+  //       equipment: [],
+  //       ingredients: [],
+  //       detailedIngredients: [],
+  //       image: "",
+  //     })
+  //     setIngredientInput("")
+  //     setStepInput("")
+  //     setTipInput("")
+  //     setEquipmentInput("")
+  //     setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+  //     fetchData()
+  //   } catch (error) {
+  //     console.error("Error updating meal:", error)
+  //   }
+  // }
 
   const handleAddMeal = async (e) => {
-    e.preventDefault();
-    try {
-      // Generate a unique numeric ID that doesn't conflict with default meals (1-16)
-      // Use numeric ID starting from 10000 to avoid conflicts
-      const existingIds = meals.map(m => typeof m.id === 'number' ? m.id : parseInt(m.id) || 0);
-      const maxId = Math.max(10000, ...existingIds, Date.now());
-      const newMeal = {
-        ...mealForm,
-        id: mealForm.id || (maxId + 1),
-      };
-      const updatedMeals = [...meals, newMeal];
-      setMeals(updatedMeals);
-      localStorage.setItem("admin_meals", JSON.stringify(updatedMeals));
-      setShowMealForm(false);
-      setMealForm({ 
-        id: "", 
-        name: "", 
-        mealType: "breakfast", 
-        goal: "all", 
-        calories: 0, 
-        protein: 0, 
-        carbs: 0, 
-        fats: 0, 
-        fiber: 0, 
-        ingredients: [], 
-        image: "", 
-        prepTime: "", 
-        description: "" 
-      });
-      setIngredientInput("");
-      fetchData();
-    } catch (error) {
-      console.error("Error adding meal:", error);
+  e.preventDefault()
+  try {
+    if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
+      alert("Prep time must be a positive number greater than 0")
+      return
     }
-  };
 
-  const handleUpdateMeal = async (e) => {
-    e.preventDefault();
-    try {
-      const updatedMeals = meals.map(m => m.id === editingItem.id ? mealForm : m);
-      setMeals(updatedMeals);
-      localStorage.setItem("admin_meals", JSON.stringify(updatedMeals));
-      window.dispatchEvent(new Event("mealsUpdated"));
-      setShowMealForm(false);
-      setEditingItem(null);
-      setMealForm({ 
-        id: "", 
-        name: "", 
-        mealType: "breakfast", 
-        goal: "all", 
-        calories: 0, 
-        protein: 0, 
-        carbs: 0, 
-        fats: 0, 
-        fiber: 0, 
-        ingredients: [], 
-        image: "", 
-        prepTime: "", 
-        description: "" 
-      });
-      setIngredientInput("");
-      fetchData();
-    } catch (error) {
-      console.error("Error updating meal:", error);
+    if (!mealForm.servings || Number.parseInt(mealForm.servings) <= 0) {
+      alert("Servings must be a positive number greater than 0")
+      return
     }
-  };
+
+    const existingIds = meals.map((m) => (typeof m.id === "number" ? m.id : Number.parseInt(m.id) || 0))
+    const maxId = Math.max(10000, ...existingIds, Date.now())
+    
+    const newMeal = {
+      id: mealForm.id || maxId + 1,
+      name: mealForm.name,
+      mealType: mealForm.mealType,
+      goal: mealForm.goal,
+      description: mealForm.description || "",
+      servings: Number.parseInt(mealForm.servings),
+      difficulty: mealForm.difficulty,
+      prepTime: `${Number.parseInt(mealForm.prepTime)} min`,
+      image: mealForm.image,
+      // Nutrition details as nested object
+      calories: Number.parseInt(mealForm.calories) || 0,
+      protein: Number.parseInt(mealForm.protein) || 0,
+      carbs: Number.parseInt(mealForm.carbs) || 0,
+      fats: Number.parseInt(mealForm.fats) || 0,
+      fiber: Number.parseInt(mealForm.fiber) || 0,
+      nutritionDetails: {
+        calories: Number.parseInt(mealForm.calories) || 0,
+        protein: Number.parseInt(mealForm.protein) || 0,
+        carbs: Number.parseInt(mealForm.carbs) || 0,
+        fats: Number.parseInt(mealForm.fats) || 0,
+        fiber: Number.parseInt(mealForm.fiber) || 0,
+        sugar: Number.parseInt(mealForm.sugar) || 0,
+        sodium: Number.parseInt(mealForm.sodium) || 0
+      },
+      // Recipe details
+      detailedIngredients: mealForm.detailedIngredients,
+      steps: mealForm.steps,
+      tips: mealForm.tips,
+      equipment: mealForm.equipment,
+      ingredients: mealForm.ingredients // Keep for backward compatibility
+    }
+
+    const updatedMeals = [...meals, newMeal]
+    setMeals(updatedMeals)
+    localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
+    window.dispatchEvent(new Event("mealsUpdated"))
+    
+    setShowMealForm(false)
+    setMealForm({
+      id: "",
+      name: "",
+      mealType: "breakfast",
+      goal: "all",
+      description: "",
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fats: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0,
+      servings: 1,
+      difficulty: "Easy",
+      prepTime: 0,
+      steps: [],
+      tips: [],
+      equipment: [],
+      ingredients: [],
+      detailedIngredients: [],
+      image: "",
+    })
+    setIngredientInput("")
+    setStepInput("")
+    setTipInput("")
+    setEquipmentInput("")
+    setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+    fetchData()
+  } catch (error) {
+    console.error("Error adding meal:", error)
+  }
+}
+
+const handleUpdateMeal = async (e) => {
+  e.preventDefault()
+  try {
+    if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
+      alert("Prep time must be a positive number greater than 0")
+      return
+    }
+
+    if (!mealForm.servings || Number.parseInt(mealForm.servings) <= 0) {
+      alert("Servings must be a positive number greater than 0")
+      return
+    }
+
+    const updatedMeal = {
+      id: editingItem.id,
+      name: mealForm.name,
+      mealType: mealForm.mealType,
+      goal: mealForm.goal,
+      description: mealForm.description || "",
+      servings: Number.parseInt(mealForm.servings),
+      difficulty: mealForm.difficulty,
+      prepTime: `${Number.parseInt(mealForm.prepTime)} min`,
+      image: mealForm.image,
+      // Nutrition details as nested object
+      calories: Number.parseInt(mealForm.calories) || 0,
+      protein: Number.parseInt(mealForm.protein) || 0,
+      carbs: Number.parseInt(mealForm.carbs) || 0,
+      fats: Number.parseInt(mealForm.fats) || 0,
+      fiber: Number.parseInt(mealForm.fiber) || 0,
+      nutritionDetails: {
+        calories: Number.parseInt(mealForm.calories) || 0,
+        protein: Number.parseInt(mealForm.protein) || 0,
+        carbs: Number.parseInt(mealForm.carbs) || 0,
+        fats: Number.parseInt(mealForm.fats) || 0,
+        fiber: Number.parseInt(mealForm.fiber) || 0,
+        sugar: Number.parseInt(mealForm.sugar) || 0,
+        sodium: Number.parseInt(mealForm.sodium) || 0
+      },
+      // Recipe details
+      detailedIngredients: mealForm.detailedIngredients,
+      steps: mealForm.steps,
+      tips: mealForm.tips,
+      equipment: mealForm.equipment,
+      ingredients: mealForm.ingredients
+    }
+
+    const updatedMeals = meals.map((m) => (m.id === editingItem.id ? updatedMeal : m))
+    setMeals(updatedMeals)
+    localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
+    window.dispatchEvent(new Event("mealsUpdated"))
+    
+    setShowMealForm(false)
+    setEditingItem(null)
+    setMealForm({
+      id: "",
+      name: "",
+      mealType: "breakfast",
+      goal: "all",
+      description: "",
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fats: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0,
+      servings: 1,
+      difficulty: "Easy",
+      prepTime: 0,
+      steps: [],
+      tips: [],
+      equipment: [],
+      ingredients: [],
+      detailedIngredients: [],
+      image: "",
+    })
+    setIngredientInput("")
+    setStepInput("")
+    setTipInput("")
+    setEquipmentInput("")
+    setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+    fetchData()
+  } catch (error) {
+    console.error("Error updating meal:", error)
+  }
+}
 
   const handleDeleteMeal = async (id) => {
-    if (!confirm("Are you sure you want to delete this meal?")) return;
+    if (!confirm("Are you sure you want to delete this meal?")) return
     try {
-      const updatedMeals = meals.filter(m => m.id !== id);
-      setMeals(updatedMeals);
-      localStorage.setItem("admin_meals", JSON.stringify(updatedMeals));
-      window.dispatchEvent(new Event("mealsUpdated"));
-      fetchData();
+      const updatedMeals = meals.filter((m) => m.id !== id)
+      setMeals(updatedMeals)
+      localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
+      window.dispatchEvent(new Event("mealsUpdated"))
+      fetchData()
     } catch (error) {
-      console.error("Error deleting meal:", error);
+      console.error("Error deleting meal:", error)
     }
-  };
+  }
 
   const handleAddProgram = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       const res = await fetch("/api/admin/programs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(programForm),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        setShowProgramForm(false);
-        setProgramForm({ name: "", description: "", duration: "", schedule: [], exercises: [], price: 0, discount: false, discount_percentage: 0 });
-        fetchData();
+        setShowProgramForm(false)
+        setProgramForm({
+          name: "",
+          description: "",
+          duration: "",
+          schedule: [],
+          exercises: [],
+          price: 0,
+          discount: false,
+          discount_percentage: 0,
+        })
+        fetchData()
       }
     } catch (error) {
-      console.error("Error adding program:", error);
+      console.error("Error adding program:", error)
     }
-  };
+  }
 
   const handleUpdateProgram = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       const res = await fetch("/api/admin/programs", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...programForm, id: editingItem.id }),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        setShowProgramForm(false);
-        setEditingItem(null);
-        setProgramForm({ name: "", description: "", duration: "", schedule: [], exercises: [], price: 0, discount: false, discount_percentage: 0 });
-        fetchData();
+        setShowProgramForm(false)
+        setEditingItem(null)
+        setProgramForm({
+          name: "",
+          description: "",
+          duration: "",
+          schedule: [],
+          exercises: [],
+          price: 0,
+          discount: false,
+          discount_percentage: 0,
+        })
+        fetchData()
       }
     } catch (error) {
-      console.error("Error updating program:", error);
+      console.error("Error updating program:", error)
     }
-  };
+  }
 
   const handleDeleteProgram = async (id) => {
-    if (!confirm("Are you sure you want to delete this program?")) return;
+    if (!confirm("Are you sure you want to delete this program?")) return
     try {
-      const res = await fetch(`/api/admin/programs?id=${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) fetchData();
+      const res = await fetch(`/api/admin/programs?id=${id}`, { method: "DELETE" })
+      const data = await res.json()
+      if (data.success) fetchData()
     } catch (error) {
-      console.error("Error deleting program:", error);
+      console.error("Error deleting program:", error)
     }
-  };
+  }
 
   const openEditCoach = (coach) => {
-    setEditingItem(coach);
-    setCoachForm({ id: coach.id, name: coach.name, category: coach.category, bio: coach.bio || "", image_url: coach.image_url || "" });
-    setCoachImagePreview(coach.image_url || "");
-    setCoachImageFile(null);
-    setShowCoachForm(true);
-  };
+    setEditingItem(coach)
+    setCoachForm({
+      id: coach.id,
+      name: coach.name,
+      category: coach.category,
+      bio: coach.bio || "",
+      image_url: coach.image_url || "",
+    })
+    setCoachImagePreview(coach.image_url || "")
+    setCoachImageFile(null)
+    setShowCoachForm(true)
+  }
 
   const openEditVideo = (video) => {
-    setEditingItem(video);
-    setVideoForm({ title: video.title, description: video.description || "", video_url: video.video_url, thumbnail_url: video.thumbnail_url || "", bio: video.bio || "", price: video.price || 0, discount: video.discount || false, discount_percentage: video.discount_percentage || 0 });
-    setVideoThumbnailPreview(video.thumbnail_url || "");
-    setVideoThumbnailFile(null);
-    setShowVideoForm(true);
-  };
+    setEditingItem(video)
+    setVideoForm({
+      title: video.title,
+      description: video.description || "",
+      video_url: video.video_url,
+      thumbnail_url: video.thumbnail_url || "",
+      bio: video.bio || "",
+      price: video.price || 0,
+      discount: video.discount || false,
+      discount_percentage: video.discount_percentage || 0,
+    })
+    setVideoThumbnailPreview(video.thumbnail_url || "")
+    setVideoThumbnailFile(null)
+    setShowVideoForm(true)
+  }
+
+  // const openEditMeal = (meal) => {
+  //   setEditingItem(meal)
+  //   setMealForm({
+  //     id: meal.id,
+  //     name: meal.name || "",
+  //     mealType: meal.mealType || "breakfast",
+  //     goal: meal.goal || "all",
+  //     calories: meal.calories || 0,
+  //     protein: meal.protein || 0,
+  //     carbs: meal.carbs || 0,
+  //     fats: meal.fats || 0,
+  //     fiber: meal.fiber || 0,
+  //     sugar: meal.sugar || 0,
+  //     sodium: meal.sodium || 0,
+  //     servings: meal.servings || 1,
+  //     difficulty: meal.difficulty || "Easy",
+  //     prepTime: meal.prepTime || 0,
+  //     steps: meal.steps || [],
+  //     tips: meal.tips || [],
+  //     equipment: meal.equipment || [],
+  //     ingredients: meal.ingredients || [],
+  //     detailedIngredients: meal.detailedIngredients || [],
+  //     image: meal.image || "",
+  //   })
+  //   setIngredientInput("")
+  //   setStepInput("")
+  //   setTipInput("")
+  //   setEquipmentInput("")
+  //   setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+  //   setShowMealForm(true)
+  // }
 
   const openEditMeal = (meal) => {
-    setEditingItem(meal);
-    setMealForm({ 
-      id: meal.id,
-      name: meal.name || "", 
-      mealType: meal.mealType || "breakfast", 
-      goal: meal.goal || "all", 
-      calories: meal.calories || 0, 
-      protein: meal.protein || 0, 
-      carbs: meal.carbs || 0, 
-      fats: meal.fats || 0, 
-      fiber: meal.fiber || 0, 
-      ingredients: meal.ingredients || [], 
-      image: meal.image || "", 
-      prepTime: meal.prepTime || "", 
-      description: meal.description || "" 
-    });
-    setIngredientInput("");
-    setShowMealForm(true);
-  };
-
+  setEditingItem(meal)
+  
+  // Extract prepTime number from "X min" format
+  const prepTimeNum = typeof meal.prepTime === 'string' 
+    ? parseInt(meal.prepTime.replace(' min', '')) 
+    : meal.prepTime || 0
+  
+  setMealForm({
+    id: meal.id,
+    name: meal.name || "",
+    mealType: meal.mealType || "breakfast",
+    goal: meal.goal || "all",
+    description: meal.description || "",
+    calories: meal.calories || meal.nutritionDetails?.calories || 0,
+    protein: meal.protein || meal.nutritionDetails?.protein || 0,
+    carbs: meal.carbs || meal.nutritionDetails?.carbs || 0,
+    fats: meal.fats || meal.nutritionDetails?.fats || 0,
+    fiber: meal.fiber || meal.nutritionDetails?.fiber || 0,
+    sugar: meal.sugar || meal.nutritionDetails?.sugar || 0,
+    sodium: meal.sodium || meal.nutritionDetails?.sodium || 0,
+    servings: meal.servings || 1,
+    difficulty: meal.difficulty || "Easy",
+    prepTime: prepTimeNum,
+    steps: meal.steps || [],
+    tips: meal.tips || [],
+    equipment: meal.equipment || [],
+    ingredients: meal.ingredients || [],
+    detailedIngredients: meal.detailedIngredients || [],
+    image: meal.image || "",
+  })
+  setIngredientInput("")
+  setStepInput("")
+  setTipInput("")
+  setEquipmentInput("")
+  setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+  setShowMealForm(true)
+}
   const openEditProgram = (program) => {
-    setEditingItem(program);
-    setProgramForm({ name: program.name, description: program.description, duration: program.duration || "", schedule: program.schedule || [], exercises: program.exercises || [], price: program.price || 0, discount: program.discount || false, discount_percentage: program.discount_percentage || 0 });
-    setShowProgramForm(true);
-  };
+    setEditingItem(program)
+    setProgramForm({
+      name: program.name,
+      description: program.description,
+      duration: program.duration || "",
+      schedule: program.schedule || [],
+      exercises: program.exercises || [],
+      price: program.price || 0,
+      discount: program.discount || false,
+      discount_percentage: program.discount_percentage || 0,
+    })
+    setShowProgramForm(true)
+  }
 
-  const filteredCoaches = coaches.filter((coach) =>
-    coach.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    coach.bio?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCoaches = coaches.filter(
+    (coach) =>
+      coach.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      coach.bio?.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
@@ -552,35 +894,40 @@ export default function AdminDashboard() {
     { id: "videos", label: "Videos", icon: Video },
     { id: "meals", label: "Meals", icon: Cookie },
     { id: "programs", label: "Programs", icon: Dumbbell },
-  ];
+  ]
 
   // Calculate stats
   const stats = {
     totalUsers: users.length,
-    newUsersToday: users.filter(u => {
-      if (!u.createdAt) return false;
-      const today = new Date();
-      const userDate = new Date(u.createdAt);
-      return userDate.toDateString() === today.toDateString();
+    newUsersToday: users.filter((u) => {
+      if (!u.createdAt) return false
+      const today = new Date()
+      const userDate = new Date(u.createdAt)
+      return userDate.toDateString() === today.toDateString()
     }).length,
     totalCoaches: coaches.length,
     totalVideos: videos.length,
     totalPrograms: programs.length,
     totalMeals: meals.length,
-  };
+  }
 
   return (
     <div className="fixed inset-0 bg-white relative overflow-hidden h-screen w-screen">
       {/* Animated background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-20 w-96 h-96 bg-[#6BB371]/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#52796F]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div
+          className="absolute bottom-20 left-20 w-80 h-80 bg-[#52796F]/10 rounded-full blur-3xl animate-float"
+          style={{ animationDelay: "1s" }}
+        ></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#354F52]/5 rounded-full blur-3xl animate-pulse-glow"></div>
       </div>
 
       <div className="flex relative z-10 h-full">
         {/* Sidebar */}
-        <div className={`bg-gradient-to-b from-[#354F52] to-[#2F3E46] shadow-xl transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0"} overflow-hidden flex flex-col h-full`}>
+        <div
+          className={`bg-gradient-to-b from-[#354F52] to-[#2F3E46] shadow-xl transition-all duration-300 ${sidebarOpen ? "w-64" : "w-0"} overflow-hidden flex flex-col h-full`}
+        >
           <div className="p-6 border-b border-[#52796F]/30 flex-shrink-0">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -595,13 +942,13 @@ export default function AdminDashboard() {
 
           <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
             {menuItems.map((item) => {
-              const Icon = item.icon;
+              const Icon = item.icon
               return (
                 <button
                   key={item.id}
                   onClick={() => {
-                    setActiveSection(item.id);
-                    setSearchTerm("");
+                    setActiveSection(item.id)
+                    setSearchTerm("")
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                     activeSection === item.id
@@ -612,7 +959,7 @@ export default function AdminDashboard() {
                   <Icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
                 </button>
-              );
+              )
             })}
           </nav>
 
@@ -750,19 +1097,21 @@ export default function AdminDashboard() {
                     <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                       <h2 className="text-xl font-bold text-[#354F52] mb-4">Quick Actions</h2>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {menuItems.filter(item => item.id !== "dashboard").map((item) => {
-                          const Icon = item.icon;
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => setActiveSection(item.id)}
-                              className="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#52796F]/10 to-[#354F52]/10 rounded-lg hover:from-[#52796F]/20 hover:to-[#354F52]/20 transition-all border border-[#52796F]/20 hover:border-[#6BB371]/40"
-                            >
-                              <Icon className="w-6 h-6 text-[#52796F]" />
-                              <span className="text-sm font-medium text-[#354F52]">{item.label}</span>
-                            </button>
-                          );
-                        })}
+                        {menuItems
+                          .filter((item) => item.id !== "dashboard")
+                          .map((item) => {
+                            const Icon = item.icon
+                            return (
+                              <button
+                                key={item.id}
+                                onClick={() => setActiveSection(item.id)}
+                                className="flex flex-col items-center gap-2 p-4 bg-gradient-to-br from-[#52796F]/10 to-[#354F52]/10 rounded-lg hover:from-[#52796F]/20 hover:to-[#354F52]/20 transition-all border border-[#52796F]/20 hover:border-[#6BB371]/40"
+                              >
+                                <Icon className="w-6 h-6 text-[#52796F]" />
+                                <span className="text-sm font-medium text-[#354F52]">{item.label}</span>
+                              </button>
+                            )
+                          })}
                       </div>
                     </div>
                   </div>
@@ -807,9 +1156,7 @@ export default function AdminDashboard() {
                           ))}
                         </tbody>
                       </table>
-                      {users.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">No users found</div>
-                      )}
+                      {users.length === 0 && <div className="text-center py-12 text-gray-500">No users found</div>}
                     </div>
                   </div>
                 )}
@@ -823,25 +1170,25 @@ export default function AdminDashboard() {
                         <div className="flex gap-3">
                           <button
                             onClick={async () => {
-                              if (!confirm("This will create 15+ sample coaches. Continue?")) return;
-                              setLoading(true);
+                              if (!confirm("This will create 15+ sample coaches. Continue?")) return
+                              setLoading(true)
                               try {
                                 const res = await fetch("/api/test-db/create-sample-coaches", {
                                   method: "POST",
-                                  headers: { "Content-Type": "application/json" }
-                                });
-                                const data = await res.json();
+                                  headers: { "Content-Type": "application/json" },
+                                })
+                                const data = await res.json()
                                 if (data.success) {
-                                  alert(`✅ Successfully created ${data.coachesCreated} sample coaches!`);
-                                  fetchData();
+                                  alert(`✅ Successfully created ${data.coachesCreated} sample coaches!`)
+                                  fetchData()
                                 } else {
-                                  alert(`Error: ${data.error || data.message}`);
+                                  alert(`Error: ${data.error || data.message}`)
                                 }
                               } catch (error) {
-                                console.error("Error creating sample coaches:", error);
-                                alert("Error creating sample coaches. Check console for details.");
+                                console.error("Error creating sample coaches:", error)
+                                alert("Error creating sample coaches. Check console for details.")
                               } finally {
-                                setLoading(false);
+                                setLoading(false)
                               }
                             }}
                             className="flex items-center gap-2 bg-gradient-to-r from-[#6BB371] to-[#52796F] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#6BB371]/30 transition-all"
@@ -851,9 +1198,9 @@ export default function AdminDashboard() {
                           </button>
                           <button
                             onClick={() => {
-                              setShowCoachForm(true);
-                              setEditingItem(null);
-                              setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" });
+                              setShowCoachForm(true)
+                              setEditingItem(null)
+                              setCoachForm({ id: "", name: "", category: "", bio: "", image_url: "" })
                             }}
                             className="flex items-center gap-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#52796F]/30 transition-all"
                           >
@@ -878,10 +1225,17 @@ export default function AdminDashboard() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredCoaches.map((coach, idx) => (
-                          <div key={coach.id || idx} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                          <div
+                            key={coach.id || idx}
+                            className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                          >
                             <div className="h-48 bg-gradient-to-br from-blue-400 to-purple-500 relative">
                               {coach.image_url ? (
-                                <img src={coach.image_url} alt={coach.name} className="w-full h-full object-cover" />
+                                <img
+                                  src={coach.image_url || "/placeholder.svg"}
+                                  alt={coach.name}
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-white text-4xl font-bold">
                                   {coach.name?.charAt(0) || "?"}
@@ -890,7 +1244,9 @@ export default function AdminDashboard() {
                             </div>
                             <div className="p-4">
                               <h3 className="font-bold text-lg text-gray-800 mb-2">{coach.name}</h3>
-                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">{coach.bio || "No bio available"}</p>
+                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                {coach.bio || "No bio available"}
+                              </p>
                               <div className="flex items-center justify-between">
                                 <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
                                   {coach.category}
@@ -925,7 +1281,12 @@ export default function AdminDashboard() {
                         <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold">{editingItem ? "Edit Coach" : "Add New Coach"}</h3>
-                            <button onClick={() => { setShowCoachForm(false); setEditingItem(null); }}>
+                            <button
+                              onClick={() => {
+                                setShowCoachForm(false)
+                                setEditingItem(null)
+                              }}
+                            >
                               <XIcon className="w-6 h-6 text-gray-600" />
                             </button>
                           </div>
@@ -984,7 +1345,11 @@ export default function AdminDashboard() {
                                     <div className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
                                       <Upload className="w-5 h-5 text-gray-500" />
                                       <span className="text-sm text-gray-600">
-                                        {coachImageUploading ? "Uploading..." : coachImageFile ? "Change Image" : "Upload Image"}
+                                        {coachImageUploading
+                                          ? "Uploading..."
+                                          : coachImageFile
+                                            ? "Change Image"
+                                            : "Upload Image"}
                                       </span>
                                     </div>
                                   </label>
@@ -999,9 +1364,9 @@ export default function AdminDashboard() {
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        setCoachImagePreview("");
-                                        setCoachImageFile(null);
-                                        setCoachForm({ ...coachForm, image_url: "" });
+                                        setCoachImagePreview("")
+                                        setCoachImageFile(null)
+                                        setCoachForm({ ...coachForm, image_url: "" })
                                       }}
                                       className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                                     >
@@ -1015,11 +1380,21 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                             <div className="flex gap-3">
-                              <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                              <button
+                                type="submit"
+                                className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                              >
                                 <Save className="w-4 h-4 inline mr-2" />
                                 {editingItem ? "Update" : "Add"}
                               </button>
-                              <button type="button" onClick={() => { setShowCoachForm(false); setEditingItem(null); }} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowCoachForm(false)
+                                  setEditingItem(null)
+                                }}
+                                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                              >
                                 Cancel
                               </button>
                             </div>
@@ -1038,11 +1413,20 @@ export default function AdminDashboard() {
                         <h2 className="text-xl font-bold text-gray-800">Videos Management</h2>
                         <button
                           onClick={() => {
-                            setShowVideoForm(true);
-                            setEditingItem(null);
-                            setVideoForm({ title: "", description: "", video_url: "", thumbnail_url: "", bio: "", price: 0, discount: false, discount_percentage: 0 });
-                            setVideoThumbnailPreview("");
-                            setVideoThumbnailFile(null);
+                            setShowVideoForm(true)
+                            setEditingItem(null)
+                            setVideoForm({
+                              title: "",
+                              description: "",
+                              video_url: "",
+                              thumbnail_url: "",
+                              bio: "",
+                              price: 0,
+                              discount: false,
+                              discount_percentage: 0,
+                            })
+                            setVideoThumbnailPreview("")
+                            setVideoThumbnailFile(null)
                           }}
                           className="flex items-center gap-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#52796F]/30 transition-all"
                         >
@@ -1053,17 +1437,31 @@ export default function AdminDashboard() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {videos.map((video, idx) => (
-                          <div key={video.id || idx} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all">
+                          <div
+                            key={video.id || idx}
+                            className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all"
+                          >
                             {video.thumbnail_url && (
-                              <img src={video.thumbnail_url} alt={video.title} className="w-full h-48 object-cover" />
+                              <img
+                                src={video.thumbnail_url || "/placeholder.svg"}
+                                alt={video.title}
+                                className="w-full h-48 object-cover"
+                              />
                             )}
                             <div className="p-4">
                               <h3 className="font-bold text-lg mb-2">{video.title}</h3>
-                              <p className="text-sm text-gray-600 mb-2 line-clamp-2">{video.description || video.bio}</p>
+                              <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                                {video.description || video.bio}
+                              </p>
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-lg font-bold text-blue-600">
-                                  ${video.discount ? (video.price * (1 - video.discount_percentage / 100)).toFixed(2) : video.price}
-                                  {video.discount && <span className="text-xs text-gray-400 line-through ml-2">${video.price}</span>}
+                                  $
+                                  {video.discount
+                                    ? (video.price * (1 - video.discount_percentage / 100)).toFixed(2)
+                                    : video.price}
+                                  {video.discount && (
+                                    <span className="text-xs text-gray-400 line-through ml-2">${video.price}</span>
+                                  )}
                                 </span>
                                 {video.discount && (
                                   <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
@@ -1091,9 +1489,7 @@ export default function AdminDashboard() {
                           </div>
                         ))}
                       </div>
-                      {videos.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">No videos found</div>
-                      )}
+                      {videos.length === 0 && <div className="text-center py-12 text-gray-500">No videos found</div>}
                     </div>
 
                     {/* Video Form Modal */}
@@ -1102,7 +1498,12 @@ export default function AdminDashboard() {
                         <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold">{editingItem ? "Edit Video" : "Add New Video"}</h3>
-                            <button onClick={() => { setShowVideoForm(false); setEditingItem(null); }}>
+                            <button
+                              onClick={() => {
+                                setShowVideoForm(false)
+                                setEditingItem(null)
+                              }}
+                            >
                               <XIcon className="w-6 h-6 text-gray-600" />
                             </button>
                           </div>
@@ -1160,7 +1561,11 @@ export default function AdminDashboard() {
                                     <div className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
                                       <Upload className="w-5 h-5 text-gray-500" />
                                       <span className="text-sm text-gray-600">
-                                        {videoThumbnailUploading ? "Uploading..." : videoThumbnailFile ? "Change Image" : "Upload Thumbnail"}
+                                        {videoThumbnailUploading
+                                          ? "Uploading..."
+                                          : videoThumbnailFile
+                                            ? "Change Image"
+                                            : "Upload Thumbnail"}
                                       </span>
                                     </div>
                                   </label>
@@ -1175,9 +1580,9 @@ export default function AdminDashboard() {
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        setVideoThumbnailPreview("");
-                                        setVideoThumbnailFile(null);
-                                        setVideoForm({ ...videoForm, thumbnail_url: "" });
+                                        setVideoThumbnailPreview("")
+                                        setVideoThumbnailFile(null)
+                                        setVideoForm({ ...videoForm, thumbnail_url: "" })
                                       }}
                                       className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                                     >
@@ -1197,7 +1602,9 @@ export default function AdminDashboard() {
                                   type="number"
                                   step="0.01"
                                   value={videoForm.price}
-                                  onChange={(e) => setVideoForm({ ...videoForm, price: parseFloat(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    setVideoForm({ ...videoForm, price: Number.parseFloat(e.target.value) || 0 })
+                                  }
                                   className="w-full px-3 py-2 border rounded-lg"
                                 />
                               </div>
@@ -1206,7 +1613,12 @@ export default function AdminDashboard() {
                                 <input
                                   type="number"
                                   value={videoForm.discount_percentage}
-                                  onChange={(e) => setVideoForm({ ...videoForm, discount_percentage: parseFloat(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    setVideoForm({
+                                      ...videoForm,
+                                      discount_percentage: Number.parseFloat(e.target.value) || 0,
+                                    })
+                                  }
                                   className="w-full px-3 py-2 border rounded-lg"
                                   disabled={!videoForm.discount}
                                 />
@@ -1222,11 +1634,21 @@ export default function AdminDashboard() {
                               <label className="text-sm font-medium">Has Discount</label>
                             </div>
                             <div className="flex gap-3">
-                              <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                              <button
+                                type="submit"
+                                className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                              >
                                 <Save className="w-4 h-4 inline mr-2" />
                                 {editingItem ? "Update" : "Add"}
                               </button>
-                              <button type="button" onClick={() => { setShowVideoForm(false); setEditingItem(null); }} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowVideoForm(false)
+                                  setEditingItem(null)
+                                }}
+                                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                              >
                                 Cancel
                               </button>
                             </div>
@@ -1241,9 +1663,52 @@ export default function AdminDashboard() {
                 {activeSection === "meals" && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                      {/*Update header section to include Add Meal button on the right */}
                       <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-[#354F52]">Meals Management</h2>
-                        <div className="text-sm text-gray-600">Total: {meals.length}</div>
+                        <div>
+                          <h2 className="text-xl font-bold text-[#354F52]">Meals Management</h2>
+                          <div className="text-sm text-gray-600 mt-1">Total: {meals.length}</div>
+                        </div>
+                        {/*Add Meal button */}
+                        <button
+                          onClick={() => {
+                            setShowMealForm(true)
+                            setEditingItem(null)
+                            // Reset form to empty values
+                            setMealForm({
+                              id: "",
+                              name: "",
+                              mealType: "breakfast",
+                              calories: 0,
+                              prepTime: 0,
+                              protein: 0,
+                              carbs: 0,
+                              fats: 0,
+                              fiber: 0,
+                              sugar: 0,
+                              sodium: 0,
+                              servings: 1,
+                              difficulty: "Easy",
+                              steps: [],
+                              tips: [],
+                              equipment: [],
+                              ingredients: [],
+                              detailedIngredients: [],
+                              goal: "all",
+                              description: "",
+                              image: "",
+                            })
+                            setIngredientInput("")
+                            setStepInput("")
+                            setTipInput("")
+                            setEquipmentInput("")
+                            setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+                          }}
+                          className="flex items-center gap-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#52796F]/30 transition-all"
+                        >
+                          <Plus className="w-5 h-5" />
+                          Add Meal
+                        </button>
                       </div>
 
                       <div className="mb-6">
@@ -1260,62 +1725,77 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {meals.filter(meal => 
-                          meal.name?.toLowerCase().includes(searchTerm.toLowerCase())
-                        ).map((meal, idx) => (
-                          <div key={meal.id || idx} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-200">
-                            {meal.image && (
-                              <div className="h-48 overflow-hidden">
-                                <img src={meal.image} alt={meal.name} className="w-full h-full object-cover" />
-                              </div>
-                            )}
-                            <div className="p-4">
-                              <h3 className="font-bold text-lg text-[#354F52] mb-2">{meal.name}</h3>
-                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">{meal.description || "No description"}</p>
-                              <div className="flex items-center gap-2 mb-3">
-                                {meal.calories && (
-                                  <span className="px-2 py-1 bg-[#6BB371]/10 text-[#52796F] rounded text-xs font-medium">
-                                    {meal.calories} cal
-                                  </span>
-                                )}
-                                {meal.mealType && (
-                                  <span className="px-2 py-1 bg-[#52796F]/10 text-[#354F52] rounded text-xs font-medium capitalize">
-                                    {meal.mealType}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => openEditMeal(meal)}
-                                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#52796F]/10 text-[#52796F] rounded hover:bg-[#52796F]/20 transition-colors"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteMeal(meal.id)}
-                                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete
-                                </button>
+                        {meals
+                          .filter((meal) => meal.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+                          .map((meal, idx) => (
+                            <div
+                              key={meal.id || idx}
+                              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-200"
+                            >
+                              {meal.image && (
+                                <div className="h-48 overflow-hidden">
+                                  <img
+                                    src={meal.image || "/placeholder.svg"}
+                                    alt={meal.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                              <div className="p-4">
+                                <h3 className="font-bold text-lg text-[#354F52] mb-2">{meal.name}</h3>
+                                <div className="flex items-center gap-2 mb-3">
+                                  {meal.calories && (
+                                    <span className="px-2 py-1 bg-[#6BB371]/10 text-[#52796F] rounded text-xs font-medium">
+                                      {meal.calories} cal
+                                    </span>
+                                  )}
+                                  {meal.mealType && (
+                                    <span className="px-2 py-1 bg-[#52796F]/10 text-[#354F52] rounded text-xs font-medium capitalize">
+                                      {meal.mealType}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => openEditMeal(meal)}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#52796F]/10 text-[#52796F] rounded hover:bg-[#52796F]/20 transition-colors"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteMeal(meal.id)}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                       {meals.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">No meals found. Click "Add Meal" to create your first meal.</div>
+                        <div className="text-center py-12 text-gray-500">
+                          No meals found. Click "Add Meal" to create your first meal.
+                        </div>
                       )}
                     </div>
 
-                    {/* Meal Form Modal */}
+                    {/* Meal Form Modal*/}
                     {showMealForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-bold text-[#354F52]">{editingItem ? "Edit Meal" : "Add New Meal"}</h3>
-                            <button onClick={() => { setShowMealForm(false); setEditingItem(null); }}>
+                            <h3 className="text-xl font-bold text-[#354F52]">
+                              {editingItem ? "Edit Meal" : "Add New Meal"}
+                            </h3>
+                            <button
+                              onClick={() => {
+                                setShowMealForm(false)
+                                setEditingItem(null)
+                              }}
+                            >
                               <XIcon className="w-6 h-6 text-gray-600" />
                             </button>
                           </div>
@@ -1345,6 +1825,8 @@ export default function AdminDashboard() {
                                 </select>
                               </div>
                             </div>
+
+                            {/* Description Field */}
                             <div>
                               <label className="block text-sm font-medium mb-1 text-[#354F52]">Description</label>
                               <textarea
@@ -1352,37 +1834,89 @@ export default function AdminDashboard() {
                                 onChange={(e) => setMealForm({ ...mealForm, description: e.target.value })}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                 rows="3"
+                                placeholder="Brief description of the meal"
                                 required
                               />
                             </div>
+
+                            <div className="grid grid-cols-4 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Servings</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={mealForm.servings}
+                                  onChange={(e) =>
+                                    setMealForm({ ...mealForm, servings: Number.parseInt(e.target.value) || 1 })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Difficulty</label>
+                                <select
+                                  value={mealForm.difficulty}
+                                  onChange={(e) => setMealForm({ ...mealForm, difficulty: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                >
+                                  <option value="Easy">Easy</option>
+                                  <option value="Medium">Medium</option>
+                                  <option value="Hard">Hard</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Prep Time (min)</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={mealForm.prepTime}
+                                  onChange={(e) => setMealForm({ ...mealForm, prepTime: e.target.value })}
+                                  placeholder="Must be > 0"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  required
+                                />
+                              </div>
+                            </div>
+
+
+
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-sm font-medium mb-1 text-[#354F52]">Calories</label>
                                 <input
                                   type="number"
                                   value={mealForm.calories}
-                                  onChange={(e) => setMealForm({ ...mealForm, calories: parseInt(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    setMealForm({ ...mealForm, calories: Number.parseInt(e.target.value) || 0 })
+                                  }
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Prep Time</label>
-                                <input
-                                  type="text"
-                                  value={mealForm.prepTime}
-                                  onChange={(e) => setMealForm({ ...mealForm, prepTime: e.target.value })}
-                                  placeholder="e.g., 10 min"
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Goal</label>
+                                <select
+                                  value={mealForm.goal}
+                                  onChange={(e) => setMealForm({ ...mealForm, goal: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
-                                />
+                                >
+                                  <option value="all">All Goals</option>
+                                  <option value="lose-weight">Lose Weight</option>
+                                  <option value="gain-weight">Gain Weight</option>
+                                  <option value="muscle-gain">Muscle Gain</option>
+                                  <option value="maintenance">Maintenance</option>
+                                </select>
                               </div>
                             </div>
+
                             <div className="grid grid-cols-4 gap-4">
                               <div>
                                 <label className="block text-sm font-medium mb-1 text-[#354F52]">Protein (g)</label>
                                 <input
                                   type="number"
                                   value={mealForm.protein}
-                                  onChange={(e) => setMealForm({ ...mealForm, protein: parseInt(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    setMealForm({ ...mealForm, protein: Number.parseInt(e.target.value) || 0 })
+                                  }
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                 />
                               </div>
@@ -1391,7 +1925,9 @@ export default function AdminDashboard() {
                                 <input
                                   type="number"
                                   value={mealForm.carbs}
-                                  onChange={(e) => setMealForm({ ...mealForm, carbs: parseInt(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    setMealForm({ ...mealForm, carbs: Number.parseInt(e.target.value) || 0 })
+                                  }
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                 />
                               </div>
@@ -1400,7 +1936,9 @@ export default function AdminDashboard() {
                                 <input
                                   type="number"
                                   value={mealForm.fats}
-                                  onChange={(e) => setMealForm({ ...mealForm, fats: parseInt(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    setMealForm({ ...mealForm, fats: Number.parseInt(e.target.value) || 0 })
+                                  }
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                 />
                               </div>
@@ -1409,48 +1947,303 @@ export default function AdminDashboard() {
                                 <input
                                   type="number"
                                   value={mealForm.fiber}
-                                  onChange={(e) => setMealForm({ ...mealForm, fiber: parseInt(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    setMealForm({ ...mealForm, fiber: Number.parseInt(e.target.value) || 0 })
+                                  }
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                 />
                               </div>
                             </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Goal</label>
-                              <select
-                                value={mealForm.goal}
-                                onChange={(e) => setMealForm({ ...mealForm, goal: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
-                              >
-                                <option value="all">All Goals</option>
-                                <option value="lose-weight">Lose Weight</option>
-                                <option value="gain-weight">Gain Weight</option>
-                                <option value="muscle-gain">Muscle Gain</option>
-                                <option value="maintenance">Maintenance</option>
-                              </select>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Sugar (g)</label>
+                                <input
+                                  type="number"
+                                  value={mealForm.sugar}
+                                  onChange={(e) =>
+                                    setMealForm({ ...mealForm, sugar: Number.parseInt(e.target.value) || 0 })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Sodium (mg)</label>
+                                <input
+                                  type="number"
+                                  value={mealForm.sodium}
+                                  onChange={(e) =>
+                                    setMealForm({ ...mealForm, sodium: Number.parseInt(e.target.value) || 0 })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                              </div>
                             </div>
+
                             <div>
-                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Image URL</label>
-                              <input
-                                type="text"
-                                value={mealForm.image}
-                                onChange={(e) => setMealForm({ ...mealForm, image: e.target.value })}
-                                placeholder="https://images.unsplash.com/..."
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
-                              />
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">
+                                Detailed Ingredients
+                              </label>
+                              <div className="space-y-2 mb-2">
+                                <div className="grid grid-cols-3 gap-2">
+                                  <input
+                                    type="text"
+                                    value={detailedIngredientInput.item}
+                                    onChange={(e) =>
+                                      setDetailedIngredientInput({ ...detailedIngredientInput, item: e.target.value })
+                                    }
+                                    placeholder="Item"
+                                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={detailedIngredientInput.amount}
+                                    onChange={(e) =>
+                                      setDetailedIngredientInput({ ...detailedIngredientInput, amount: e.target.value })
+                                    }
+                                    placeholder="Amount"
+                                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={detailedIngredientInput.notes}
+                                    onChange={(e) =>
+                                      setDetailedIngredientInput({ ...detailedIngredientInput, notes: e.target.value })
+                                    }
+                                    placeholder="Notes"
+                                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (detailedIngredientInput.item && detailedIngredientInput.amount) {
+                                      setMealForm({
+                                        ...mealForm,
+                                        detailedIngredients: [...mealForm.detailedIngredients, detailedIngredientInput],
+                                      })
+                                      setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+                                    }
+                                  }}
+                                  className="w-full px-4 py-2 bg-[#52796F] text-white rounded-lg hover:bg-[#6BB371] transition-colors"
+                                >
+                                  Add Ingredient
+                                </button>
+                              </div>
+                              <div className="space-y-1 max-h-40 overflow-y-auto">
+                                {mealForm.detailedIngredients.map((ing, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex justify-between items-center p-2 bg-[#52796F]/10 rounded text-sm"
+                                  >
+                                    <span className="text-[#354F52]">
+                                      <strong>{ing.item}</strong> - {ing.amount} {ing.notes && `(${ing.notes})`}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setMealForm({
+                                          ...mealForm,
+                                          detailedIngredients: mealForm.detailedIngredients.filter((_, i) => i !== idx),
+                                        })
+                                      }}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      <XIcon className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
+
                             <div>
-                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Ingredients</label>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Cooking Steps</label>
+                              <div className="flex gap-2 mb-2">
+                                <input
+                                  type="text"
+                                  value={stepInput}
+                                  onChange={(e) => setStepInput(e.target.value)}
+                                  onKeyPress={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault()
+                                      if (stepInput.trim()) {
+                                        setMealForm({ ...mealForm, steps: [...mealForm.steps, stepInput.trim()] })
+                                        setStepInput("")
+                                      }
+                                    }
+                                  }}
+                                  placeholder="Add step and press Enter"
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (stepInput.trim()) {
+                                      setMealForm({ ...mealForm, steps: [...mealForm.steps, stepInput.trim()] })
+                                      setStepInput("")
+                                    }
+                                  }}
+                                  className="px-4 py-2 bg-[#52796F] text-white rounded-lg hover:bg-[#6BB371] transition-colors"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <ol className="space-y-1 max-h-40 overflow-y-auto">
+                                {mealForm.steps.map((step, idx) => (
+                                  <li
+                                    key={idx}
+                                    className="flex items-start gap-2 p-2 bg-[#52796F]/10 rounded text-sm text-[#354F52]"
+                                  >
+                                    <span className="font-bold">{idx + 1}.</span>
+                                    <span className="flex-1">{step}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setMealForm({ ...mealForm, steps: mealForm.steps.filter((_, i) => i !== idx) })
+                                      }}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      <XIcon className="w-3 h-3" />
+                                    </button>
+                                  </li>
+                                ))}
+                              </ol>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Tips</label>
+                              <div className="flex gap-2 mb-2">
+                                <input
+                                  type="text"
+                                  value={tipInput}
+                                  onChange={(e) => setTipInput(e.target.value)}
+                                  onKeyPress={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault()
+                                      if (tipInput.trim()) {
+                                        setMealForm({ ...mealForm, tips: [...mealForm.tips, tipInput.trim()] })
+                                        setTipInput("")
+                                      }
+                                    }
+                                  }}
+                                  placeholder="Add tip and press Enter"
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (tipInput.trim()) {
+                                      setMealForm({ ...mealForm, tips: [...mealForm.tips, tipInput.trim()] })
+                                      setTipInput("")
+                                    }
+                                  }}
+                                  className="px-4 py-2 bg-[#52796F] text-white rounded-lg hover:bg-[#6BB371] transition-colors"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                                {mealForm.tips.map((tip, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-3 py-1 bg-[#52796F]/10 text-[#354F52] rounded-full text-sm flex items-center gap-2"
+                                  >
+                                    {tip}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setMealForm({ ...mealForm, tips: mealForm.tips.filter((_, i) => i !== idx) })
+                                      }}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      <XIcon className="w-3 h-3" />
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Equipment</label>
+                              <div className="flex gap-2 mb-2">
+                                <input
+                                  type="text"
+                                  value={equipmentInput}
+                                  onChange={(e) => setEquipmentInput(e.target.value)}
+                                  onKeyPress={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault()
+                                      if (equipmentInput.trim()) {
+                                        setMealForm({
+                                          ...mealForm,
+                                          equipment: [...mealForm.equipment, equipmentInput.trim()],
+                                        })
+                                        setEquipmentInput("")
+                                      }
+                                    }
+                                  }}
+                                  placeholder="Add equipment and press Enter"
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (equipmentInput.trim()) {
+                                      setMealForm({
+                                        ...mealForm,
+                                        equipment: [...mealForm.equipment, equipmentInput.trim()],
+                                      })
+                                      setEquipmentInput("")
+                                    }
+                                  }}
+                                  className="px-4 py-2 bg-[#52796F] text-white rounded-lg hover:bg-[#6BB371] transition-colors"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                                {mealForm.equipment.map((item, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-3 py-1 bg-[#52796F]/10 text-[#354F52] rounded-full text-sm flex items-center gap-2"
+                                  >
+                                    {item}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setMealForm({
+                                          ...mealForm,
+                                          equipment: mealForm.equipment.filter((_, i) => i !== idx),
+                                        })
+                                      }}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      <XIcon className="w-3 h-3" />
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Original ingredients section */}
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">
+                                Simple Ingredients (Legacy)
+                              </label>
                               <div className="flex gap-2 mb-2">
                                 <input
                                   type="text"
                                   value={ingredientInput}
                                   onChange={(e) => setIngredientInput(e.target.value)}
                                   onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
+                                    if (e.key === "Enter") {
+                                      e.preventDefault()
                                       if (ingredientInput.trim()) {
-                                        setMealForm({ ...mealForm, ingredients: [...mealForm.ingredients, ingredientInput.trim()] });
-                                        setIngredientInput("");
+                                        setMealForm({
+                                          ...mealForm,
+                                          ingredients: [...mealForm.ingredients, ingredientInput.trim()],
+                                        })
+                                        setIngredientInput("")
                                       }
                                     }
                                   }}
@@ -1461,8 +2254,11 @@ export default function AdminDashboard() {
                                   type="button"
                                   onClick={() => {
                                     if (ingredientInput.trim()) {
-                                      setMealForm({ ...mealForm, ingredients: [...mealForm.ingredients, ingredientInput.trim()] });
-                                      setIngredientInput("");
+                                      setMealForm({
+                                        ...mealForm,
+                                        ingredients: [...mealForm.ingredients, ingredientInput.trim()],
+                                      })
+                                      setIngredientInput("")
                                     }
                                   }}
                                   className="px-4 py-2 bg-[#52796F] text-white rounded-lg hover:bg-[#6BB371] transition-colors"
@@ -1470,14 +2266,20 @@ export default function AdminDashboard() {
                                   Add
                                 </button>
                               </div>
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                                 {mealForm.ingredients.map((ing, idx) => (
-                                  <span key={idx} className="px-3 py-1 bg-[#52796F]/10 text-[#354F52] rounded-full text-sm flex items-center gap-2">
+                                  <span
+                                    key={idx}
+                                    className="px-3 py-1 bg-[#52796F]/10 text-[#354F52] rounded-full text-sm flex items-center gap-2"
+                                  >
                                     {ing}
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        setMealForm({ ...mealForm, ingredients: mealForm.ingredients.filter((_, i) => i !== idx) });
+                                        setMealForm({
+                                          ...mealForm,
+                                          ingredients: mealForm.ingredients.filter((_, i) => i !== idx),
+                                        })
                                       }}
                                       className="text-red-500 hover:text-red-700"
                                     >
@@ -1487,12 +2289,34 @@ export default function AdminDashboard() {
                                 ))}
                               </div>
                             </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Image URL</label>
+                              <input
+                                type="text"
+                                value={mealForm.image}
+                                onChange={(e) => setMealForm({ ...mealForm, image: e.target.value })}
+                                placeholder="https://images.unsplash.com/..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                              />
+                            </div>
+
                             <div className="flex gap-3">
-                              <button type="submit" className="flex-1 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white py-2 rounded-lg hover:from-[#6BB371] hover:to-[#52796F] transition-all shadow-lg hover:shadow-[#52796F]/30">
+                              <button
+                                type="submit"
+                                className="flex-1 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white py-2 rounded-lg hover:from-[#6BB371] hover:to-[#52796F] transition-all shadow-lg hover:shadow-[#52796F]/30"
+                              >
                                 <Save className="w-4 h-4 inline mr-2" />
                                 {editingItem ? "Update" : "Add"} Meal
                               </button>
-                              <button type="button" onClick={() => { setShowMealForm(false); setEditingItem(null); }} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowMealForm(false)
+                                  setEditingItem(null)
+                                }}
+                                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                              >
                                 Cancel
                               </button>
                             </div>
@@ -1512,25 +2336,25 @@ export default function AdminDashboard() {
                         <div className="flex gap-3">
                           <button
                             onClick={async () => {
-                              if (!confirm("This will create 12+ sample programs. Continue?")) return;
-                              setLoading(true);
+                              if (!confirm("This will create 12+ sample programs. Continue?")) return
+                              setLoading(true)
                               try {
                                 const res = await fetch("/api/test-db/create-sample-programs", {
                                   method: "POST",
-                                  headers: { "Content-Type": "application/json" }
-                                });
-                                const data = await res.json();
+                                  headers: { "Content-Type": "application/json" },
+                                })
+                                const data = await res.json()
                                 if (data.success) {
-                                  alert(`✅ Successfully created ${data.programsCreated} sample programs!`);
-                                  fetchData();
+                                  alert(`✅ Successfully created ${data.programsCreated} sample programs!`)
+                                  fetchData()
                                 } else {
-                                  alert(`Error: ${data.error || data.message}`);
+                                  alert(`Error: ${data.error || data.message}`)
                                 }
                               } catch (error) {
-                                console.error("Error creating sample programs:", error);
-                                alert("Error creating sample programs. Check console for details.");
+                                console.error("Error creating sample programs:", error)
+                                alert("Error creating sample programs. Check console for details.")
                               } finally {
-                                setLoading(false);
+                                setLoading(false)
                               }
                             }}
                             className="flex items-center gap-2 bg-gradient-to-r from-[#6BB371] to-[#52796F] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#6BB371]/30 transition-all"
@@ -1540,24 +2364,24 @@ export default function AdminDashboard() {
                           </button>
                           <button
                             onClick={() => {
-                              setShowProgramForm(true);
-                              setEditingItem(null);
-                              setProgramForm({ 
-                                name: "", 
-                                description: "", 
-                                duration: "", 
-                                schedule: [], 
-                                exercises: [], 
-                                price: 0, 
-                                discount: false, 
+                              setShowProgramForm(true)
+                              setEditingItem(null)
+                              setProgramForm({
+                                name: "",
+                                description: "",
+                                duration: "",
+                                schedule: [],
+                                exercises: [],
+                                price: 0,
+                                discount: false,
                                 discount_percentage: 0,
                                 goal: "muscle_building",
                                 level: "All Levels",
                                 equipment: [],
                                 coach_recommendation: "",
                                 coach_id: "",
-                                overview: ""
-                              });
+                                overview: "",
+                              })
                             }}
                             className="flex items-center gap-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#52796F]/30 transition-all"
                           >
@@ -1569,13 +2393,21 @@ export default function AdminDashboard() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {programs.map((program, idx) => (
-                          <div key={program.id || idx} className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all">
+                          <div
+                            key={program.id || idx}
+                            className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all"
+                          >
                             <h3 className="font-bold text-lg mb-2">{program.name}</h3>
                             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{program.description}</p>
                             <div className="flex items-center justify-between mb-3">
                               <span className="text-lg font-bold text-blue-600">
-                                ${program.discount ? (program.price * (1 - program.discount_percentage / 100)).toFixed(2) : program.price}
-                                {program.discount && <span className="text-xs text-gray-400 line-through ml-2">${program.price}</span>}
+                                $
+                                {program.discount
+                                  ? (program.price * (1 - program.discount_percentage / 100)).toFixed(2)
+                                  : program.price}
+                                {program.discount && (
+                                  <span className="text-xs text-gray-400 line-through ml-2">${program.price}</span>
+                                )}
                               </span>
                               {program.discount && (
                                 <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
@@ -1613,7 +2445,12 @@ export default function AdminDashboard() {
                         <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold">{editingItem ? "Edit Program" : "Add New Program"}</h3>
-                            <button onClick={() => { setShowProgramForm(false); setEditingItem(null); }}>
+                            <button
+                              onClick={() => {
+                                setShowProgramForm(false)
+                                setEditingItem(null)
+                              }}
+                            >
                               <XIcon className="w-6 h-6 text-gray-600" />
                             </button>
                           </div>
@@ -1690,10 +2527,17 @@ export default function AdminDashboard() {
                               <label className="block text-sm font-medium mb-1">Equipment (comma-separated)</label>
                               <input
                                 type="text"
-                                value={Array.isArray(programForm.equipment) ? programForm.equipment.join(", ") : programForm.equipment}
+                                value={
+                                  Array.isArray(programForm.equipment)
+                                    ? programForm.equipment.join(", ")
+                                    : programForm.equipment
+                                }
                                 onChange={(e) => {
-                                  const equipmentList = e.target.value.split(",").map(item => item.trim()).filter(item => item);
-                                  setProgramForm({ ...programForm, equipment: equipmentList });
+                                  const equipmentList = e.target.value
+                                    .split(",")
+                                    .map((item) => item.trim())
+                                    .filter((item) => item)
+                                  setProgramForm({ ...programForm, equipment: equipmentList })
                                 }}
                                 className="w-full px-3 py-2 border rounded-lg"
                                 placeholder="e.g., Dumbbells, Barbell, Bench, Resistance Bands"
@@ -1704,7 +2548,9 @@ export default function AdminDashboard() {
                               <label className="block text-sm font-medium mb-1">Coach Recommendation</label>
                               <textarea
                                 value={programForm.coach_recommendation}
-                                onChange={(e) => setProgramForm({ ...programForm, coach_recommendation: e.target.value })}
+                                onChange={(e) =>
+                                  setProgramForm({ ...programForm, coach_recommendation: e.target.value })
+                                }
                                 className="w-full px-3 py-2 border rounded-lg"
                                 rows="2"
                                 placeholder="Recommended coach or coaching style for this program"
@@ -1721,21 +2567,36 @@ export default function AdminDashboard() {
                               />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium mb-1">Exercises (JSON Array or comma-separated)</label>
+                              <label className="block text-sm font-medium mb-1">
+                                Exercises (JSON Array or comma-separated)
+                              </label>
                               <textarea
-                                value={Array.isArray(programForm.exercises) ? JSON.stringify(programForm.exercises, null, 2) : programForm.exercises}
+                                value={
+                                  Array.isArray(programForm.exercises)
+                                    ? JSON.stringify(programForm.exercises, null, 2)
+                                    : programForm.exercises
+                                }
                                 onChange={(e) => {
                                   try {
-                                    const parsed = JSON.parse(e.target.value);
+                                    const parsed = JSON.parse(e.target.value)
                                     if (Array.isArray(parsed)) {
-                                      setProgramForm({ ...programForm, exercises: parsed });
+                                      setProgramForm({ ...programForm, exercises: parsed })
                                     } else {
-                                      setProgramForm({ ...programForm, exercises: e.target.value.split(",").map(item => item.trim()).filter(item => item) });
+                                      setProgramForm({
+                                        ...programForm,
+                                        exercises: e.target.value
+                                          .split(",")
+                                          .map((item) => item.trim())
+                                          .filter((item) => item),
+                                      })
                                     }
                                   } catch {
                                     // If not valid JSON, treat as comma-separated
-                                    const exercises = e.target.value.split(",").map(item => item.trim()).filter(item => item);
-                                    setProgramForm({ ...programForm, exercises });
+                                    const exercises = e.target.value
+                                      .split(",")
+                                      .map((item) => item.trim())
+                                      .filter((item) => item)
+                                    setProgramForm({ ...programForm, exercises })
                                   }
                                 }}
                                 className="w-full px-3 py-2 border rounded-lg font-mono text-sm"
@@ -1745,14 +2606,16 @@ export default function AdminDashboard() {
                               <p className="text-xs text-gray-500 mt-1">Enter as JSON array or comma-separated list</p>
                             </div>
                             <div>
-                              <label className="block text-sm font-medium mb-1">Schedule (JSON Array - Day-by-Day)</label>
+                              <label className="block text-sm font-medium mb-1">
+                                Schedule (JSON Array - Day-by-Day)
+                              </label>
                               <textarea
                                 value={JSON.stringify(programForm.schedule, null, 2)}
                                 onChange={(e) => {
                                   try {
-                                    const parsed = JSON.parse(e.target.value);
+                                    const parsed = JSON.parse(e.target.value)
                                     if (Array.isArray(parsed)) {
-                                      setProgramForm({ ...programForm, schedule: parsed });
+                                      setProgramForm({ ...programForm, schedule: parsed })
                                     }
                                   } catch {
                                     // Invalid JSON, keep as is
@@ -1762,7 +2625,9 @@ export default function AdminDashboard() {
                                 rows="8"
                                 placeholder={`[\n  {\n    "day": "Day 1",\n    "focus": "Upper Body",\n    "exercises": ["Bench Press", "Rows"],\n    "notes": "Focus on form"\n  },\n  {\n    "day": "Day 2",\n    "focus": "Lower Body",\n    "exercises": ["Squats", "Deadlifts"]\n  }\n]`}
                               />
-                              <p className="text-xs text-gray-500 mt-1">Format: Array of objects with day, focus, exercises, and optional notes</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Format: Array of objects with day, focus, exercises, and optional notes
+                              </p>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
@@ -1771,7 +2636,9 @@ export default function AdminDashboard() {
                                   type="number"
                                   step="0.01"
                                   value={programForm.price}
-                                  onChange={(e) => setProgramForm({ ...programForm, price: parseFloat(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    setProgramForm({ ...programForm, price: Number.parseFloat(e.target.value) || 0 })
+                                  }
                                   className="w-full px-3 py-2 border rounded-lg"
                                 />
                               </div>
@@ -1780,7 +2647,12 @@ export default function AdminDashboard() {
                                 <input
                                   type="number"
                                   value={programForm.discount_percentage}
-                                  onChange={(e) => setProgramForm({ ...programForm, discount_percentage: parseFloat(e.target.value) || 0 })}
+                                  onChange={(e) =>
+                                    setProgramForm({
+                                      ...programForm,
+                                      discount_percentage: Number.parseFloat(e.target.value) || 0,
+                                    })
+                                  }
                                   className="w-full px-3 py-2 border rounded-lg"
                                   disabled={!programForm.discount}
                                 />
@@ -1796,11 +2668,21 @@ export default function AdminDashboard() {
                               <label className="text-sm font-medium">Has Discount</label>
                             </div>
                             <div className="flex gap-3">
-                              <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                              <button
+                                type="submit"
+                                className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                              >
                                 <Save className="w-4 h-4 inline mr-2" />
                                 {editingItem ? "Update" : "Add"}
                               </button>
-                              <button type="button" onClick={() => { setShowProgramForm(false); setEditingItem(null); }} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowProgramForm(false)
+                                  setEditingItem(null)
+                                }}
+                                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                              >
                                 Cancel
                               </button>
                             </div>
@@ -1816,6 +2698,5 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
-  );
+  )
 }
-

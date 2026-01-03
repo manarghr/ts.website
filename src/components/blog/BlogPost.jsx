@@ -7,7 +7,8 @@ import Image from "next/image"
 
 // Extended blog posts data with full content
 export const allBlogPosts = [
-     {
+  // Training Articles
+  {
     id: 1,
     title: "10 Essential Exercises for Perfect Form",
     excerpt: "Learn the fundamental movements that will transform your training and prevent injuries.",
@@ -16,29 +17,37 @@ export const allBlogPosts = [
     readTime: "5 min read",
     image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
     category: "training",
-    content: `# 10 Essential Exercises for Perfect Form
+    content: `Proper form is the foundation of any successful fitness journey. Whether you're a beginner or an experienced athlete, mastering these fundamental exercises will help you build strength safely and effectively.
 
-Proper form is the foundation of any successful fitness journey. Whether you're a beginner or an experienced athlete, mastering these fundamental exercises will help you build strength safely and effectively.
+**1. The Perfect Squat**
 
-## 1. Squats
-Squats are the king of lower-body exercises. Stand with feet shoulder-width apart, toes slightly pointed out. As you descend, imagine sitting back into a chair, keeping your chest up and core engaged. Drive through your heels to return to standing. Proper form ensures your knees track over your toes and prevents injury.
+Squats are the king of lower body exercises. Start with your feet shoulder-width apart, toes slightly pointed out. As you descend, imagine sitting back into a chair, keeping your chest up and core engaged. Your knees should track over your toes, never caving inward. Drive through your heels to return to standing.
 
-## 2. Deadlifts
-Deadlifts work your entire posterior chain. Begin with feet hip-width apart and barbell over mid-foot. Hinge at the hips, keeping your back flat and chest proud. Grip the bar outside your legs, then lift with controlled motion. Deadlifts build strength in the back, glutes, and hamstrings.
+**2. Deadlift Fundamentals**
 
-## 3. Push-Ups
-A proper push-up starts in a plank position with hands slightly wider than shoulders. Lower your chest toward the ground, keeping elbows at 45 degrees. Push back up with control. This strengthens the chest, triceps, and core while improving shoulder stability.
+The deadlift works your entire posterior chain. Stand with feet hip-width apart, barbell over mid-foot. Hinge at the hips, keeping your back flat and chest proud. Grip the bar just outside your legs, then drive through your heels while keeping the bar close to your body.
 
-## 4. Rows
-Rows target the back and improve posture. Focus on squeezing shoulder blades together during the pull. Keep core tight and avoid using momentum. Rows can be done with dumbbells, barbells, or cables.
+**3. Push-Up Perfection**
 
-## 5. Overhead Press
-Stand with feet hip-width apart, core engaged. Press the weight overhead in a straight line, finishing with your biceps by your ears. Avoid arching your lower back. This strengthens shoulders, arms, and stabilizes the core.
+A proper push-up starts in a plank position with hands slightly wider than shoulders. Your body should form a straight line from head to heels. Lower yourself until your chest nearly touches the ground, keeping elbows at a 45-degree angle. Push back up with control.
 
-## 6-10. Additional Exercises
-Include lunges, planks, pull-ups, hip bridges, and kettlebell swings. Each builds functional strength and targets different muscle groups. Progressive overload and proper recovery ensure continuous improvement.
+**4. The Row Variation**
 
-Perfect form takes practice. Focus on control, technique, and gradual progression. Consulting a qualified trainer can help accelerate results and prevent injuries.`
+Rows are essential for back development and posture. Whether using dumbbells, barbells, or cables, focus on pulling your shoulder blades together first, then bending your elbows. Keep your core tight and avoid using momentum.
+
+**5. Overhead Press Technique**
+
+Stand with feet hip-width apart, core braced. Press the weight overhead in a straight line, finishing with your biceps by your ears. Avoid arching your lower back by keeping your glutes engaged throughout the movement.
+
+**Common Mistakes to Avoid**
+
+The most common error across all exercises is rushing through movements. Quality always beats quantity. Take time to feel each muscle working and maintain control throughout the entire range of motion.
+
+**Progressive Overload**
+
+Once you've mastered proper form, gradually increase the challenge through added weight, reps, or time under tension. This progressive approach ensures continued gains while minimizing injury risk.
+
+Remember, perfect form takes practice. Don't be discouraged if it feels awkward at first. Consider working with a qualified trainer to ensure you're performing movements correctly before adding significant weight.`
   },
   {
     id: 4,
@@ -49,26 +58,37 @@ Perfect form takes practice. Focus on control, technique, and gradual progressio
     readTime: "8 min read",
     image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
     category: "training",
-    content: `# Building Strength: A Complete Guide
+    content: `Strength training is one of the most effective ways to transform your body, boost metabolism, and improve overall health. This comprehensive guide will take you from the basics to advanced techniques.
 
-Strength training is essential for improving muscle mass, bone density, and overall fitness. This guide covers exercises, programming, and recovery strategies suitable for all levels.
+**Understanding Strength Training**
 
-## Core Lifts
-Focus on compound lifts like squats, deadlifts, and bench press. These movements recruit multiple muscles, promoting growth and functional strength. Ensure proper technique and start with manageable weights.
+Strength training involves using resistance to build muscle mass, increase bone density, and enhance functional fitness. Whether you're using free weights, machines, or bodyweight, the principles remain the same: progressive overload and proper recovery.
 
-## Accessory Work
-Add exercises to strengthen weak points and balance your physique. Examples include lunges, rows, tricep extensions, and lateral raises. Accessory work improves overall stability and prevents injuries.
+**Beginner Foundation**
 
-## Programming
-Structure workouts using sets, reps, and rest intervals. Beginners may start with 3 sets of 8-12 reps, while advanced athletes can use varied rep ranges and intensity techniques like drop sets and supersets.
+Start with compound movements that work multiple muscle groups simultaneously. Focus on squats, deadlifts, bench press, rows, and overhead press. Begin with 2-3 sets of 8-12 reps, using weights that challenge you while maintaining perfect form.
 
-## Recovery
-Strength gains happen outside the gym. Sleep, nutrition, and active recovery are vital. Include deload weeks periodically to allow muscles and joints to recover.
+**Intermediate Progression**
 
-## Nutrition
-Protein intake, sufficient calories, and balanced macros support muscle repair and growth. Hydration and micronutrients optimize performance and recovery.
+Once you've built a solid foundation (typically 3-6 months), introduce variation through different rep ranges, tempo training, and exercise variations. Incorporate isolation exercises to target specific muscle groups and address weaknesses.
 
-Strength training is a journey. Consistency, proper form, and intelligent programming are keys to sustainable progress.`
+**Advanced Techniques**
+
+Advanced lifters can experiment with periodization, where you cycle through different phases focusing on strength, hypertrophy, and power. Consider techniques like drop sets, supersets, and pyramid training to push past plateaus.
+
+**Programming Principles**
+
+A well-designed strength program includes adequate volume, intensity, and frequency. Most people benefit from 3-5 training sessions per week, with each muscle group trained 2-3 times weekly for optimal results.
+
+**Recovery and Adaptation**
+
+Muscle growth happens during recovery, not during the workout. Ensure you're getting 7-9 hours of quality sleep, eating adequate protein (0.7-1g per pound of bodyweight), and allowing proper rest between sessions.
+
+**Tracking Progress**
+
+Keep a training log to track weights, reps, and how you feel. Progress isn't always linear, but over months and years, consistent effort compounds into remarkable transformations.
+
+Strength training is a journey, not a destination. Stay consistent, be patient with yourself, and enjoy the process of becoming stronger every day.`
   },
   {
     id: 7,
@@ -79,18 +99,37 @@ Strength training is a journey. Consistency, proper form, and intelligent progra
     readTime: "6 min read",
     image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800",
     category: "training",
-    content: `# HIIT vs Steady State Cardio
+    content: `The debate between HIIT and steady-state cardio has divided the fitness community for years. The truth? Both have their place, and the best choice depends on your goals, fitness level, and preferences.
 
-Cardiovascular training is essential for heart health, endurance, and fat loss. Choosing the right method depends on your goals, lifestyle, and fitness level.
+**What is HIIT?**
 
-## High-Intensity Interval Training (HIIT)
-HIIT alternates intense exercise bursts with recovery periods. It boosts metabolism, improves VO2 max, and burns calories efficiently. Workouts can be completed in 20-30 minutes, making them time-efficient.
+High-Intensity Interval Training involves short bursts of maximum effort followed by brief recovery periods. A typical session might include 30 seconds of sprinting followed by 90 seconds of walking, repeated for 15-20 minutes.
 
-## Steady-State Cardio
-Steady-state cardio involves maintaining a consistent pace for extended periods, like jogging or cycling. It enhances aerobic capacity, promotes fat utilization, and is easier on joints compared to HIIT.
+**What is Steady State Cardio?**
 
-## Choosing the Right Cardio
-Combine both methods for maximum benefit. Use HIIT for metabolic conditioning and steady-state cardio for endurance and recovery days. Tailor your cardio to your goals, fitness level, and schedule.`
+Steady-state cardio involves maintaining a consistent, moderate intensity for an extended period. Think jogging at a conversational pace for 30-60 minutes, or cycling at a steady rhythm.
+
+**Benefits of HIIT**
+
+HIIT is incredibly time-efficient, often delivering results in just 15-20 minutes. It creates an "afterburn effect" where your metabolism stays elevated for hours post-workout. It's excellent for fat loss while preserving muscle mass and improving cardiovascular fitness quickly.
+
+**Benefits of Steady State**
+
+Steady-state cardio is easier to recover from, making it ideal for active recovery days. It builds aerobic base and endurance, burns calories without excessive stress on the body, and is more sustainable for longer periods.
+
+**Which is Better for Fat Loss?**
+
+Both are effective for fat loss. HIIT burns more calories per minute and boosts metabolism post-workout, but steady-state allows you to burn calories for longer periods with less fatigue. The best approach often combines both methods.
+
+**Considerations for Your Choice**
+
+Choose HIIT if you're time-constrained, enjoy intense workouts, have a good fitness base, and want to improve power and speed. Choose steady-state if you're new to exercise, recovering from injury, need low-impact options, or enjoy longer, meditative workouts.
+
+**The Hybrid Approach**
+
+Most successful fitness programs incorporate both. Try 2-3 HIIT sessions weekly for intensity and efficiency, combined with 2-3 steady-state sessions for recovery and aerobic development.
+
+Remember, the best cardio is the one you'll actually do consistently. Choose based on what you enjoy and what fits your lifestyle.`
   },
 
   // Nutrition Articles
@@ -103,26 +142,41 @@ Combine both methods for maximum benefit. Use HIIT for metabolic conditioning an
     readTime: "7 min read",
     image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800",
     category: "nutrition",
-    content: `# Nutrition Tips for Optimal Recovery
+    content: `Recovery isn't just about rest—it's about providing your body with the right nutrients at the right time. Let's explore the science-backed strategies that will help you recover faster and perform better.
 
-Recovery is as important as training. Proper nutrition accelerates muscle repair, replenishes energy stores, and reduces soreness.
+**The Anabolic Window**
 
-## Protein
-Protein repairs and rebuilds muscles. Consume 0.7-1g per pound of body weight daily, focusing on sources like lean meats, fish, eggs, and legumes.
+While the traditional "30-minute window" has been overstated, consuming protein and carbohydrates within 2-3 hours post-workout does optimize recovery. Your muscles are primed to absorb nutrients during this period, making it an ideal time to refuel.
 
-## Carbohydrates
-Replenish glycogen stores with complex carbs such as oats, brown rice, and sweet potatoes. Post-workout carbs help recovery and performance.
+**Protein Requirements**
 
-## Fats
-Healthy fats aid hormone production and support cell function. Include nuts, avocados, olive oil, and fatty fish.
+Aim for 0.7-1 gram of protein per pound of body weight daily. Post-workout, 20-40 grams of high-quality protein helps kickstart muscle repair. Good sources include lean meats, fish, eggs, Greek yogurt, and plant-based options like legumes and tofu.
 
-## Hydration & Electrolytes
-Water and electrolytes maintain optimal performance and recovery. Consume fluids during and after exercise to replace losses.
+**Carbohydrates Matter**
 
-## Supplements
-Optional supplements like creatine, vitamin D, and omega-3s can enhance recovery. Consult a professional before use.
+Carbs replenish glycogen stores depleted during training. After intense workouts, consume 0.5-0.7 grams of carbs per pound of body weight. Choose easily digestible options like rice, potatoes, oats, or fruit.
 
-Consistency in nutrition supports long-term performance improvements and reduces injury risk.`
+**Hydration and Electrolytes**
+
+Water is crucial, but don't forget electrolytes. For every pound lost during exercise, drink 16-24 ounces of fluid. If you're training for over an hour or sweating heavily, include sodium, potassium, and magnesium in your recovery routine.
+
+**Anti-Inflammatory Foods**
+
+Include omega-3 rich foods like salmon, walnuts, and flaxseeds to combat exercise-induced inflammation. Colorful fruits and vegetables provide antioxidants that support recovery at the cellular level.
+
+**Timing Throughout the Day**
+
+Recovery nutrition isn't just about post-workout meals. Distribute protein evenly across 4-5 meals throughout the day for optimal muscle protein synthesis. Each meal should contain 25-40 grams of protein.
+
+**Sleep and Nutrition**
+
+What you eat before bed matters. A small serving of protein (like cottage cheese or casein protein) provides amino acids throughout the night, supporting muscle repair during sleep.
+
+**Supplement Considerations**
+
+While whole foods should be your priority, certain supplements can support recovery. Creatine, vitamin D, and omega-3s have strong research backing. Consult with a healthcare provider before starting any supplement regimen.
+
+The key to optimal recovery nutrition is consistency. Create a sustainable eating pattern that supports your training goals without causing unnecessary stress or restriction.`
   },
   {
     id: 5,
@@ -133,23 +187,106 @@ Consistency in nutrition supports long-term performance improvements and reduces
     readTime: "6 min read",
     image: "https://images.unsplash.com/photo-1547496502-affa22d38842?w=800",
     category: "nutrition",
-    content: `**Meal Prep Made Easy**
+    content: `Meal prep is the secret weapon of successful fitness enthusiasts. By dedicating just a few hours on the weekend, you can ensure healthy eating throughout your busy week.
 
-Meal prepping simplifies healthy eating and ensures consistency with your diet. With proper planning, you can prepare a week's worth of meals in a few hours.
+**Why Meal Prep Works**
 
-**Planning**
+Meal prep removes decision fatigue, saves money, reduces food waste, ensures portion control, and makes it easier to hit your nutrition goals. When healthy food is ready to eat, you're less likely to make impulsive, unhealthy choices.
 
-Decide on your meals, focusing on protein, carbs, and vegetables. Create a grocery list and shop efficiently.
+**Essential Equipment**
 
-**Cooking**
+Invest in quality storage containers (glass or BPA-free plastic), measuring cups and a food scale, large baking sheets and pans, a slow cooker or instant pot, and sharp knives and cutting boards.
 
-Batch cook proteins like chicken, fish, or tofu. Roast vegetables and cook grains in large quantities. Portion meals into containers for convenience.
+**The Basic Framework**
 
-**Storage**
+Start with a simple formula: protein + carbs + vegetables + healthy fats. Choose 2-3 protein sources, 2-3 carb sources, and 3-4 different vegetables. This variety prevents boredom while simplifying your prep.
 
-Use airtight containers, label with dates, and refrigerate or freeze to maintain freshness. Rotate meals throughout the week to prevent boredom.
+**Step-by-Step Process**
 
-Meal prepping reduces stress, saves money, and improves adherence to nutrition goals.`
+Begin by planning your meals for the week. Make a detailed shopping list and shop once. Set aside 2-3 hours on Sunday (or your preferred day). Prep ingredients in batches—cook all proteins together, roast all vegetables at once, and batch cook grains.
+
+**Protein Prep Ideas**
+
+Bake chicken breasts with different seasonings, grill lean ground turkey or beef, hard boil a dozen eggs, bake salmon filets, and prepare a large batch of beans or lentils.
+
+**Carb Solutions**
+
+Cook a large pot of brown rice or quinoa, bake sweet potatoes in bulk, prepare overnight oats for breakfasts, and cook pasta for easy meals.
+
+**Vegetable Strategies**
+
+Roast sheet pans of mixed vegetables with olive oil and seasonings. Steam broccoli and cauliflower. Prepare salad ingredients in separate containers. Chop raw veggies for snacking.
+
+**Storage Tips**
+
+Store proteins and carbs separately for flexibility in mixing meals. Keep sauces and dressings separate until eating. Label containers with contents and dates. Most prepped meals last 4-5 days in the fridge.
+
+**Preventing Boredom**
+
+Use different seasonings and marinades to create variety from the same base ingredients. Mix and match components throughout the week. Don't prep all seven days—leave room for 1-2 fresh meals or dining out.
+
+**Time-Saving Hacks**
+
+Use pre-cut vegetables when budget allows, cook multiple dishes simultaneously using oven and stovetop, embrace one-pot meals, and consider a slow cooker or instant pot for hands-off cooking.
+
+Meal prep doesn't have to be perfect. Start small with just a few meals, and gradually expand as you become more comfortable with the process. The goal is consistency, not perfection.`
+  },
+  {
+    id: 8,
+    title: "Understanding Macros and Micros",
+    excerpt: "A comprehensive guide to macronutrients and micronutrients for optimal health.",
+    author: "Dr. Rachel Green",
+    date: "February 25, 2024",
+    readTime: "9 min read",
+    image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800",
+    category: "nutrition",
+    content: `Understanding macronutrients and micronutrients is fundamental to optimizing your nutrition. This guide breaks down what you need to know about the building blocks of food.
+
+**The Three Macronutrients**
+
+Macronutrients are nutrients your body needs in large amounts: protein, carbohydrates, and fats. Each plays unique and essential roles in your health and performance.
+
+**Protein: The Builder**
+
+Protein is essential for building and repairing tissues, producing enzymes and hormones, and supporting immune function. Aim for 0.7-1 gram per pound of body weight if you're active. Quality sources include lean meats, fish, eggs, dairy, legumes, and plant-based proteins like tofu and tempeh.
+
+**Carbohydrates: The Fuel**
+
+Despite recent trends, carbs are not the enemy. They're your body's preferred energy source, especially for high-intensity exercise. Focus on complex carbohydrates like whole grains, fruits, vegetables, and legumes. Active individuals typically need 2-3 grams per pound of body weight daily.
+
+**Fats: The Essential**
+
+Healthy fats support hormone production, nutrient absorption, and brain health. Aim for 0.3-0.5 grams per pound of body weight. Prioritize sources like avocados, nuts, seeds, olive oil, fatty fish, and coconut oil.
+
+**Understanding Micronutrients**
+
+Micronutrients include vitamins and minerals needed in smaller amounts but equally crucial for health. They support immune function, bone health, energy production, and countless other processes.
+
+**Essential Vitamins**
+
+Vitamin D supports bone health and immune function (get sun exposure or supplement if needed). B vitamins are crucial for energy metabolism (found in whole grains, meat, leafy greens). Vitamin C supports immune health and collagen production (citrus fruits, berries, bell peppers). Vitamin A is important for vision and immune function (orange vegetables, dark leafy greens).
+
+**Critical Minerals**
+
+Iron carries oxygen in blood (red meat, spinach, lentils). Calcium builds strong bones (dairy, fortified plant milks, leafy greens). Magnesium supports muscle function and sleep (nuts, seeds, dark chocolate). Zinc aids immune function and recovery (meat, shellfish, legumes). Potassium regulates fluid balance (bananas, potatoes, avocados).
+
+**Getting Your Micros**
+
+The best approach is eating a rainbow of colorful fruits and vegetables, including variety in protein sources, choosing whole grains over refined grains, eating nuts and seeds regularly, and considering a quality multivitamin as insurance.
+
+**Tracking Macros**
+
+If you choose to track macros, use an app like MyFitnessPal or Cronometer. Start by tracking everything you normally eat for a week to establish a baseline. Then adjust based on your goals—weight loss, maintenance, or muscle gain.
+
+**The 80/20 Approach**
+
+Aim for 80% of your diet to come from nutrient-dense whole foods. The remaining 20% allows flexibility for treats and social occasions. This sustainable approach prevents the all-or-nothing mentality that leads to diet failure.
+
+**Individual Needs**
+
+Remember, these are general guidelines. Your optimal macro split depends on your goals, activity level, age, genetics, and personal preferences. Consider working with a registered dietitian for personalized recommendations.
+
+Nutrition doesn't have to be complicated. Focus on whole foods, eat plenty of protein and vegetables, stay hydrated, and allow yourself flexibility. Consistency over perfection is what creates lasting results.`
   },
 
   // Technology Articles
@@ -162,66 +299,51 @@ Meal prepping reduces stress, saves money, and improves adherence to nutrition g
     readTime: "6 min read",
     image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
     category: "technology",
-    content: `# How AI is Revolutionizing Fitness
+    content: `Artificial intelligence is transforming the fitness industry in ways we never imagined. From personalized workout plans to real-time form correction, AI is making expert-level training accessible to everyone.
 
-Artificial intelligence is transforming the fitness industry. From personalized workouts to real-time feedback, AI makes expert-level training accessible to everyone.
+**Personalized Training Programs**
 
-## Personalized Training
-AI analyzes your data and customizes programs for optimal results, considering goals, equipment, and injury history.
+AI algorithms analyze your fitness level, goals, available equipment, and even your injury history to create truly customized workout plans. These programs adapt in real-time based on your performance, energy levels, and recovery needs—something even the best human trainers struggle to do consistently.
 
-## Form Correction
-Computer vision tracks movement patterns, providing immediate feedback to prevent injuries and improve performance.
+**Form Analysis and Correction**
 
-## Predictive Analytics
-AI predicts overtraining risks, monitors recovery, and recommends adjustments for better performance.
+Computer vision technology can now analyze your exercise form through your smartphone or webcam. These systems provide instant feedback on joint angles, movement patterns, and potential injury risks. It's like having a personal trainer watching your every rep.
 
-Embrace AI as a tool to complement your workouts, making your fitness journey more efficient and informed.`
+**Predictive Analytics**
+
+AI can predict when you're at risk of overtraining or injury by analyzing patterns in your performance data, sleep quality, heart rate variability, and more. This proactive approach helps prevent setbacks before they occur.
+
+**Virtual Coaching**
+
+Natural language processing enables AI coaches that can answer questions, provide motivation, and adjust your program through conversational interfaces. These systems learn your preferences and communication style over time, creating increasingly personalized interactions.
+
+**Nutrition Optimization**
+
+AI-powered apps can scan your meals, calculate macros, and provide personalized nutrition recommendations based on your goals and dietary preferences. Some systems even learn which foods you enjoy and suggest meal plans you'll actually follow.
+
+**Recovery Monitoring**
+
+Wearable devices combined with AI algorithms track recovery metrics like heart rate variability, sleep quality, and stress levels. The system then recommends optimal training intensity for each day.
+
+**Smart Equipment**
+
+Connected fitness equipment uses AI to adjust resistance, suggest workout modifications, and track your progress over time. These smart machines learn your preferences and automatically optimize your training.
+
+**The Future is Now**
+
+We're just scratching the surface of AI's potential in fitness. Upcoming innovations include augmented reality workout experiences, predictive injury prevention models, and even AI that can detect early signs of health issues through exercise performance patterns.
+
+**The Human Element**
+
+Despite these advances, AI won't replace human trainers—it will enhance them. The best approach combines AI's analytical power with human empathy, motivation, and accountability.
+
+**Getting Started with AI Fitness**
+
+You don't need expensive equipment to benefit from AI fitness technology. Many smartphone apps offer AI-powered features for free or at minimal cost. Start by trying form analysis apps, AI workout planners, or smart nutrition trackers.
+
+The fitness industry is experiencing a technological revolution, and AI is at its center. Whether you're a gym owner, trainer, or fitness enthusiast, understanding and embracing these tools will be crucial for success in the coming years.`
   },
-  {
-    id: 6,
-    title: "Wearable Tech for Fitness Tracking",
-    excerpt: "The best fitness wearables and how to use them to optimize your workouts.",
-    author: "David Park",
-    date: "March 2, 2024",
-    readTime: "5 min read",
-    image: "https://images.unsplash.com/photo-1576243345690-4e4b79b63288?w=800",
-    category: "technology",
-    content: `# Wearable Tech for Fitness Tracking
-
-Wearables track heart rate, steps, sleep, and performance metrics. Popular devices include smartwatches and fitness trackers.
-
-## Benefits
-- Monitor progress over time
-- Receive alerts for activity goals
-- Track sleep quality
-- Optimize training intensity
-
-## Tips
-Use data to adjust workouts, prevent overtraining, and stay motivated. Pair wearable insights with personalized coaching for best results.`
-  },
-  {
-    id: 9,
-    title: "The Future of Virtual Training",
-    excerpt: "How virtual reality and AI are creating the next generation of fitness experiences.",
-    author: "Chris Martinez",
-    date: "February 22, 2024",
-    readTime: "7 min read",
-    image: "https://images.unsplash.com/photo-1593642532842-98d0fd5ebc1a?w=800",
-    category: "technology",
-    content: `The Future of Virtual Training
-
-Virtual reality and AI are merging to create immersive training experiences. Gamified workouts, real-time corrections, and adaptive programs enhance engagement and results.
-
-## VR Workouts
-Simulate environments, track motion, and visualize form. Perfect for home-based training or rehabilitation.
-
-## AI Integration
-AI coaches analyze performance and provide personalized guidance. Users can adjust intensity based on feedback, making every session optimized.
-
-Virtual training will continue evolving, offering accessibility, motivation, and innovation for all fitness enthusiasts.`
-  },
-];
-
+]
 
 export default function BlogPost({ postId }) {
   const post = allBlogPosts.find(p => p.id === parseInt(postId))
@@ -261,250 +383,289 @@ export default function BlogPost({ postId }) {
     return names[category] || category
   }
 
-  // Get all related posts from the same category
   const relatedPosts = allBlogPosts
     .filter(p => p.category === post.category && p.id !== post.id)
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Grid Background - Same as BlogGrid */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/5 via-transparent to-[#6BB371]/5"></div>
-      <div
-        className="absolute inset-0 opacity-35"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.4;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
-          backgroundSize: "60px 60px",
-        }}
-      ></div>
+    <div className="min-h-screen bg-white">
+      {/* Hero Section - Enhanced */}
+      <section className="relative w-full h-[500px] md:h-[600px] overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src={post.image}
+            alt={post.title}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+        </div>
 
-      {/* Hero Section with Image */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="relative h-[400px] md:h-[500px] overflow-hidden z-10"
-      >
-        <Image
-          src={post.image}
-          alt={post.title}
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 right-20 w-96 h-96 bg-[#6BB371]/20 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#52796F]/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        </div>
         
-        {/* Content Overlay */}
-        <div className="absolute inset-0 flex flex-col justify-end">
-          <div className="max-w-4xl mx-auto w-full px-6 md:px-12 pb-12">
+        {/* Content */}
+        <div className="relative z-10 h-full flex items-end">
+          <div className="max-w-5xl mx-auto w-full px-6 md:px-12 pb-16">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
             >
-              <div className="flex items-center gap-3 mb-4">
-                <span className="inline-flex items-center gap-2 px-4 py-2 bg-[#52796F] text-white rounded-full text-sm font-semibold capitalize">
-                  <FaTag className="w-3 h-3" />
-                  {getCategoryName(post.category)}
-                </span>
-              </div>
+              {/* Category Badge */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#52796F]/90 backdrop-blur-sm text-white rounded-full text-sm font-bold uppercase tracking-wider mb-6 shadow-lg"
+              >
+                <FaTag className="w-3 h-3" />
+                {getCategoryName(post.category)}
+              </motion.div>
               
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+              {/* Title */}
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight tracking-tight">
                 {post.title}
               </h1>
               
-              <div className="flex flex-wrap items-center gap-4 text-white/90 text-sm md:text-base">
+              {/* Decorative Line */}
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: 96 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                className="h-1.5 bg-gradient-to-r from-[#6BB371] to-[#52796F] mb-6"
+              />
+              
+              {/* Meta Info */}
+              <div className="flex flex-wrap items-center gap-6 text-white/90 text-base">
                 <div className="flex items-center gap-2">
-                  <FaUser className="w-4 h-4" />
-                  <span className="font-medium">{post.author}</span>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                    <FaUser className="w-4 h-4" />
+                  </div>
+                  <span className="font-semibold">{post.author}</span>
                 </div>
                 <span className="text-white/50">•</span>
-                <span>{post.date}</span>
+                <span className="font-medium">{post.date}</span>
                 <span className="text-white/50">•</span>
                 <div className="flex items-center gap-2">
-                  <FaClock className="w-4 h-4" />
-                  <span>{post.readTime}</span>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                    <FaClock className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium">{post.readTime}</span>
                 </div>
               </div>
             </motion.div>
           </div>
         </div>
-      </motion.div>
+      </section>
 
-      {/* Article Content - White Rectangle */}
-      <div className="relative z-10 py-12 md:py-16">
-        <div className="max-w-4xl mx-auto px-6 md:px-12">
+      {/* Article Content Section */}
+      <section className="relative py-16 md:py-24 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/5 via-transparent to-[#6BB371]/5"></div>
+        <div className="absolute inset-0 opacity-30" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.4;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
+          backgroundSize: "60px 60px",
+        }}></div>
+
+        {/* Floating Accent Elements */}
+        <div className="absolute top-20 right-10 w-32 h-32 bg-[#6BB371]/10 rounded-full blur-2xl animate-float"></div>
+        <div className="absolute bottom-40 left-10 w-40 h-40 bg-[#52796F]/10 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }}></div>
+        
+        <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="bg-white rounded-2xl shadow-sm p-8 md:p-12 lg:p-16"
+            className="bg-white rounded-3xl shadow-xl p-8 md:p-12 lg:p-16 border border-[#C8CDC5]/30"
           >
-          <motion.article
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="prose prose-lg max-w-none"
-            style={{
-              color: '#354F52',
-              fontSize: '1.125rem',
-              lineHeight: '1.8'
-            }}
-          >
-            {post.content.split('\n\n').map((paragraph, index) => {
-              // Check if paragraph is a heading (starts with **)
-              if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-                const heading = paragraph.replace(/\*\*/g, '')
-                return (
-                  <h2 key={index} className="text-2xl md:text-3xl font-bold text-[#354F52] mt-12 mb-6 first:mt-0">
-                    {heading}
-                  </h2>
+            <article className="prose prose-lg max-w-none">
+              {post.content.split('\n\n').map((paragraph, index) => {
+                if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
+                  const heading = paragraph.replace(/\*\*/g, '')
+                  return (
+                    <motion.h2 
+                      key={index} 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * index, duration: 0.5 }}
+                      className="text-3xl md:text-4xl font-bold text-[#354F52] mt-12 mb-6 first:mt-0 flex items-center gap-3"
+                    >
+                      <span className="w-2 h-8 bg-gradient-to-b from-[#52796F] to-[#6BB371] rounded-full"></span>
+                      {heading}
+                    </motion.h2>
+                  )
+                }
+                
+                const formattedText = paragraph.split('**').map((text, i) => 
+                  i % 2 === 1 ? <strong key={i} className="text-[#52796F] font-bold">{text}</strong> : text
                 )
-              }
-              
-              // Regular paragraph with potential bold text
-              const formattedText = paragraph.split('**').map((text, i) => 
-                i % 2 === 1 ? <strong key={i} className="text-[#52796F] font-bold">{text}</strong> : text
-              )
-              
-              return (
-                <p key={index} className="text-gray-700 leading-relaxed mb-6">
-                  {formattedText}
-                </p>
-              )
-            })}
-            </motion.article>
+                
+                return (
+                  <motion.p 
+                    key={index} 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 * index, duration: 0.5 }}
+                    className="text-gray-700 leading-relaxed mb-6 text-lg"
+                  >
+                    {formattedText}
+                  </motion.p>
+                )
+              })}
+            </article>
 
             {/* Back Button */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7, duration: 0.8 }}
-              className="mt-12 pt-8 border-t border-[#C8CDC5]/50"
+              className="mt-16 pt-8 border-t-2 border-[#C8CDC5]/30"
             >
               <Link
                 href="/blog"
-                className="inline-flex items-center gap-2 text-[#52796F] hover:text-[#354F52] font-semibold text-lg transition-colors group"
+                className="inline-flex items-center gap-3 text-[#52796F] hover:text-[#354F52] font-bold text-lg transition-all duration-300 group"
               >
-                <FaArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                <div className="bg-[#52796F]/10 group-hover:bg-[#52796F] rounded-full p-3 transition-colors duration-300">
+                  <FaArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform group-hover:text-white" />
+                </div>
                 Back to All Articles
               </Link>
             </motion.div>
           </motion.div>
         </div>
-      </div>
+      </section>
 
       {/* Related Posts Section */}
       {relatedPosts.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.8 }}
-          className="relative bg-[#CAE5C4]/50 py-10 md:py-10 border-t border-[#CAE5C4]/50"
-        >
-          {/* Subtle pattern overlay */}
-          <div
-            className="absolute inset-0 opacity-20"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.3;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
-              backgroundSize: "60px 60px",
-            }}
-          ></div>
+        <section className="relative bg-gradient-to-br from-[#CAE5C4]/40 via-[#CAE5C4]/20 to-transparent py-20 md:py-28 overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-25" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.3;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
+            backgroundSize: "60px 60px",
+          }}></div>
+
+          {/* Floating Elements */}
+          <div className="absolute top-10 right-20 w-64 h-64 bg-[#6BB371]/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 left-20 w-64 h-64 bg-[#52796F]/10 rounded-full blur-3xl"></div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12">
-            <div className="flex items-center justify-between mb-10">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-[#354F52] mb-2">
-                  More {getCategoryName(post.category)} Articles
-                </h2>
-                <p className="text-gray-600">
-                  Explore {relatedPosts.length} more article{relatedPosts.length !== 1 ? 's' : ''} in this category
-                </p>
-              </div>
-              
-              <Link 
-                href="/blog"
-                className="hidden md:inline-flex items-center gap-2 px-6 py-3 bg-[#52796F] text-white rounded-xl font-semibold hover:bg-[#354F52] transition-all duration-300 shadow-md hover:shadow-lg"
-              >
-                View All Articles
-                <FaArrowLeft className="w-4 h-4 rotate-180" />
-              </Link>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {relatedPosts.slice(0, 6).map((relatedPost, index) => (
-                <motion.div
-                  key={relatedPost.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1 + index * 0.1, duration: 0.5 }}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9, duration: 0.8 }}
+            >
+              {/* Header */}
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
+                <div>
+                  <h2 className="text-4xl md:text-5xl font-bold text-[#354F52] mb-3">
+                    More {getCategoryName(post.category)} Articles
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-1 bg-gradient-to-r from-[#52796F] to-[#6BB371]"></div>
+                    <p className="text-gray-600 font-medium">
+                      {relatedPosts.length} article{relatedPosts.length !== 1 ? 's' : ''} available
+                    </p>
+                  </div>
+                </div>
+                
+                <Link 
+                  href="/blog"
+                  className="hidden md:inline-flex items-center gap-2 px-6 py-3 bg-[#52796F] text-white rounded-xl font-semibold hover:bg-[#354F52] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                 >
-                  <Link href={`/blog/${relatedPost.id}`}>
-                    <div className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 h-full">
-                      <div className="relative h-48 overflow-hidden">
-                        <Image
-                          src={relatedPost.image}
-                          alt={relatedPost.title}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute top-4 left-4 px-3 py-1 bg-[#52796F] text-white text-xs font-semibold rounded-full capitalize">
-                          {getCategoryName(relatedPost.category)}
+                  View All Articles
+                  <FaArrowLeft className="w-4 h-4 rotate-180" />
+                </Link>
+              </div>
+            
+              {/* Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {relatedPosts.slice(0, 6).map((relatedPost, index) => (
+                  <motion.div
+                    key={relatedPost.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1 + index * 0.1, duration: 0.5 }}
+                  >
+                    <Link href={`/blog/${relatedPost.id}`}>
+                      <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-[#52796F]/30 h-full transform hover:-translate-y-2">
+                        <div className="relative h-48 overflow-hidden">
+                          <Image
+                            src={relatedPost.image}
+                            alt={relatedPost.title}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className="absolute top-4 left-4 px-3 py-1.5 bg-[#52796F] text-white text-xs font-bold rounded-full capitalize shadow-lg">
+                            {getCategoryName(relatedPost.category)}
+                          </div>
+                        </div>
+                        
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold text-[#354F52] mb-3 group-hover:text-[#52796F] transition-colors line-clamp-2 leading-tight">
+                            {relatedPost.title}
+                          </h3>
+                          <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
+                            {relatedPost.excerpt}
+                          </p>
+                          <div className="flex items-center justify-between text-sm text-gray-500">
+                            <div className="flex items-center gap-2">
+                              <FaClock className="w-3 h-3" />
+                              <span className="font-medium">{relatedPost.readTime}</span>
+                            </div>
+                            <span className="text-[#52796F] font-semibold group-hover:gap-2 inline-flex items-center gap-1 transition-all">
+                              Read More
+                              <FaArrowLeft className="w-3 h-3 rotate-180 group-hover:translate-x-1 transition-transform" />
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold text-[#354F52] mb-3 group-hover:text-[#52796F] transition-colors line-clamp-2">
-                          {relatedPost.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                          {relatedPost.excerpt}
-                        </p>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <FaClock className="w-3 h-3" />
-                          <span>{relatedPost.readTime}</span>
-                        </div>
-                      </div>
-                    </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* View More Buttons */}
+              {relatedPosts.length > 6 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.6, duration: 0.5 }}
+                  className="mt-12 text-center"
+                >
+                  <Link
+                    href={`/blog?category=${post.category}`}
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white rounded-xl font-bold hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  >
+                    View All {getCategoryName(post.category)} Articles ({relatedPosts.length})
+                    <FaArrowLeft className="w-5 h-5 rotate-180" />
                   </Link>
                 </motion.div>
-              ))}
-            </div>
+              )}
 
-            {/* Show "View All" button if there are more articles */}
-            {relatedPosts.length > 6 && (
+              {/* Mobile Button */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.6, duration: 0.5 }}
-                className="mt-12 text-center"
+                transition={{ delay: 1.7, duration: 0.5 }}
+                className="mt-8 md:hidden text-center"
               >
-                <Link
-                  href={`/blog?category=${post.category}`}
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-[#52796F] text-white rounded-xl font-semibold hover:bg-[#354F52] transition-all duration-300 shadow-lg hover:shadow-xl"
+                <Link 
+                  href="/blog"
+                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#52796F] text-[#52796F] rounded-xl font-semibold hover:bg-[#52796F] hover:text-white transition-all duration-300"
                 >
-                  View All {getCategoryName(post.category)} Articles ({relatedPosts.length})
-                  <FaArrowLeft className="w-5 h-5 rotate-180" />
+                  View All Articles
+                  <FaArrowLeft className="w-4 h-4 rotate-180" />
                 </Link>
               </motion.div>
-            )}
-
-            {/* Mobile "View All Articles" button */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.7, duration: 0.5 }}
-              className="mt-8 md:hidden text-center"
-            >
-              <Link 
-                href="/blog"
-                className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#52796F] text-[#52796F] rounded-xl font-semibold hover:bg-[#52796F] hover:text-white transition-all duration-300"
-              >
-                View All Articles
-                <FaArrowLeft className="w-4 h-4 rotate-180" />
-              </Link>
             </motion.div>
           </div>
-        </motion.div>
+        </section>
       )}
     </div>
   )
