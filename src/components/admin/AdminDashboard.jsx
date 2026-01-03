@@ -401,98 +401,149 @@ export default function AdminDashboard() {
 
 
 
-//   const handleAddMeal = async (e) => {
-//   e.preventDefault()
+
+
+// const handleAddMeal = async (e) => {
+//   e.preventDefault();
 //   try {
-//     if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
-//       alert("Prep time must be a positive number greater than 0")
-//       return
+//     if (!mealForm.prepTime || parseInt(mealForm.prepTime) <= 0) {
+//       alert("Prep time must be a positive number greater than 0");
+//       return;
 //     }
 
-//     if (!mealForm.servings || Number.parseInt(mealForm.servings) <= 0) {
-//       alert("Servings must be a positive number greater than 0")
-//       return
+//     if (!mealForm.servings || parseInt(mealForm.servings) <= 0) {
+//       alert("Servings must be a positive number greater than 0");
+//       return;
 //     }
 
-//     const existingIds = meals.map((m) => (typeof m.id === "number" ? m.id : Number.parseInt(m.id) || 0))
-//     const maxId = Math.max(10000, ...existingIds, Date.now())
+//     const res = await fetch("/api/admin/meals", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(mealForm),
+//     });
+
+//     const data = await res.json();
     
-//     const newMeal = {
-//       id: mealForm.id || maxId + 1,
-//       name: mealForm.name,
-//       mealType: mealForm.mealType,
-//       goal: mealForm.goal,
-//       description: mealForm.description || "",
-//       servings: Number.parseInt(mealForm.servings),
-//       difficulty: mealForm.difficulty,
-//       prepTime: `${Number.parseInt(mealForm.prepTime)} min`,
-//       image: mealForm.image,
-//       // Nutrition details as nested object
-//       calories: Number.parseInt(mealForm.calories) || 0,
-//       protein: Number.parseInt(mealForm.protein) || 0,
-//       carbs: Number.parseInt(mealForm.carbs) || 0,
-//       fats: Number.parseInt(mealForm.fats) || 0,
-//       fiber: Number.parseInt(mealForm.fiber) || 0,
-//       nutritionDetails: {
-//         calories: Number.parseInt(mealForm.calories) || 0,
-//         protein: Number.parseInt(mealForm.protein) || 0,
-//         carbs: Number.parseInt(mealForm.carbs) || 0,
-//         fats: Number.parseInt(mealForm.fats) || 0,
-//         fiber: Number.parseInt(mealForm.fiber) || 0,
-//         sugar: Number.parseInt(mealForm.sugar) || 0,
-//         sodium: Number.parseInt(mealForm.sodium) || 0
-//       },
-//       // Recipe details
-//       detailedIngredients: mealForm.detailedIngredients,
-//       steps: mealForm.steps,
-//       tips: mealForm.tips,
-//       equipment: mealForm.equipment,
-//       ingredients: mealForm.ingredients // Keep for backward compatibility
+//     if (data.success) {
+//       setShowMealForm(false);
+//       setMealForm({
+//         id: "",
+//         name: "",
+//         mealType: "breakfast",
+//         goal: "all",
+//         description: "",
+//         calories: 0,
+//         protein: 0,
+//         carbs: 0,
+//         fats: 0,
+//         fiber: 0,
+//         sugar: 0,
+//         sodium: 0,
+//         servings: 1,
+//         difficulty: "Easy",
+//         prepTime: 0,
+//         steps: [],
+//         tips: [],
+//         equipment: [],
+//         ingredients: [],
+//         detailedIngredients: [],
+//         image: "",
+//       });
+//       setIngredientInput("");
+//       setStepInput("");
+//       setTipInput("");
+//       setEquipmentInput("");
+//       setDetailedIngredientInput({ item: "", amount: "", notes: "" });
+//       fetchData(); // Reload meals from database
+//     } else {
+//       alert(`Error: ${data.error}`);
 //     }
-
-//     const updatedMeals = [...meals, newMeal]
-//     setMeals(updatedMeals)
-//     localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
-//     window.dispatchEvent(new Event("mealsUpdated"))
-    
-//     setShowMealForm(false)
-//     setMealForm({
-//       id: "",
-//       name: "",
-//       mealType: "breakfast",
-//       goal: "all",
-//       description: "",
-//       calories: 0,
-//       protein: 0,
-//       carbs: 0,
-//       fats: 0,
-//       fiber: 0,
-//       sugar: 0,
-//       sodium: 0,
-//       servings: 1,
-//       difficulty: "Easy",
-//       prepTime: 0,
-//       steps: [],
-//       tips: [],
-//       equipment: [],
-//       ingredients: [],
-//       detailedIngredients: [],
-//       image: "",
-//     })
-//     setIngredientInput("")
-//     setStepInput("")
-//     setTipInput("")
-//     setEquipmentInput("")
-//     setDetailedIngredientInput({ item: "", amount: "", notes: "" })
-//     fetchData()
 //   } catch (error) {
-//     console.error("Error adding meal:", error)
+//     console.error("Error adding meal:", error);
+//     alert("Failed to add meal. Please try again.");
 //   }
-// }
+// };
+
+
+
+// const handleUpdateMeal = async (e) => {
+//   e.preventDefault();
+//   try {
+//     if (!mealForm.prepTime || parseInt(mealForm.prepTime) <= 0) {
+//       alert("Prep time must be a positive number greater than 0");
+//       return;
+//     }
+
+//     if (!mealForm.servings || parseInt(mealForm.servings) <= 0) {
+//       alert("Servings must be a positive number greater than 0");
+//       return;
+//     }
+
+//     const res = await fetch("/api/admin/meals", {
+//       method: "PUT",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ ...mealForm, id: editingItem.id }),
+//     });
+
+//     const data = await res.json();
+    
+//     if (data.success) {
+//       setShowMealForm(false);
+//       setEditingItem(null);
+//       setMealForm({
+//         id: "",
+//         name: "",
+//         mealType: "breakfast",
+//         goal: "all",
+//         description: "",
+//         calories: 0,
+//         protein: 0,
+//         carbs: 0,
+//         fats: 0,
+//         fiber: 0,
+//         sugar: 0,
+//         sodium: 0,
+//         servings: 1,
+//         difficulty: "Easy",
+//         prepTime: 0,
+//         steps: [],
+//         tips: [],
+//         equipment: [],
+//         ingredients: [],
+//         detailedIngredients: [],
+//         image: "",
+//       });
+//       setIngredientInput("");
+//       setStepInput("");
+//       setTipInput("");
+//       setEquipmentInput("");
+//       setDetailedIngredientInput({ item: "", amount: "", notes: "" });
+//       fetchData(); // Reload meals from database
+//     } else {
+//       alert(`Error: ${data.error}`);
+//     }
+//   } catch (error) {
+//     console.error("Error updating meal:", error);
+//     alert("Failed to update meal. Please try again.");
+//   }
+// };
+
+
+
 
 const handleAddMeal = async (e) => {
   e.preventDefault();
+  
+  console.log("=== Adding Meal - Start ===");
+  console.log("Form data:", mealForm);
+  
   try {
+    // Validation
+    if (!mealForm.name || !mealForm.mealType) {
+      alert("Name and meal type are required");
+      return;
+    }
+
     if (!mealForm.prepTime || parseInt(mealForm.prepTime) <= 0) {
       alert("Prep time must be a positive number greater than 0");
       return;
@@ -503,15 +554,52 @@ const handleAddMeal = async (e) => {
       return;
     }
 
+    // Prepare data - ensure all fields are properly formatted
+    const mealData = {
+      name: mealForm.name,
+      mealType: mealForm.mealType,
+      goal: mealForm.goal || 'all',
+      description: mealForm.description || '',
+      servings: parseInt(mealForm.servings) || 1,
+      difficulty: mealForm.difficulty || 'Easy',
+      prepTime: parseInt(mealForm.prepTime), // Send as number, API will format
+      image: mealForm.image || '',
+      // Nutrition
+      calories: parseInt(mealForm.calories) || 0,
+      protein: parseInt(mealForm.protein) || 0,
+      carbs: parseInt(mealForm.carbs) || 0,
+      fats: parseInt(mealForm.fats) || 0,
+      fiber: parseInt(mealForm.fiber) || 0,
+      sugar: parseInt(mealForm.sugar) || 0,
+      sodium: parseInt(mealForm.sodium) || 0,
+      // Recipe details
+      detailedIngredients: mealForm.detailedIngredients || [],
+      steps: mealForm.steps || [],
+      tips: mealForm.tips || [],
+      equipment: mealForm.equipment || [],
+      ingredients: mealForm.ingredients || []
+    };
+
+    console.log("Sending meal data:", mealData);
+
     const res = await fetch("/api/admin/meals", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(mealForm),
+      headers: { 
+        "Content-Type": "application/json" 
+      },
+      body: JSON.stringify(mealData),
     });
 
+    console.log("Response status:", res.status);
+    
     const data = await res.json();
+    console.log("Response data:", data);
     
     if (data.success) {
+      console.log("Meal added successfully!");
+      alert("Meal added successfully!");
+      
+      // Reset form
       setShowMealForm(false);
       setMealForm({
         id: "",
@@ -541,106 +629,36 @@ const handleAddMeal = async (e) => {
       setTipInput("");
       setEquipmentInput("");
       setDetailedIngredientInput({ item: "", amount: "", notes: "" });
-      fetchData(); // Reload meals from database
+      
+      // Reload meals
+      fetchData();
     } else {
-      alert(`Error: ${data.error}`);
+      console.error("Error from API:", data.error);
+      alert(`Error: ${data.error || 'Failed to add meal'}`);
     }
   } catch (error) {
-    console.error("Error adding meal:", error);
-    alert("Failed to add meal. Please try again.");
+    console.error("=== Error adding meal ===");
+    console.error("Error:", error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    alert(`Failed to add meal: ${error.message}`);
   }
 };
 
-// const handleUpdateMeal = async (e) => {
-//   e.preventDefault()
-//   try {
-//     if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
-//       alert("Prep time must be a positive number greater than 0")
-//       return
-//     }
-
-//     if (!mealForm.servings || Number.parseInt(mealForm.servings) <= 0) {
-//       alert("Servings must be a positive number greater than 0")
-//       return
-//     }
-
-//     const updatedMeal = {
-//       id: editingItem.id,
-//       name: mealForm.name,
-//       mealType: mealForm.mealType,
-//       goal: mealForm.goal,
-//       description: mealForm.description || "",
-//       servings: Number.parseInt(mealForm.servings),
-//       difficulty: mealForm.difficulty,
-//       prepTime: `${Number.parseInt(mealForm.prepTime)} min`,
-//       image: mealForm.image,
-//       // Nutrition details as nested object
-//       calories: Number.parseInt(mealForm.calories) || 0,
-//       protein: Number.parseInt(mealForm.protein) || 0,
-//       carbs: Number.parseInt(mealForm.carbs) || 0,
-//       fats: Number.parseInt(mealForm.fats) || 0,
-//       fiber: Number.parseInt(mealForm.fiber) || 0,
-//       nutritionDetails: {
-//         calories: Number.parseInt(mealForm.calories) || 0,
-//         protein: Number.parseInt(mealForm.protein) || 0,
-//         carbs: Number.parseInt(mealForm.carbs) || 0,
-//         fats: Number.parseInt(mealForm.fats) || 0,
-//         fiber: Number.parseInt(mealForm.fiber) || 0,
-//         sugar: Number.parseInt(mealForm.sugar) || 0,
-//         sodium: Number.parseInt(mealForm.sodium) || 0
-//       },
-//       // Recipe details
-//       detailedIngredients: mealForm.detailedIngredients,
-//       steps: mealForm.steps,
-//       tips: mealForm.tips,
-//       equipment: mealForm.equipment,
-//       ingredients: mealForm.ingredients
-//     }
-
-//     const updatedMeals = meals.map((m) => (m.id === editingItem.id ? updatedMeal : m))
-//     setMeals(updatedMeals)
-//     localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
-//     window.dispatchEvent(new Event("mealsUpdated"))
-    
-//     setShowMealForm(false)
-//     setEditingItem(null)
-//     setMealForm({
-//       id: "",
-//       name: "",
-//       mealType: "breakfast",
-//       goal: "all",
-//       description: "",
-//       calories: 0,
-//       protein: 0,
-//       carbs: 0,
-//       fats: 0,
-//       fiber: 0,
-//       sugar: 0,
-//       sodium: 0,
-//       servings: 1,
-//       difficulty: "Easy",
-//       prepTime: 0,
-//       steps: [],
-//       tips: [],
-//       equipment: [],
-//       ingredients: [],
-//       detailedIngredients: [],
-//       image: "",
-//     })
-//     setIngredientInput("")
-//     setStepInput("")
-//     setTipInput("")
-//     setEquipmentInput("")
-//     setDetailedIngredientInput({ item: "", amount: "", notes: "" })
-//     fetchData()
-//   } catch (error) {
-//     console.error("Error updating meal:", error)
-//   }
-// }
-
 const handleUpdateMeal = async (e) => {
   e.preventDefault();
+  
+  console.log("=== Updating Meal - Start ===");
+  console.log("Editing item:", editingItem);
+  console.log("Form data:", mealForm);
+  
   try {
+    // Validation
+    if (!editingItem || !editingItem.id) {
+      alert("No meal selected for editing");
+      return;
+    }
+
     if (!mealForm.prepTime || parseInt(mealForm.prepTime) <= 0) {
       alert("Prep time must be a positive number greater than 0");
       return;
@@ -651,15 +669,53 @@ const handleUpdateMeal = async (e) => {
       return;
     }
 
+    // Prepare data
+    const mealData = {
+      id: editingItem.id,
+      name: mealForm.name,
+      mealType: mealForm.mealType,
+      goal: mealForm.goal || 'all',
+      description: mealForm.description || '',
+      servings: parseInt(mealForm.servings) || 1,
+      difficulty: mealForm.difficulty || 'Easy',
+      prepTime: parseInt(mealForm.prepTime), // Send as number
+      image: mealForm.image || '',
+      // Nutrition
+      calories: parseInt(mealForm.calories) || 0,
+      protein: parseInt(mealForm.protein) || 0,
+      carbs: parseInt(mealForm.carbs) || 0,
+      fats: parseInt(mealForm.fats) || 0,
+      fiber: parseInt(mealForm.fiber) || 0,
+      sugar: parseInt(mealForm.sugar) || 0,
+      sodium: parseInt(mealForm.sodium) || 0,
+      // Recipe details
+      detailedIngredients: mealForm.detailedIngredients || [],
+      steps: mealForm.steps || [],
+      tips: mealForm.tips || [],
+      equipment: mealForm.equipment || [],
+      ingredients: mealForm.ingredients || []
+    };
+
+    console.log("Sending update data:", mealData);
+
     const res = await fetch("/api/admin/meals", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...mealForm, id: editingItem.id }),
+      headers: { 
+        "Content-Type": "application/json" 
+      },
+      body: JSON.stringify(mealData),
     });
 
+    console.log("Response status:", res.status);
+    
     const data = await res.json();
+    console.log("Response data:", data);
     
     if (data.success) {
+      console.log("Meal updated successfully!");
+      alert("Meal updated successfully!");
+      
+      // Reset form
       setShowMealForm(false);
       setEditingItem(null);
       setMealForm({
@@ -690,28 +746,22 @@ const handleUpdateMeal = async (e) => {
       setTipInput("");
       setEquipmentInput("");
       setDetailedIngredientInput({ item: "", amount: "", notes: "" });
-      fetchData(); // Reload meals from database
+      
+      // Reload meals
+      fetchData();
     } else {
-      alert(`Error: ${data.error}`);
+      console.error("Error from API:", data.error);
+      alert(`Error: ${data.error || 'Failed to update meal'}`);
     }
   } catch (error) {
-    console.error("Error updating meal:", error);
-    alert("Failed to update meal. Please try again.");
+    console.error("=== Error updating meal ===");
+    console.error("Error:", error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    alert(`Failed to update meal: ${error.message}`);
   }
 };
 
-  // const handleDeleteMeal = async (id) => {
-  //   if (!confirm("Are you sure you want to delete this meal?")) return
-  //   try {
-  //     const updatedMeals = meals.filter((m) => m.id !== id)
-  //     setMeals(updatedMeals)
-  //     localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
-  //     window.dispatchEvent(new Event("mealsUpdated"))
-  //     fetchData()
-  //   } catch (error) {
-  //     console.error("Error deleting meal:", error)
-  //   }
-  // }
 
   const handleDeleteMeal = async (id) => {
   if (!confirm("Are you sure you want to delete this meal?")) return;
