@@ -183,13 +183,16 @@ export default function MealsPage() {
       className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
     >
       <div className="relative h-48 overflow-hidden">
-        <img
-          src={meal.image}
-          alt={meal.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-          loading="lazy"
-          onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/400x200?text=Meal+Image'; }}
-        />
+          <img
+            src={meal.image || "/images/placeholder-blur.svg"}
+            alt={meal.name || "Meal image"}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = "/images/placeholder-blur.svg";
+            }}
+          />
+
         <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-[#354F52] flex items-center gap-1">
           <Clock className="w-3 h-3" />
           {meal.prepTime}
