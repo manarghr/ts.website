@@ -15,6 +15,15 @@ const inter = Inter({
   display: "swap",
 });
 
+export const metadata = {
+  title: "TrainSight - AI-Powered Fitness Platform",
+  description: "Transform your training with AI-powered coaching, real-time feedback, and personalized fitness programs.",
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${montserrat.variable} ${inter.variable}`}>

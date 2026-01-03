@@ -7,6 +7,7 @@ import { FaSearch, FaUser, FaSignOutAlt, FaDumbbell, FaBrain, FaUtensils } from 
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
+import logo from "../assets/logo1.png"
 
 export default function Navbar() {
   const router = useRouter()
@@ -117,7 +118,14 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 w-full h-[60px] flex justify-between items-center px-6 bg-[#354F52] text-white shadow-md z-50">
       <div className="flex items-center gap-20">
-        <Link href="/" className="font-bold text-xl tracking-wide hover:text-[#C1B8AE] transition-colors">
+        <Link href="/" className="flex items-center gap-3 font-bold text-xl tracking-wide hover:text-[#C1B8AE] transition-colors group">
+          <Image 
+            src={logo} 
+            alt="TrainSight Logo" 
+            width={40} 
+            height={40} 
+            className="group-hover:scale-110 transition-transform duration-300"
+          />
           TrainSight
         </Link>
 
