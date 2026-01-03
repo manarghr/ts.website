@@ -89,7 +89,6 @@ export default function AdminDashboard() {
     ingredients: [],
     detailedIngredients: [],
     image: "",
-    description: "",
   })
   const [programForm, setProgramForm] = useState({
     name: "",
@@ -408,108 +407,282 @@ export default function AdminDashboard() {
     }
   }
 
+  // const handleAddMeal = async (e) => {
+  //   e.preventDefault()
+  //   try {
+  //     if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
+  //       alert("Prep time must be a positive number greater than 0")
+  //       return
+  //     }
+
+  //     const existingIds = meals.map((m) => (typeof m.id === "number" ? m.id : Number.parseInt(m.id) || 0))
+  //     const maxId = Math.max(10000, ...existingIds, Date.now())
+  //     const newMeal = {
+  //       ...mealForm,
+  //       id: mealForm.id || maxId + 1,
+  //       prepTime: Number.parseInt(mealForm.prepTime),
+  //     }
+  //     const updatedMeals = [...meals, newMeal]
+  //     setMeals(updatedMeals)
+  //     localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
+  //     setShowMealForm(false)
+  //     setMealForm({
+  //       id: "",
+  //       name: "",
+  //       mealType: "breakfast",
+  //       goal: "all",
+  //       calories: 0,
+  //       protein: 0,
+  //       carbs: 0,
+  //       fats: 0,
+  //       fiber: 0,
+  //       sugar: 0,
+  //       sodium: 0,
+  //       servings: 1,
+  //       difficulty: "Easy",
+  //       prepTime: 0,
+  //       steps: [],
+  //       tips: [],
+  //       equipment: [],
+  //       ingredients: [],
+  //       detailedIngredients: [],
+  //       image: "",
+  //     })
+  //     setIngredientInput("")
+  //     setStepInput("")
+  //     setTipInput("")
+  //     setEquipmentInput("")
+  //     setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+  //     fetchData()
+  //   } catch (error) {
+  //     console.error("Error adding meal:", error)
+  //   }
+  // }
+
+  // const handleUpdateMeal = async (e) => {
+  //   e.preventDefault()
+  //   try {
+  //     if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
+  //       alert("Prep time must be a positive number greater than 0")
+  //       return
+  //     }
+
+  //     const updatedMeals = meals.map((m) =>
+  //       m.id === editingItem.id ? { ...mealForm, prepTime: Number.parseInt(mealForm.prepTime) } : m,
+  //     )
+  //     setMeals(updatedMeals)
+  //     localStorage.setItem("admin_meals", JSON.JSON.stringify(updatedMeals))
+  //     window.dispatchEvent(new Event("mealsUpdated"))
+  //     setShowMealForm(false)
+  //     setEditingItem(null)
+  //     setMealForm({
+  //       id: "",
+  //       name: "",
+  //       mealType: "breakfast",
+  //       goal: "all",
+  //       calories: 0,
+  //       protein: 0,
+  //       carbs: 0,
+  //       fats: 0,
+  //       fiber: 0,
+  //       sugar: 0,
+  //       sodium: 0,
+  //       servings: 1,
+  //       difficulty: "Easy",
+  //       prepTime: 0,
+  //       steps: [],
+  //       tips: [],
+  //       equipment: [],
+  //       ingredients: [],
+  //       detailedIngredients: [],
+  //       image: "",
+  //     })
+  //     setIngredientInput("")
+  //     setStepInput("")
+  //     setTipInput("")
+  //     setEquipmentInput("")
+  //     setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+  //     fetchData()
+  //   } catch (error) {
+  //     console.error("Error updating meal:", error)
+  //   }
+  // }
+
   const handleAddMeal = async (e) => {
-    e.preventDefault()
-    try {
-      if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
-        alert("Prep time must be a positive number greater than 0")
-        return
-      }
-
-      const existingIds = meals.map((m) => (typeof m.id === "number" ? m.id : Number.parseInt(m.id) || 0))
-      const maxId = Math.max(10000, ...existingIds, Date.now())
-      const newMeal = {
-        ...mealForm,
-        id: mealForm.id || maxId + 1,
-        prepTime: Number.parseInt(mealForm.prepTime),
-      }
-      const updatedMeals = [...meals, newMeal]
-      setMeals(updatedMeals)
-      localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
-      setShowMealForm(false)
-      setMealForm({
-        id: "",
-        name: "",
-        mealType: "breakfast",
-        goal: "all",
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fats: 0,
-        fiber: 0,
-        sugar: 0,
-        sodium: 0,
-        servings: 1,
-        difficulty: "Easy",
-        prepTime: 0,
-        steps: [],
-        tips: [],
-        equipment: [],
-        ingredients: [],
-        detailedIngredients: [],
-        image: "",
-        description: "",
-      })
-      setIngredientInput("")
-      setStepInput("")
-      setTipInput("")
-      setEquipmentInput("")
-      setDetailedIngredientInput({ item: "", amount: "", notes: "" })
-      fetchData()
-    } catch (error) {
-      console.error("Error adding meal:", error)
+  e.preventDefault()
+  try {
+    if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
+      alert("Prep time must be a positive number greater than 0")
+      return
     }
-  }
 
-  const handleUpdateMeal = async (e) => {
-    e.preventDefault()
-    try {
-      if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
-        alert("Prep time must be a positive number greater than 0")
-        return
-      }
-
-      const updatedMeals = meals.map((m) =>
-        m.id === editingItem.id ? { ...mealForm, prepTime: Number.parseInt(mealForm.prepTime) } : m,
-      )
-      setMeals(updatedMeals)
-      localStorage.setItem("admin_meals", JSON.JSON.stringify(updatedMeals))
-      window.dispatchEvent(new Event("mealsUpdated"))
-      setShowMealForm(false)
-      setEditingItem(null)
-      setMealForm({
-        id: "",
-        name: "",
-        mealType: "breakfast",
-        goal: "all",
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fats: 0,
-        fiber: 0,
-        sugar: 0,
-        sodium: 0,
-        servings: 1,
-        difficulty: "Easy",
-        prepTime: 0,
-        steps: [],
-        tips: [],
-        equipment: [],
-        ingredients: [],
-        detailedIngredients: [],
-        image: "",
-        description: "",
-      })
-      setIngredientInput("")
-      setStepInput("")
-      setTipInput("")
-      setEquipmentInput("")
-      setDetailedIngredientInput({ item: "", amount: "", notes: "" })
-      fetchData()
-    } catch (error) {
-      console.error("Error updating meal:", error)
+    if (!mealForm.servings || Number.parseInt(mealForm.servings) <= 0) {
+      alert("Servings must be a positive number greater than 0")
+      return
     }
+
+    const existingIds = meals.map((m) => (typeof m.id === "number" ? m.id : Number.parseInt(m.id) || 0))
+    const maxId = Math.max(10000, ...existingIds, Date.now())
+    
+    const newMeal = {
+      id: mealForm.id || maxId + 1,
+      name: mealForm.name,
+      mealType: mealForm.mealType,
+      goal: mealForm.goal,
+      description: mealForm.description || "",
+      servings: Number.parseInt(mealForm.servings),
+      difficulty: mealForm.difficulty,
+      prepTime: `${Number.parseInt(mealForm.prepTime)} min`,
+      image: mealForm.image,
+      // Nutrition details as nested object
+      calories: Number.parseInt(mealForm.calories) || 0,
+      protein: Number.parseInt(mealForm.protein) || 0,
+      carbs: Number.parseInt(mealForm.carbs) || 0,
+      fats: Number.parseInt(mealForm.fats) || 0,
+      fiber: Number.parseInt(mealForm.fiber) || 0,
+      nutritionDetails: {
+        calories: Number.parseInt(mealForm.calories) || 0,
+        protein: Number.parseInt(mealForm.protein) || 0,
+        carbs: Number.parseInt(mealForm.carbs) || 0,
+        fats: Number.parseInt(mealForm.fats) || 0,
+        fiber: Number.parseInt(mealForm.fiber) || 0,
+        sugar: Number.parseInt(mealForm.sugar) || 0,
+        sodium: Number.parseInt(mealForm.sodium) || 0
+      },
+      // Recipe details
+      detailedIngredients: mealForm.detailedIngredients,
+      steps: mealForm.steps,
+      tips: mealForm.tips,
+      equipment: mealForm.equipment,
+      ingredients: mealForm.ingredients // Keep for backward compatibility
+    }
+
+    const updatedMeals = [...meals, newMeal]
+    setMeals(updatedMeals)
+    localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
+    window.dispatchEvent(new Event("mealsUpdated"))
+    
+    setShowMealForm(false)
+    setMealForm({
+      id: "",
+      name: "",
+      mealType: "breakfast",
+      goal: "all",
+      description: "",
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fats: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0,
+      servings: 1,
+      difficulty: "Easy",
+      prepTime: 0,
+      steps: [],
+      tips: [],
+      equipment: [],
+      ingredients: [],
+      detailedIngredients: [],
+      image: "",
+    })
+    setIngredientInput("")
+    setStepInput("")
+    setTipInput("")
+    setEquipmentInput("")
+    setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+    fetchData()
+  } catch (error) {
+    console.error("Error adding meal:", error)
   }
+}
+
+const handleUpdateMeal = async (e) => {
+  e.preventDefault()
+  try {
+    if (!mealForm.prepTime || Number.parseInt(mealForm.prepTime) <= 0) {
+      alert("Prep time must be a positive number greater than 0")
+      return
+    }
+
+    if (!mealForm.servings || Number.parseInt(mealForm.servings) <= 0) {
+      alert("Servings must be a positive number greater than 0")
+      return
+    }
+
+    const updatedMeal = {
+      id: editingItem.id,
+      name: mealForm.name,
+      mealType: mealForm.mealType,
+      goal: mealForm.goal,
+      description: mealForm.description || "",
+      servings: Number.parseInt(mealForm.servings),
+      difficulty: mealForm.difficulty,
+      prepTime: `${Number.parseInt(mealForm.prepTime)} min`,
+      image: mealForm.image,
+      // Nutrition details as nested object
+      calories: Number.parseInt(mealForm.calories) || 0,
+      protein: Number.parseInt(mealForm.protein) || 0,
+      carbs: Number.parseInt(mealForm.carbs) || 0,
+      fats: Number.parseInt(mealForm.fats) || 0,
+      fiber: Number.parseInt(mealForm.fiber) || 0,
+      nutritionDetails: {
+        calories: Number.parseInt(mealForm.calories) || 0,
+        protein: Number.parseInt(mealForm.protein) || 0,
+        carbs: Number.parseInt(mealForm.carbs) || 0,
+        fats: Number.parseInt(mealForm.fats) || 0,
+        fiber: Number.parseInt(mealForm.fiber) || 0,
+        sugar: Number.parseInt(mealForm.sugar) || 0,
+        sodium: Number.parseInt(mealForm.sodium) || 0
+      },
+      // Recipe details
+      detailedIngredients: mealForm.detailedIngredients,
+      steps: mealForm.steps,
+      tips: mealForm.tips,
+      equipment: mealForm.equipment,
+      ingredients: mealForm.ingredients
+    }
+
+    const updatedMeals = meals.map((m) => (m.id === editingItem.id ? updatedMeal : m))
+    setMeals(updatedMeals)
+    localStorage.setItem("admin_meals", JSON.stringify(updatedMeals))
+    window.dispatchEvent(new Event("mealsUpdated"))
+    
+    setShowMealForm(false)
+    setEditingItem(null)
+    setMealForm({
+      id: "",
+      name: "",
+      mealType: "breakfast",
+      goal: "all",
+      description: "",
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fats: 0,
+      fiber: 0,
+      sugar: 0,
+      sodium: 0,
+      servings: 1,
+      difficulty: "Easy",
+      prepTime: 0,
+      steps: [],
+      tips: [],
+      equipment: [],
+      ingredients: [],
+      detailedIngredients: [],
+      image: "",
+    })
+    setIngredientInput("")
+    setStepInput("")
+    setTipInput("")
+    setEquipmentInput("")
+    setDetailedIngredientInput({ item: "", amount: "", notes: "" })
+    fetchData()
+  } catch (error) {
+    console.error("Error updating meal:", error)
+  }
+}
 
   const handleDeleteMeal = async (id) => {
     if (!confirm("Are you sure you want to delete this meal?")) return
@@ -646,7 +819,6 @@ export default function AdminDashboard() {
       ingredients: meal.ingredients || [],
       detailedIngredients: meal.detailedIngredients || [],
       image: meal.image || "",
-      description: meal.description || "",
     })
     setIngredientInput("")
     setStepInput("")
@@ -1453,13 +1625,13 @@ export default function AdminDashboard() {
                 {activeSection === "meals" && (
                   <div className="space-y-6">
                     <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                      {/* CHANGE 1: Update header section to include Add Meal button on the right */}
+                      {/*Update header section to include Add Meal button on the right */}
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <h2 className="text-xl font-bold text-[#354F52]">Meals Management</h2>
                           <div className="text-sm text-gray-600 mt-1">Total: {meals.length}</div>
                         </div>
-                        {/* ADD THIS: Add Meal button */}
+                        {/*Add Meal button */}
                         <button
                           onClick={() => {
                             setShowMealForm(true)
@@ -1469,7 +1641,6 @@ export default function AdminDashboard() {
                               id: "",
                               name: "",
                               mealType: "breakfast",
-                              description: "",
                               calories: 0,
                               prepTime: 0,
                               protein: 0,
@@ -1533,9 +1704,6 @@ export default function AdminDashboard() {
                               )}
                               <div className="p-4">
                                 <h3 className="font-bold text-lg text-[#354F52] mb-2">{meal.name}</h3>
-                                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                                  {meal.description || "No description"}
-                                </p>
                                 <div className="flex items-center gap-2 mb-3">
                                   {meal.calories && (
                                     <span className="px-2 py-1 bg-[#6BB371]/10 text-[#52796F] rounded text-xs font-medium">
@@ -1575,7 +1743,7 @@ export default function AdminDashboard() {
                       )}
                     </div>
 
-                    {/* Meal Form Modal - NO CHANGES NEEDED HERE */}
+                    {/* Meal Form Modal*/}
                     {showMealForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
@@ -1658,16 +1826,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <div>
-                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Description</label>
-                              <textarea
-                                value={mealForm.description}
-                                onChange={(e) => setMealForm({ ...mealForm, description: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
-                                rows="3"
-                                required
-                              />
-                            </div>
+
 
                             <div className="grid grid-cols-2 gap-4">
                               <div>
