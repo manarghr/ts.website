@@ -108,25 +108,51 @@ export default function MealsPage() {
   // Default meals
   const defaultMeals = [];
 
-  // Load meals from localStorage (admin-added meals) and merge with default meals
-  const [meals, setMeals] = useState(() => {
-    if (typeof window !== "undefined") {
-      const adminMeals = localStorage.getItem("admin_meals");
-      if (adminMeals) {
-        try {
-          const parsedAdminMeals = JSON.parse(adminMeals);
-          // Merge admin meals with default meals, avoiding duplicates by id
-          const existingIds = new Set(parsedAdminMeals.map(m => m.id));
-          const uniqueDefaultMeals = defaultMeals.filter(m => !existingIds.has(m.id));
-          return [...parsedAdminMeals, ...uniqueDefaultMeals];
-        } catch (error) {
-          console.error("Error parsing admin meals:", error);
-          return defaultMeals;
-        }
+  // // Load meals from localStorage (admin-added meals) and merge with default meals
+  // const [meals, setMeals] = useState(() => {
+  //   if (typeof window !== "undefined") {
+  //     const adminMeals = localStorage.getItem("admin_meals");
+  //     if (adminMeals) {
+  //       try {
+  //         const parsedAdminMeals = JSON.parse(adminMeals);
+  //         // Merge admin meals with default meals, avoiding duplicates by id
+  //         const existingIds = new Set(parsedAdminMeals.map(m => m.id));
+  //         const uniqueDefaultMeals = defaultMeals.filter(m => !existingIds.has(m.id));
+  //         return [...parsedAdminMeals, ...uniqueDefaultMeals];
+  //       } catch (error) {
+  //         console.error("Error parsing admin meals:", error);
+  //         return defaultMeals;
+  //       }
+  //     }
+  //   }
+  //   return defaultMeals;
+  // });
+
+  // Load meals from API instead of localStorage
+const [meals, setMeals] = useState(defaultMeals);
+
+useEffect(() => {
+  const fetchMeals = async () => {
+    try {
+      const res = await fetch("/api/admin/meals");
+      const data = await res.json();
+      
+      if (data.success && data.meals && data.meals.length > 0) {
+        // Merge API meals with default meals
+        const existingIds = new Set(data.meals.map(m => m.id));
+        const uniqueDefaultMeals = defaultMeals.filter(m => !existingIds.has(m.id));
+        setMeals([...data.meals, ...uniqueDefaultMeals]);
+      } else {
+        setMeals(defaultMeals);
       }
+    } catch (error) {
+      console.error("Error fetching meals:", error);
+      setMeals(defaultMeals);
     }
-    return defaultMeals;
-  });
+  };
+
+  fetchMeals();
+}, []);
 
   // Update meals when admin_meals changes
   useEffect(() => {
