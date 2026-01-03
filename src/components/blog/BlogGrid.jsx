@@ -362,7 +362,7 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
               </AnimatePresence>
             </div>
 
-            {/* Enhanced Pagination - Same as Services Component */}
+            {/*Pagination */}
             {totalPages > 1 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

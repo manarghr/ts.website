@@ -82,7 +82,6 @@ export default function AdminDashboard() {
     sodium: 0,
     servings: 1,
     difficulty: "Easy",
-    totalTime: "",
     prepTime: 0,
     steps: [],
     tips: [],
@@ -442,7 +441,6 @@ export default function AdminDashboard() {
         sodium: 0,
         servings: 1,
         difficulty: "Easy",
-        totalTime: "",
         prepTime: 0,
         steps: [],
         tips: [],
@@ -493,7 +491,6 @@ export default function AdminDashboard() {
         sodium: 0,
         servings: 1,
         difficulty: "Easy",
-        totalTime: "",
         prepTime: 0,
         steps: [],
         tips: [],
@@ -642,7 +639,6 @@ export default function AdminDashboard() {
       sodium: meal.sodium || 0,
       servings: meal.servings || 1,
       difficulty: meal.difficulty || "Easy",
-      totalTime: meal.totalTime || "",
       prepTime: meal.prepTime || 0,
       steps: meal.steps || [],
       tips: meal.tips || [],
@@ -1484,7 +1480,6 @@ export default function AdminDashboard() {
                               sodium: 0,
                               servings: 1,
                               difficulty: "Easy",
-                              totalTime: "",
                               steps: [],
                               tips: [],
                               equipment: [],
@@ -1659,16 +1654,6 @@ export default function AdminDashboard() {
                                   placeholder="Must be > 0"
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                   required
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Total Time</label>
-                                <input
-                                  type="text"
-                                  value={mealForm.totalTime}
-                                  onChange={(e) => setMealForm({ ...mealForm, totalTime: e.target.value })}
-                                  placeholder="e.g., 30 min"
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
                                 />
                               </div>
                             </div>
