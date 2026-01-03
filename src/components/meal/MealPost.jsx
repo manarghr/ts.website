@@ -26,35 +26,22 @@ export default function MealPost({ postId }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState("ingredients");
 
-  // Recipe details for each meal 
-  const mealRecipes = {};
-
-  // Default meals (ADD YOUR DEFAULT MEALS HERE)
-  const defaultMeals = [];
-
   useEffect(() => {
-    // Load meal data from localStorage or default meals
+    // Load meal data from localStorage
     const loadMeal = () => {
-      // Try to find meal in admin meals first
       const adminMeals = localStorage.getItem("admin_meals");
-      let allMeals = defaultMeals;
       
       if (adminMeals) {
         try {
           const parsedAdminMeals = JSON.parse(adminMeals);
-          allMeals = [...parsedAdminMeals, ...defaultMeals];
+          const foundMeal = parsedAdminMeals.find(m => m.id === parseInt(postId));
+          
+          if (foundMeal) {
+            setMeal(foundMeal);
+          }
         } catch (error) {
           console.error("Error parsing admin meals:", error);
         }
-      }
-
-      const foundMeal = allMeals.find(m => m.id === parseInt(postId));
-      
-      if (foundMeal) {
-        setMeal({
-          ...foundMeal,
-          recipe: mealRecipes[foundMeal.id] || null
-        });
       }
     };
 
@@ -131,8 +118,9 @@ export default function MealPost({ postId }) {
     );
   }
 
-  const recipe = meal.recipe;
-  const hasRecipe = recipe !== null;
+  // Check if meal has full recipe details
+  const hasRecipe = meal.detailedIngredients && meal.detailedIngredients.length > 0 && 
+                    meal.steps && meal.steps.length > 0;
 
   const goalColors = {
     "lose-weight": { bg: "from-orange-500 to-red-500", text: "text-orange-600", icon: Flame },
@@ -151,9 +139,12 @@ export default function MealPost({ postId }) {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url(${meal.image})`,
-            filter: "brightness(0.7)"
-          }}
+              backgroundImage: meal.image
+                ? `url(${meal.image})`
+                : "linear-gradient(135deg, #e5e7eb, #d1d5db)",
+              filter: meal.image ? "brightness(0.7)" : "blur(6px)"
+            }}
+
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
         
@@ -169,14 +160,14 @@ export default function MealPost({ postId }) {
           <div className="text-white">
             <div className="flex items-center gap-3 mb-4">
               <span className={`px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r ${goalInfo.bg} capitalize`}>
-                {meal.goal.replace("-", " ")}
+                {meal.goal ? meal.goal.replace("-", " ") : "All Goals"}
               </span>
               <span className="px-4 py-2 rounded-full text-sm font-semibold bg-white/20 backdrop-blur-md capitalize">
                 {meal.mealType}
               </span>
             </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-4">{meal.name}</h1>
-            <p className="text-xl text-white/90 max-w-2xl">{meal.description}</p>
+            <p className="text-xl text-white/90 max-w-2xl">{meal.description || "Delicious and nutritious meal"}</p>
           </div>
         </div>
       </div>
@@ -217,30 +208,30 @@ export default function MealPost({ postId }) {
             <div className="text-sm text-gray-600">Protein</div>
           </motion.div>
 
-          {hasRecipe && (
-            <>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-xl p-6 shadow-lg text-center border-2 border-gray-100"
-              >
-                <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-[#354F52]">{recipe.servings}</div>
-                <div className="text-sm text-gray-600">Servings</div>
-              </motion.div>
+          {meal.servings && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-xl p-6 shadow-lg text-center border-2 border-gray-100"
+            >
+              <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-[#354F52]">{meal.servings}</div>
+              <div className="text-sm text-gray-600">Servings</div>
+            </motion.div>
+          )}
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white rounded-xl p-6 shadow-lg text-center border-2 border-gray-100"
-              >
-                <Award className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-[#354F52]">{recipe.difficulty}</div>
-                <div className="text-sm text-gray-600">Difficulty</div>
-              </motion.div>
-            </>
+          {meal.difficulty && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white rounded-xl p-6 shadow-lg text-center border-2 border-gray-100"
+            >
+              <Award className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-[#354F52]">{meal.difficulty}</div>
+              <div className="text-sm text-gray-600">Difficulty</div>
+            </motion.div>
           )}
         </div>
 
@@ -271,16 +262,18 @@ export default function MealPost({ postId }) {
                   >
                     Instructions
                   </button>
-                  <button
-                    onClick={() => setActiveTab("equipment")}
-                    className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
-                      activeTab === "equipment"
-                        ? "bg-white text-[#354F52] shadow-md"
-                        : "text-gray-600 hover:text-[#354F52]"
-                    }`}
-                  >
-                    Equipment
-                  </button>
+                  {meal.equipment && meal.equipment.length > 0 && (
+                    <button
+                      onClick={() => setActiveTab("equipment")}
+                      className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all ${
+                        activeTab === "equipment"
+                          ? "bg-white text-[#354F52] shadow-md"
+                          : "text-gray-600 hover:text-[#354F52]"
+                      }`}
+                    >
+                      Equipment
+                    </button>
+                  )}
                 </div>
 
                 {/* Tab Content */}
@@ -292,7 +285,7 @@ export default function MealPost({ postId }) {
                         Ingredients
                       </h2>
                       <div className="space-y-3">
-                        {recipe.detailedIngredients.map((ingredient, index) => (
+                        {meal.detailedIngredients.map((ingredient, index) => (
                           <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                             <CheckCircle2 className="w-5 h-5 text-[#6BB371] mt-0.5 flex-shrink-0" />
                             <div className="flex-1">
@@ -317,7 +310,7 @@ export default function MealPost({ postId }) {
                         Instructions
                       </h2>
                       <div className="space-y-4">
-                        {recipe.steps.map((step, index) => (
+                        {meal.steps.map((step, index) => (
                           <div key={index} className="flex gap-4">
                             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-[#6BB371] to-[#52796F] text-white flex items-center justify-center font-bold">
                               {index + 1}
@@ -329,14 +322,14 @@ export default function MealPost({ postId }) {
                     </div>
                   )}
 
-                  {activeTab === "equipment" && (
+                  {activeTab === "equipment" && meal.equipment && meal.equipment.length > 0 && (
                     <div>
                       <h2 className="text-2xl font-bold text-[#354F52] mb-6 flex items-center gap-2">
                         <UtensilsCrossed className="w-6 h-6 text-[#6BB371]" />
                         Equipment Needed
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {recipe.equipment.map((item, index) => (
+                        {meal.equipment.map((item, index) => (
                           <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                             <CheckCircle2 className="w-5 h-5 text-[#6BB371]" />
                             <span className="text-gray-700">{item}</span>
@@ -348,14 +341,14 @@ export default function MealPost({ postId }) {
                 </div>
 
                 {/* Tips Section */}
-                {recipe.tips && recipe.tips.length > 0 && (
+                {meal.tips && meal.tips.length > 0 && (
                   <div className="bg-gradient-to-r from-[#6BB371]/10 to-[#52796F]/10 rounded-xl p-8 mt-8 border-2 border-[#6BB371]/20">
                     <h2 className="text-2xl font-bold text-[#354F52] mb-4 flex items-center gap-2">
                       <Award className="w-6 h-6 text-[#6BB371]" />
                       Pro Tips
                     </h2>
                     <ul className="space-y-3">
-                      {recipe.tips.map((tip, index) => (
+                      {meal.tips.map((tip, index) => (
                         <li key={index} className="flex items-start gap-3">
                           <span className="text-[#6BB371] font-bold mt-1">•</span>
                           <span className="text-gray-700">{tip}</span>
@@ -368,8 +361,8 @@ export default function MealPost({ postId }) {
             ) : (
               <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-gray-100 text-center">
                 <ChefHat className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-700 mb-2">Recipe Coming Soon</h3>
-                <p className="text-gray-500">Full recipe details will be available soon for this meal.</p>
+                <h3 className="text-xl font-bold text-gray-700 mb-2">Recipe Details Coming Soon</h3>
+                <p className="text-gray-500">Full recipe instructions will be available soon for this meal.</p>
               </div>
             )}
           </div>
@@ -396,20 +389,20 @@ export default function MealPost({ postId }) {
                 Nutrition Facts
               </h3>
               
-              {hasRecipe && recipe.nutritionDetails ? (
+              {meal.nutritionDetails ? (
                 <div className="space-y-3">
-                  {Object.entries(recipe.nutritionDetails).map(([key, value]) => (
+                  {Object.entries(meal.nutritionDetails).map(([key, value]) => (
                     <div key={key} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
                       <span className="text-gray-600 capitalize">{key}</span>
                       <span className="font-semibold text-[#354F52]">
-                        {value}{key !== "calories" && "g"}
+                        {value}{key !== "calories" && key !== "sodium" ? "g" : key === "sodium" ? "mg" : ""}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div className="flexjustify-between items-center py-2 border-b border-gray-100">
                     <span className="text-gray-600">Calories</span>
                     <span className="font-semibold text-[#354F52]">{meal.calories}</span>
                   </div>
@@ -430,31 +423,32 @@ export default function MealPost({ postId }) {
                     <span className="font-semibold text-[#354F52]">{meal.fiber}g</span>
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Goal Info */}
-            <div className={`bg-gradient-to-r ${goalInfo.bg} rounded-xl p-6 text-white shadow-lg`}>
-              <div className="flex items-center gap-3 mb-3">
-                <GoalIcon className="w-8 h-8" />
-                <h3 className="text-xl font-bold">Perfect For</h3>
+                    )}
               </div>
-              <p className="text-white/90 capitalize text-lg">
-                {meal.goal.replace("-", " ")} Goals
-              </p>
-            </div>
 
-            {/* Meal Type */}
-            <div className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-xl p-6 text-white shadow-lg">
-              <div className="flex items-center gap-3 mb-3">
-                <Timer className="w-8 h-8" />
-                <h3 className="text-xl font-bold">Meal Type</h3>
-              </div>
-              <p className="text-white/90 capitalize text-lg">{meal.mealType}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+                  {/* Goal Info */}
+                          <div className={`bg-gradient-to-r ${goalInfo.bg} rounded-xl p-6 text-white shadow-lg`}>
+                            <div className="flex items-center gap-3 mb-3">
+                              <GoalIcon className="w-8 h-8" />
+                              <h3 className="text-xl font-bold">Perfect For</h3>
+                            </div>
+                            <p className="text-white/90 capitalize text-lg">
+                              {meal.goal ? meal.goal.replace("-", " ") + " Goals" : "All Goals"}
+                            </p>
+                          </div>
+
+                          {/* Meal Type */}
+                          <div className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-xl p-6 text-white shadow-lg">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Timer className="w-8 h-8" />
+                              <h3 className="text-xl font-bold">Meal Type</h3>
+                            </div>
+                            <p className="text-white/90 capitalize text-lg">{meal.mealType}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+);
 }

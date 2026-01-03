@@ -73,6 +73,7 @@ export default function AdminDashboard() {
     name: "",
     mealType: "breakfast",
     goal: "all",
+    description: "",
     calories: 0,
     protein: 0,
     carbs: 0,
@@ -1695,6 +1696,7 @@ const handleUpdateMeal = async (e) => {
                               ingredients: [],
                               detailedIngredients: [],
                               goal: "all",
+                              description: "",
                               image: "",
                             })
                             setIngredientInput("")
