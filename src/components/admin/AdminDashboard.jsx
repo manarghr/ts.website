@@ -119,23 +119,22 @@ export default function AdminDashboard() {
         fetch("/api/coaches"),
         fetch("/api/admin/videos"),
         fetch("/api/admin/programs"),
+        fetch("/api/admin/meals"),
       ])
 
       const usersData = await usersRes.json()
       const coachesData = await coachesRes.json()
       const videosData = await videosRes.json()
       const programsData = await programsRes.json()
+      const mealsData = await mealsRes.json()
 
       if (usersData.success) setUsers(usersData.users || [])
       if (coachesData.success) setCoaches(coachesData.coaches || [])
       if (videosData.success) setVideos(videosData.videos || [])
       if (programsData.success) setPrograms(programsData.programs || [])
+      if (mealsData.success) setMeals(mealsData.meals || [])
 
-      // Load meals from localStorage
-      const storedMeals = localStorage.getItem("admin_meals")
-      if (storedMeals) {
-        setMeals(JSON.parse(storedMeals))
-      }
+      
     } catch (error) {
       console.error("Error fetching stats:", error)
     } finally {
