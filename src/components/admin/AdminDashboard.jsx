@@ -1159,6 +1159,23 @@ const openEditBlog = (blog) => {
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }} // Change delay
+                        className="bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-xl p-6 text-white shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-white/20 rounded-lg">
+                            <BookOpen className="w-6 h-6" />
+                          </div>
+                          <TrendingUp className="w-5 h-5 text-[#6BB371]" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-1">{stats.totalBlogs}</h3>
+                        <p className="text-white/80 text-sm">Total Blogs</p>
+                      </motion.div>
+
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
                         className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-xl p-6 text-white shadow-lg"
                       >
