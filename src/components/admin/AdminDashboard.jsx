@@ -1016,6 +1016,11 @@ const updateSection = (index, field, value) => {
 
   //load pending blogs
   useEffect(() => {
+    // Load blogs
+    const storedBlogs = JSON.parse(localStorage.getItem("trainsight_blogs") || "[]");
+    setBlogs(storedBlogs);
+  
+   // Load pending blogs
     const pending = JSON.parse(localStorage.getItem("trainsight_pending_blogs") || "[]");
     setPendingBlogs(pending);
   }, []);

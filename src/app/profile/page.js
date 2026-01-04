@@ -222,16 +222,15 @@ export default function ProfilePage({ userId }) {
 
 
   const handleSubmitBlog = async (e) => {
-    e.preventDefault();
-    
-    if (!currentUser) {
-      alert("Please log in to submit a blog");
-      return;
-    }
+  e.preventDefault();
+  
+  if (!currentUser) {
+    alert("Please log in to submit a blog");
+    return;
+  }
 
-    // Create blog submission with pending status
+  try {
     const blogSubmission = {
-      id: Date.now().toString(),
       ...blogSubmissionForm,
       author: blogSubmissionForm.author || currentUser.fullName,
       date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
@@ -240,12 +239,15 @@ export default function ProfilePage({ userId }) {
       submittedAt: new Date().toISOString(),
     };
 
-    // Get existing pending blogs
-    const pendingBlogs = JSON.parse(localStorage.getItem("trainsight_pending_blogs") || "[]");
-    
-    // Add new submission
-    pendingBlogs.push(blogSubmission);
-    localStorage.setItem("trainsight_pending_blogs", JSON.stringify(pendingBlogs));
+    const response = await fetch('/api/blogs/pending', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(blogSubmission),
+    });
+
+    if (!response.ok) throw new Error('Failed to submit blog');
 
     alert("Blog submitted successfully! It will be reviewed by an admin.");
     
@@ -260,7 +262,11 @@ export default function ProfilePage({ userId }) {
       sections: [{ title: "", content: "" }],
     });
     setShowBlogSubmissionForm(false);
-  };
+  } catch (error) {
+    console.error('Error submitting blog:', error);
+    alert('Failed to submit blog. Please try again.');
+  }
+};
 
   const [currentUser, setCurrentUser] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
