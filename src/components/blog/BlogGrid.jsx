@@ -6,6 +6,7 @@ import Link from "next/link"
 import { FaArrowRight, FaUser, FaClock } from "react-icons/fa"
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -17,25 +18,32 @@ const fadeInUp = {
 export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters }) {
   const POSTS_PER_PAGE = 9
   const [currentPage, setCurrentPage] = useState(1)
-
+  const router = useRouter();
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm, selectedCategory])
 
-  const allBlogPosts = [
-    // Training Articles
-    {
-      id: 1,
-      title: "10 Essential Exercises for Perfect Form",
-      excerpt: "Learn the fundamental movements that will transform your training and prevent injuries.",
-      author: "Sarah Johnson",
-      date: "March 15, 2024",
-      readTime: "5 min read",
-      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
-      category: "training",
-    },
+  const [allBlogPosts, setAllBlogPosts] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  ]
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/admin/blog')
+        const data = await response.json()
+        if (data.success) {
+          setAllBlogPosts(data.blogs)
+        }
+      } catch (error) {
+        console.error('Error fetching blogs:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBlogs()
+  }, [])
 
   // Filter blog posts based on search term and category
   const filteredPosts = allBlogPosts.filter((post) => {

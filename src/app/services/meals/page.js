@@ -35,21 +35,7 @@ const [currentPages, setCurrentPages] = useState({
   snacks: 1
 });
 
-  // Load favorite meals from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const currentUser = localStorage.getItem("trainsight_current_user");
-      if (currentUser) {
-        try {
-          const userData = JSON.parse(currentUser);
-          const favorites = userData.favoriteMeals || [];
-          setFavoriteMeals(favorites);
-        } catch (error) {
-          console.error("Error loading favorite meals:", error);
-        }
-      }
-    }
-  }, []);
+
 
   // Toggle favorite meal
   const toggleFavorite = (meal) => {
