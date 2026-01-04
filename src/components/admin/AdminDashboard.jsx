@@ -1030,26 +1030,24 @@ const updateSection = (index, field, value) => {
   }, []);
 
   // Add handlers for approve/reject
-  const handleApproveBlog = (blogId) => {
-    const pending = JSON.parse(localStorage.getItem("trainsight_pending_blogs") || "[]");
-    const blogToApprove = pending.find(b => b.id === blogId);
-    
-    if (blogToApprove) {
-      // Remove from pending
-      const updatedPending = pending.filter(b => b.id !== blogId);
-      localStorage.setItem("trainsight_pending_blogs", JSON.stringify(updatedPending));
+  const handleApproveBlog = async (blogId) => {
+    try {
+      const response = await fetch(`/api/blogs/pending/${blogId}/approve`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) throw new Error('Failed to approve blog');
+
+      const approvedBlog = await response.json();
       
-      // Add to blogs
-      const existingBlogs = JSON.parse(localStorage.getItem("trainsight_blogs") || "[]");
-      const approvedBlog = { ...blogToApprove, status: "approved" };
-      delete approvedBlog.submittedBy;
-      delete approvedBlog.submittedAt;
-      existingBlogs.push(approvedBlog);
-      localStorage.setItem("trainsight_blogs", JSON.stringify(existingBlogs));
+      // Update states
+      setPendingBlogs(prev => prev.filter(b => b._id !== blogId));
+      setBlogs(prev => [...prev, approvedBlog]);
       
-      setPendingBlogs(updatedPending);
-      setBlogs(existingBlogs);
       alert("Blog approved and published!");
+    } catch (error) {
+      console.error('Error approving blog:', error);
+      alert('Failed to approve blog. Please try again.');
     }
   };
 
