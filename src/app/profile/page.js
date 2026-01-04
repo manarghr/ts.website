@@ -247,6 +247,16 @@ export default function ProfilePage({ userId }) {
           )
         }
       }
+    }
+    const handleUserUpdate = () => {
+      const current = localStorage.getItem("trainsight_current_user");
+      if (current) {
+        const userData = JSON.parse(current);
+        setCurrentUser(userData);
+        if (isOwnProfile) {
+          setProfileUser(userData);
+        }
+      };
     };
     window.addEventListener("userUpdated", handleUserUpdate);
     return () => window.removeEventListener("userUpdated", handleUserUpdate);
