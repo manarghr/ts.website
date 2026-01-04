@@ -247,7 +247,9 @@ export default function ProfilePage({ userId }) {
           )
         }
       }
-    }
+    };
+    window.addEventListener("userUpdated", handleUserUpdate);
+    return () => window.removeEventListener("userUpdated", handleUserUpdate);
   }, [userId])
 
   const handleSaveBio = () => {
