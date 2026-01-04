@@ -113,7 +113,7 @@ export default function AdminDashboard() {
   readTime: "",
   image: "",
   category: "training",
-  content: "",
+  sections: [{ title: "", content: "" }],
 })
 
   useEffect(() => {
@@ -956,6 +956,24 @@ const openEditBlog = (blog) => {
     content: blog.content || "",
   });
   setShowBlogForm(true);
+};
+
+const addSection = () => {
+  setBlogForm({
+    ...blogForm,
+    sections: [...blogForm.sections, { title: "", content: "" }]
+  });
+};
+
+const removeSection = (index) => {
+  const newSections = blogForm.sections.filter((_, i) => i !== index);
+  setBlogForm({ ...blogForm, sections: newSections });
+};
+
+const updateSection = (index, field, value) => {
+  const newSections = [...blogForm.sections];
+  newSections[index][field] = value;
+  setBlogForm({ ...blogForm, sections: newSections });
 };
 
   const filteredCoaches = coaches.filter(
