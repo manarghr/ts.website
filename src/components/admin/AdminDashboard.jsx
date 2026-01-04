@@ -21,6 +21,7 @@ import {
   Activity,
   BarChart3,
   Cookie,
+  BookOpen,
 } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -35,6 +36,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statsLoading, setStatsLoading] = useState(true)
+  const [blogs, setBlogs] = useState([])
+  const [showBlogForm, setShowBlogForm] = useState(false)
 
   // Form states
   const [showCoachForm, setShowCoachForm] = useState(false)
@@ -101,6 +104,17 @@ export default function AdminDashboard() {
     discount: false,
     discount_percentage: 0,
   })
+  const [blogForm, setBlogForm] = useState({
+  id: "",
+  title: "",
+  excerpt: "",
+  author: "",
+  date: "",
+  readTime: "",
+  image: "",
+  category: "training",
+  content: "",
+})
 
   useEffect(() => {
     if (activeSection === "dashboard") {
@@ -751,37 +765,7 @@ const handleUpdateMeal = async (e) => {
     setShowVideoForm(true)
   }
 
-  // const openEditMeal = (meal) => {
-  //   setEditingItem(meal)
-  //   setMealForm({
-  //     id: meal.id,
-  //     name: meal.name || "",
-  //     mealType: meal.mealType || "breakfast",
-  //     goal: meal.goal || "all",
-  //     calories: meal.calories || 0,
-  //     protein: meal.protein || 0,
-  //     carbs: meal.carbs || 0,
-  //     fats: meal.fats || 0,
-  //     fiber: meal.fiber || 0,
-  //     sugar: meal.sugar || 0,
-  //     sodium: meal.sodium || 0,
-  //     servings: meal.servings || 1,
-  //     difficulty: meal.difficulty || "Easy",
-  //     prepTime: meal.prepTime || 0,
-  //     steps: meal.steps || [],
-  //     tips: meal.tips || [],
-  //     equipment: meal.equipment || [],
-  //     ingredients: meal.ingredients || [],
-  //     detailedIngredients: meal.detailedIngredients || [],
-  //     image: meal.image || "",
-  //   })
-  //   setIngredientInput("")
-  //   setStepInput("")
-  //   setTipInput("")
-  //   setEquipmentInput("")
-  //   setDetailedIngredientInput({ item: "", amount: "", notes: "" })
-  //   setShowMealForm(true)
-  // }
+
 
   const openEditMeal = (meal) => {
   setEditingItem(meal)

@@ -6,7 +6,7 @@ from posture_utils import RepetitionCounter, EXERCISE_CONFIG
 
 
 
-VIDEO_PATH = r"C:\Users\zine\Documents\NIT\genie logiciel\projet\ts.website\AI\MediaPipe\videos\biceps_curl.mp4"
+VIDEO_PATH = r"C:\Users\Utilisateur\Desktop\TrainSight\ts.website\AI\Mp_helper\videos\biceps_curl.mp4"
 
 if not Path(VIDEO_PATH).exists():
     raise FileNotFoundError(f"Vidéo introuvable : {VIDEO_PATH}")
