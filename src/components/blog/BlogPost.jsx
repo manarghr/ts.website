@@ -184,41 +184,35 @@ export default function BlogPost({ postId }) {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="bg-white rounded-3xl shadow-xl p-8 md:p-12 lg:p-16 border border-[#C8CDC5]/30"
           >
-            <article className="prose prose-lg max-w-none">
-              {post.content.split('\n\n').map((paragraph, index) => {
-                if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-                  const heading = paragraph.replace(/\*\*/g, '')
-                  return (
-                    <motion.h2 
-                      key={index} 
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * index, duration: 0.5 }}
-                      className="text-3xl md:text-4xl font-bold text-[#354F52] mt-12 mb-6 first:mt-0 flex items-center gap-3"
-                    >
-                      <span className="w-2 h-8 bg-gradient-to-b from-[#52796F] to-[#6BB371] rounded-full"></span>
-                      {heading}
-                    </motion.h2>
-                  )
-                }
+          <article className="prose prose-lg max-w-none">
+            {post.sections?.map((section, index) => (
+              <div key={index}>
+                <motion.h2 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 * index, duration: 0.5 }}
+                  className="text-3xl md:text-4xl font-bold text-[#354F52] mt-12 mb-6 first:mt-0 flex items-center gap-3"
+                >
+                  <span className="w-2 h-8 bg-gradient-to-b from-[#52796F] to-[#6BB371] rounded-full"></span>
+                  {section.title}
+                </motion.h2>
                 
-                const formattedText = paragraph.split('**').map((text, i) => 
-                  i % 2 === 1 ? <strong key={i} className="text-[#52796F] font-bold">{text}</strong> : text
-                )
-                
-                return (
+                {section.content.split('\n\n').map((paragraph, pIndex) => (
                   <motion.p 
-                    key={index} 
+                    key={pIndex}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 * index, duration: 0.5 }}
+                    transition={{ delay: 0.05 * pIndex, duration: 0.5 }}
                     className="text-gray-700 leading-relaxed mb-6 text-lg"
                   >
-                    {formattedText}
+                    {paragraph.split('**').map((text, i) => 
+                      i % 2 === 1 ? <strong key={i} className="text-[#52796F] font-bold">{text}</strong> : text
+                    )}
                   </motion.p>
-                )
-              })}
-            </article>
+                ))}
+              </div>
+            ))}
+          </article>
 
             {/* Back Button */}
             <motion.div

@@ -35,12 +35,7 @@ export async function POST(request) {
     content
     } = body;
 
-    if (!title || !content) {
-      return NextResponse.json(
-        { error: 'Name and meal type are required' },
-        { status: 400 }
-      );
-    }
+
 
     const blogCollection = await getCollection('blog');
     const newBlog = {

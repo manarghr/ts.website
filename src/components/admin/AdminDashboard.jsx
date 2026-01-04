@@ -825,20 +825,20 @@ const handleUpdateMeal = async (e) => {
   const handleAddBlog = async (e) => {
   e.preventDefault();
   try {
-    if (!blogForm.title || !blogForm.excerpt || !blogForm.content) {
-      alert("Title, excerpt, and content are required");
+    if (!blogForm.title || !blogForm.excerpt) {
+      alert("Title and excerpt are required");
       return;
     }
 
     const blogData = {
       title: blogForm.title,
       excerpt: blogForm.excerpt,
-      author: blogForm.author,
+      author: blogForm.author || "TrainSight Team", 
       date: blogForm.date || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      readTime: blogForm.readTime,
-      image: blogForm.image,
+      readTime: blogForm.readTime || "5 min read", 
+      image: blogForm.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
       category: blogForm.category,
-      content: blogForm.content,
+      sections: blogForm.sections || [{ title: "", content: "" }],
     };
 
     const res = await fetch("/api/admin/blogs", {
@@ -860,7 +860,7 @@ const handleUpdateMeal = async (e) => {
         readTime: "",
         image: "",
         category: "training",
-        content: "",
+        sections: [{ title: "", content: "" }],
       });
       fetchData();
     } else {
@@ -881,15 +881,14 @@ const handleUpdateBlog = async (e) => {
     }
 
     const blogData = {
-      id: editingItem.id,
       title: blogForm.title,
       excerpt: blogForm.excerpt,
-      author: blogForm.author,
-      date: blogForm.date,
-      readTime: blogForm.readTime,
-      image: blogForm.image,
+      author: blogForm.author || "TrainSight Team", 
+      date: blogForm.date || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      readTime: blogForm.readTime || "5 min read", 
+      image: blogForm.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
       category: blogForm.category,
-      content: blogForm.content,
+      sections: blogForm.sections || [{ title: "", content: "" }],
     };
 
     const res = await fetch("/api/admin/blogs", {
@@ -912,7 +911,7 @@ const handleUpdateBlog = async (e) => {
         readTime: "",
         image: "",
         category: "training",
-        content: "",
+        sections: [{ title: "", content: "" }],
       });
       fetchData();
     } else {
@@ -953,7 +952,7 @@ const openEditBlog = (blog) => {
     readTime: blog.readTime || "",
     image: blog.image || "",
     category: blog.category || "training",
-    content: blog.content || "",
+    sections: blog.sections || [{ title: "", content: "" }],
   });
   setShowBlogForm(true);
 };
@@ -2463,7 +2462,7 @@ const updateSection = (index, field, value) => {
                               readTime: "",
                               image: "",
                               category: "training",
-                              content: "",
+                              sections: [{ title: "", content: "" }],
                             });
                           }}
                           className="flex items-center gap-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#52796F]/30 transition-all"
