@@ -1340,24 +1340,87 @@ export default function ProfilePage({ userId }) {
                   </div>
                   {isContentVisible("coaches") ? (
                     profileUser?.favoriteCoaches && profileUser.favoriteCoaches.length > 0 ? (
-                      <div className="grid md:grid-cols-3 gap-4">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {profileUser.favoriteCoaches.map((coach, index) => (
                           <motion.div
-                            key={index}
+                            key={coach.id || index}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            whileHover={{ scale: 1.05, y: -5 }}
-                            className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+                            whileHover={{ scale: 1.02, y: -5 }}
+                            className="p-6 bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                            <div className="flex items-center gap-3 mb-2 relative z-10">
-                              <div className="w-12 h-12 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                <Dumbbell className="w-6 h-6 text-white" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                            
+                            {/* Coach Image/Avatar */}
+                            <div className="flex items-center gap-4 mb-4 relative z-10">
+                              {coach.image ? (
+                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#52796F]/30 shadow-lg group-hover:scale-110 transition-transform">
+                                  <img 
+                                    src={coach.image} 
+                                    alt={coach.name} 
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.style.display = 'none';
+                                      e.target.parentElement.innerHTML = `
+                                        <div class="w-16 h-16 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center shadow-lg">
+                                          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                          </svg>
+                                        </div>
+                                      `;
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-16 h-16 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                  <Dumbbell className="w-8 h-8 text-white" />
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <div className="font-bold text-slate-800 text-xl mb-1">{coach.name || "Coach"}</div>
+                                <div className="text-sm text-slate-600 font-semibold">{coach.category || "General"}</div>
                               </div>
-                              <div className="font-bold text-slate-800 text-lg">{coach.name || "Coach"}</div>
                             </div>
-                            <div className="text-sm text-slate-600 font-semibold relative z-10">{coach.category || "General"}</div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-2 relative z-10">
+                              <Link
+                                href={`/coaches/${coach.id}`}
+                                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl hover:shadow-lg transition-all text-sm font-bold text-center"
+                              >
+                                View Profile
+                              </Link>
+                              {isOwnProfile && (
+                                <motion.button
+                                  onClick={async () => {
+                                    if (window.confirm(`Unfollow ${coach.name}?`)) {
+                                      // Remove from favoriteCoaches
+                                      const updatedUser = {
+                                        ...currentUser,
+                                        favoriteCoaches: (currentUser.favoriteCoaches || []).filter(c => c.id !== coach.id)
+                                      };
+                                      setCurrentUser(updatedUser);
+                                      setProfileUser(updatedUser);
+                                      
+                                      localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
+                                      
+                                      const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
+                                      const updatedUsers = users.map(u => u.id === currentUser.id ? updatedUser : u);
+                                      localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
+                                      
+                                      window.dispatchEvent(new Event("userUpdated"));
+                                    }
+                                  }}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  className="px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all text-sm font-bold"
+                                >
+                                  Unfollow
+                                </motion.button>
+                              )}
+                            </div>
                           </motion.div>
                         ))}
                       </div>
