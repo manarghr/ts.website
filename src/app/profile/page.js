@@ -640,14 +640,39 @@ export default function ProfilePage({ userId }) {
                     </div>
                   )}
                   {isOwnProfile && (
-                    <motion.label 
-                      className="absolute bottom-0 right-0 w-12 h-12 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center cursor-pointer shadow-xl hover:shadow-2xl transition-all border-4 border-white z-10"
-                      whileHover={{ scale: 1.1 }}
+                    <motion.button
+                      onClick={async () => {
+                        if (window.confirm(`Unfollow ${coach.name}?`)) {
+                          // Remove from favoriteCoaches
+                          const updatedUser = {
+                            ...currentUser,
+                            favoriteCoaches: (currentUser.favoriteCoaches || []).filter(c => c.id !== coach.id)
+                          };
+                          setCurrentUser(updatedUser);
+                          setProfileUser(updatedUser);
+                          
+                          // Update localStorage
+                          localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
+                          
+                          // Update users array
+                          const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
+                          const updatedUsers = users.map(u => u.id === currentUser.id ? updatedUser : u);
+                          localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
+                          
+                          // Dispatch event to notify other components
+                          window.dispatchEvent(new Event("userUpdated"));
+                          window.dispatchEvent(new StorageEvent("storage", {
+                            key: "trainsight_current_user",
+                            newValue: JSON.stringify(updatedUser)
+                          }));
+                        }
+                      }}
+                      whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      className="px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all text-sm font-bold"
                     >
-                      <Camera className="w-6 h-6 text-white" />
-                      <input type="file" accept="image/*" onChange={handleProfilePictureChange} className="hidden" />
-                    </motion.label>
+                      Unfollow
+                    </motion.button>
                   )}
                 </motion.div>
                 

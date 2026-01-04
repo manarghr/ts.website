@@ -170,9 +170,23 @@ export default function CoachProfile({ coachId }) {
   };
 
   useEffect(() => {
-    fetchCoachData();
+  fetchCoachData();
+  checkFollowStatus();
+  
+  // Listen for storage changes and user updates
+  const handleStorageChange = () => {
     checkFollowStatus();
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("userUpdated", handleStorageChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("userUpdated", handleStorageChange);
+    };
   }, [coachId]);
+
 
   const fetchCoachData = async () => {
     try {
@@ -206,15 +220,20 @@ export default function CoachProfile({ coachId }) {
         const currentUser = localStorage.getItem("trainsight_current_user");
         if (currentUser) {
           const user = JSON.parse(currentUser);
-          const res = await fetch(`/api/coaches/${coachId}/follow?userId=${user.id}`);
-          if (res.ok) {
-            const data = await res.json();
-            setIsFollowing(data.isFollowing);
-          }
+          
+          // Check localStorage directly for favoriteCoaches
+          const favoriteCoaches = user.favoriteCoaches || [];
+          const isFollowingLocally = favoriteCoaches.some(
+            c => c.id === coachId || c.id === coach?.id
+          );
+          setIsFollowing(isFollowingLocally);
+        } else {
+          setIsFollowing(false);
         }
       }
     } catch (err) {
       console.error("Follow status error", err);
+      setIsFollowing(false);
     }
   };
 
