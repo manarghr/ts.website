@@ -2650,15 +2650,61 @@ const updateSection = (index, field, value) => {
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Content *</label>
-                              <textarea
-                                value={blogForm.content}
-                                onChange={(e) => setBlogForm({ ...blogForm, content: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent font-mono text-sm"
-                                rows="15"
-                                placeholder="Write your blog content here (supports Markdown)..."
-                                required
-                              />
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-[#354F52]">Content Sections *</label>
+                                <button
+                                  type="button"
+                                  onClick={addSection}
+                                  className="text-[#52796F] hover:text-[#6BB371] font-medium text-sm flex items-center gap-1"
+                                >
+                                  <span>+ Add Section</span>
+                                </button>
+                              </div>
+                              
+                              <div className="space-y-4">
+                                {blogForm.sections.map((section, index) => (
+                                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                    <div className="flex items-center justify-between mb-3">
+                                      <span className="text-sm font-medium text-gray-700">Section {index + 1}</span>
+                                      {blogForm.sections.length > 1 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => removeSection(index)}
+                                          className="text-red-500 hover:text-red-700 text-sm"
+                                        >
+                                          Remove
+                                        </button>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                      <div>
+                                        <label className="block text-xs font-medium mb-1 text-gray-600">Section Title</label>
+                                        <input
+                                          type="text"
+                                          value={section.title}
+                                          onChange={(e) => updateSection(index, 'title', e.target.value)}
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                          placeholder="e.g., Introduction, Key Benefits, Getting Started..."
+                                          required
+                                        />
+                                      </div>
+                                      
+                                      <div>
+                                        <label className="block text-xs font-medium mb-1 text-gray-600">Section Content</label>
+                                        <textarea
+                                          value={section.content}
+                                          onChange={(e) => updateSection(index, 'content', e.target.value)}
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent font-mono text-sm"
+                                          rows="8"
+                                          placeholder="Write the content for this section..."
+                                          required
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
 
                             <div className="flex gap-3">
