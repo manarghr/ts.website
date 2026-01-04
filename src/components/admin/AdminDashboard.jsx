@@ -114,7 +114,7 @@ export default function AdminDashboard() {
     setStatsLoading(true)
     try {
       // Fetch all data for stats
-      const [usersRes, coachesRes, videosRes, programsRes] = await Promise.all([
+      const [usersRes, coachesRes, videosRes, programsRes, mealsRes] = await Promise.all([
         fetch("/api/admin/users"),
         fetch("/api/coaches"),
         fetch("/api/admin/videos"),
