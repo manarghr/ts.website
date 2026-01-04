@@ -17,7 +17,7 @@ export default function BlogPost({ postId }) {
     const fetchBlogs = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/admin/blog')
+        const response = await fetch('/api/admin/blogs')
         const data = await response.json()
         if (data.success) {
           setAllBlogPosts(data.blogs)
@@ -33,6 +33,21 @@ export default function BlogPost({ postId }) {
 
     fetchBlogs()
   }, [postId])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#52796F]/10 to-[#6BB371]/10">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <div className="text-6xl mb-4">⏳</div>
+          <h1 className="text-4xl font-bold text-[#354F52] mb-4">Loading Article...</h1>
+        </motion.div>
+      </div>
+    )
+  }
 
   if (!post) {
     return (
