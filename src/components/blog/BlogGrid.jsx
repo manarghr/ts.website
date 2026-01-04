@@ -30,7 +30,7 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
     const fetchBlogs = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/admin/blog')
+        const response = await fetch('/api/admin/blogs')
         const data = await response.json()
         if (data.success) {
           setAllBlogPosts(data.blogs)
@@ -44,6 +44,20 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
 
     fetchBlogs()
   }, [])
+
+
+  if (loading) {
+    return (
+      <section className="relative py-12 bg-white overflow-hidden">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
+          <div className="text-center py-16">
+            <div className="text-4xl mb-4">⏳</div>
+            <p className="text-gray-600">Loading articles...</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   // Filter blog posts based on search term and category
   const filteredPosts = allBlogPosts.filter((post) => {
