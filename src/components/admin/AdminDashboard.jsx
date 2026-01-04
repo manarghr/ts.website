@@ -1016,13 +1016,17 @@ const updateSection = (index, field, value) => {
 
   //load pending blogs
   useEffect(() => {
-    // Load blogs
-    const storedBlogs = JSON.parse(localStorage.getItem("trainsight_blogs") || "[]");
-    setBlogs(storedBlogs);
-  
-   // Load pending blogs
-    const pending = JSON.parse(localStorage.getItem("trainsight_pending_blogs") || "[]");
-    setPendingBlogs(pending);
+    // Fetch blogs
+    fetch('/api/blogs')
+      .then(res => res.json())
+      .then(data => setBlogs(data))
+      .catch(err => console.error('Error fetching blogs:', err));
+    
+    // Fetch pending blogs
+    fetch('/api/blogs/pending')
+      .then(res => res.json())
+      .then(data => setPendingBlogs(data))
+      .catch(err => console.error('Error fetching pending blogs:', err));
   }, []);
 
   // Add handlers for approve/reject
