@@ -179,11 +179,14 @@ export default function AdminDashboard() {
         const data = await res.json()
         if (data.success) setPrograms(data.programs || [])
       } else if (activeSection === "meals") {
-        // Fetch meals from MongoDB via API
         const res = await fetch("/api/admin/meals");
         const data = await res.json();
         if (data.success) setMeals(data.meals || []);
-      }
+      } else if (activeSection === "blogs") {
+        const res = await fetch("/api/admin/blogs");
+        const data = await res.json();
+        if (data.success) setBlogs(data.blogs || []);
+    }
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {
