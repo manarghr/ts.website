@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { FaArrowLeft, FaUser, FaClock, FaTag } from "react-icons/fa"
+import { FaArrowLeft, FaUser, FaClock, FaTag, FaChevronLeft, FaChevronRight } from "react-icons/fa"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 
@@ -12,6 +12,7 @@ export default function BlogPost({ postId }) {
   const [post, setPost] = useState(null)
   const [allBlogPosts, setAllBlogPosts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -86,6 +87,22 @@ export default function BlogPost({ postId }) {
 
   const relatedPosts = allBlogPosts
     .filter(p => p.category === post.category && p.id !== post.id)
+
+
+  const postsPerPage = 3;
+
+  
+  const totalPages = Math.ceil(relatedPosts.length / postsPerPage);
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    const section = document.querySelector('#related-posts-section');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -279,7 +296,7 @@ export default function BlogPost({ postId }) {
             
               {/* Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {relatedPosts.slice(0, 6).map((relatedPost, index) => (
+                {relatedPosts.slice(startIndex, endIndex).map((relatedPost, index) => (
                   <motion.div
                     key={relatedPost.id}
                     initial={{ opacity: 0, y: 30 }}
@@ -324,6 +341,55 @@ export default function BlogPost({ postId }) {
                   </motion.div>
                 ))}
               </div>
+
+              {/* Pagination */}
+              {totalPages >= 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  className="flex justify-center items-center gap-8 mt-16"
+                >
+                  {/* Previous Button */}
+                  <button
+                    onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                    disabled={currentPage === 1}
+                    aria-label="Previous page"
+                    className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+                  >
+                    <FaChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+                  </button>
+                  
+                  {/* Page Dots Indicator */}
+                  <div className="flex gap-3 items-center">
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const page = index + 1;
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            currentPage === page
+                              ? "bg-[#354F52] w-12 shadow-lg"
+                              : "bg-[#C8CDC5] w-2 hover:bg-[#52796F] hover:w-4"
+                          }`}
+                          aria-label={`Go to page ${page}`}
+                        />
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Next Button */}
+                  <button
+                    onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    aria-label="Next page"
+                    className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+                  >
+                    <FaChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </motion.div>
+              )}
 
               {/* View More Buttons */}
               {relatedPosts.length > 6 && (

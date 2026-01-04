@@ -16,7 +16,7 @@ const fadeInUp = {
 }
 
 export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters }) {
-  const POSTS_PER_PAGE = 9
+  const POSTS_PER_PAGE = 6
   const [currentPage, setCurrentPage] = useState(1)
   const router = useRouter();
   useEffect(() => {
@@ -196,7 +196,7 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
             </div>
 
             {/*Pagination */}
-            {totalPages > 1 && (
+            {totalPages >= 1 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
