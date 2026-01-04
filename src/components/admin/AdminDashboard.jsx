@@ -1051,13 +1051,21 @@ const updateSection = (index, field, value) => {
     }
   };
 
-  const handleRejectBlog = (blogId) => {
+  const handleRejectBlog = async (blogId) => {
     if (confirm("Are you sure you want to reject this blog submission?")) {
-      const pending = JSON.parse(localStorage.getItem("trainsight_pending_blogs") || "[]");
-      const updatedPending = pending.filter(b => b.id !== blogId);
-      localStorage.setItem("trainsight_pending_blogs", JSON.stringify(updatedPending));
-      setPendingBlogs(updatedPending);
-      alert("Blog rejected and removed from pending list.");
+      try {
+        const response = await fetch(`/api/blogs/pending/${blogId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) throw new Error('Failed to reject blog');
+
+        setPendingBlogs(prev => prev.filter(b => b._id !== blogId));
+        alert("Blog rejected and removed from pending list.");
+      } catch (error) {
+        console.error('Error rejecting blog:', error);
+        alert('Failed to reject blog. Please try again.');
+      }
     }
   };
 
