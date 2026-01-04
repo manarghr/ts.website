@@ -32,7 +32,7 @@ export async function POST(request) {
     readTime,
     image,
     category,
-    content
+    sections
     } = body;
 
 
@@ -44,10 +44,11 @@ export async function POST(request) {
       excerpt,
       author,
       date,
-      readTime: `${parseInt(readTime)} min`,
+      readTime,
       image,
       category : category || 'Training',
-      content,
+      sections,  
+      created_at: new Date(),
     };
 
     await blogCollection.insertOne(newBlog);
@@ -74,7 +75,7 @@ export async function PUT(request) {
     readTime,
     image,
     category,
-    content
+    sections
     } = body;
 
     if (!id) {
@@ -93,10 +94,10 @@ export async function PUT(request) {
     if (excerpt) updateData.excerpt = excerpt;
     if (author) updateData.author = author;
     if (date) updateData.date = date;
-    if (readTime) updateData.readTime = `${parseInt(readTime)} min`;
+    if (readTime) updateData.readTime = readTime;
     if (image) updateData.image = image;
     if (category) updateData.category = category;
-    if (content) updateData.content = content;
+    if (sections) updateData.sections = sections;
 
 
     const result = await blogCollection.updateOne(

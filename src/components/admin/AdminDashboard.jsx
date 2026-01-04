@@ -881,6 +881,7 @@ const handleUpdateBlog = async (e) => {
     }
 
     const blogData = {
+      id: blogForm.id,  
       title: blogForm.title,
       excerpt: blogForm.excerpt,
       author: blogForm.author || "TrainSight Team", 
