@@ -2423,6 +2423,252 @@ const openEditBlog = (blog) => {
                   </div>
                 )}
 
+                {/* Blogs Section */}
+                {activeSection === "blogs" && (
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <h2 className="text-xl font-bold text-[#354F52]">Blogs Management</h2>
+                          <div className="text-sm text-gray-600 mt-1">Total: {blogs.length}</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowBlogForm(true);
+                            setEditingItem(null);
+                            setBlogForm({
+                              id: "",
+                              title: "",
+                              excerpt: "",
+                              author: "",
+                              date: "",
+                              readTime: "",
+                              image: "",
+                              category: "training",
+                              content: "",
+                            });
+                          }}
+                          className="flex items-center gap-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-[#52796F]/30 transition-all"
+                        >
+                          <Plus className="w-5 h-5" />
+                          Add Blog
+                        </button>
+                      </div>
+
+                      <div className="mb-6">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Search blogs by title..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {blogs
+                          .filter((blog) => blog.title?.toLowerCase().includes(searchTerm.toLowerCase()))
+                          .map((blog, idx) => (
+                            <div
+                              key={blog.id || idx}
+                              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-200"
+                            >
+                              {blog.image && (
+                                <div className="h-48 overflow-hidden">
+                                  <img
+                                    src={blog.image}
+                                    alt={blog.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.src = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800';
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <div className="p-4">
+                                <div className="mb-2">
+                                  <span className="px-2 py-1 bg-[#52796F]/10 text-[#354F52] rounded text-xs font-medium capitalize">
+                                    {blog.category}
+                                  </span>
+                                </div>
+                                <h3 className="font-bold text-lg text-[#354F52] mb-2 line-clamp-2">{blog.title}</h3>
+                                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{blog.excerpt}</p>
+                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                                  <span>{blog.author}</span>
+                                  <span>•</span>
+                                  <span>{blog.readTime}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => openEditBlog(blog)}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#52796F]/10 text-[#52796F] rounded hover:bg-[#52796F]/20 transition-colors"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteBlog(blog.id)}
+                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                      {blogs.length === 0 && (
+                        <div className="text-center py-12 text-gray-500">
+                          No blogs found. Click "Add Blog" to create your first blog post.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Blog Form Modal */}
+                    {showBlogForm && (
+                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-bold text-[#354F52]">
+                              {editingItem ? "Edit Blog" : "Add New Blog"}
+                            </h3>
+                            <button
+                              onClick={() => {
+                                setShowBlogForm(false);
+                                setEditingItem(null);
+                              }}
+                            >
+                              <XIcon className="w-6 h-6 text-gray-600" />
+                            </button>
+                          </div>
+                          <form onSubmit={editingItem ? handleUpdateBlog : handleAddBlog} className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Title *</label>
+                              <input
+                                type="text"
+                                value={blogForm.title}
+                                onChange={(e) => setBlogForm({ ...blogForm, title: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Excerpt *</label>
+                              <textarea
+                                value={blogForm.excerpt}
+                                onChange={(e) => setBlogForm({ ...blogForm, excerpt: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                rows="2"
+                                placeholder="Brief description of the blog post"
+                                required
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Author</label>
+                                <input
+                                  type="text"
+                                  value={blogForm.author}
+                                  onChange={(e) => setBlogForm({ ...blogForm, author: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  placeholder="e.g., John Smith"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Read Time</label>
+                                <input
+                                  type="text"
+                                  value={blogForm.readTime}
+                                  onChange={(e) => setBlogForm({ ...blogForm, readTime: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  placeholder="e.g., 5 min read"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Date</label>
+                                <input
+                                  type="text"
+                                  value={blogForm.date}
+                                  onChange={(e) => setBlogForm({ ...blogForm, date: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  placeholder="e.g., March 15, 2024"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Category</label>
+                                <select
+                                  value={blogForm.category}
+                                  onChange={(e) => setBlogForm({ ...blogForm, category: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                >
+                                  <option value="training">Training</option>
+                                  <option value="nutrition">Nutrition</option>
+                                  <option value="technology">Technology</option>
+                                  <option value="wellness">Wellness</option>
+                                  <option value="mindset">Mindset</option>
+                                  <option value="progress">Progress</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Image URL</label>
+                              <input
+                                type="text"
+                                value={blogForm.image}
+                                onChange={(e) => setBlogForm({ ...blogForm, image: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                placeholder="https://images.unsplash.com/..."
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Content *</label>
+                              <textarea
+                                value={blogForm.content}
+                                onChange={(e) => setBlogForm({ ...blogForm, content: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent font-mono text-sm"
+                                rows="15"
+                                placeholder="Write your blog content here (supports Markdown)..."
+                                required
+                              />
+                            </div>
+
+                            <div className="flex gap-3">
+                              <button
+                                type="submit"
+                                className="flex-1 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white py-2 rounded-lg hover:from-[#6BB371] hover:to-[#52796F] transition-all shadow-lg hover:shadow-[#52796F]/30"
+                              >
+                                <Save className="w-4 h-4 inline mr-2" />
+                                {editingItem ? "Update" : "Add"} Blog
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowBlogForm(false);
+                                  setEditingItem(null);
+                                }}
+                                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Programs Section */}
                 {activeSection === "programs" && (
                   <div className="space-y-6 mt-6">
