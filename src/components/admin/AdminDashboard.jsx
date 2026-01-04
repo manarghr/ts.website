@@ -970,6 +970,7 @@ const openEditBlog = (blog) => {
     { id: "coaches", label: "Coaches", icon: UserCog },
     { id: "videos", label: "Videos", icon: Video },
     { id: "meals", label: "Meals", icon: Cookie },
+    { id: "blogs", label: "Blogs", icon: BookOpen },
     { id: "programs", label: "Programs", icon: Dumbbell },
   ]
 
@@ -986,6 +987,7 @@ const openEditBlog = (blog) => {
     totalVideos: videos.length,
     totalPrograms: programs.length,
     totalMeals: meals.length,
+    totalBlogs: blogs.length,
   }
 
   return (
