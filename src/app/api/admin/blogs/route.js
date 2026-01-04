@@ -1,0 +1,163 @@
+// Admin API Route - Blog CRUD
+// File: src/app/api/admin/blog/route.js
+
+import { NextResponse } from 'next/server';
+import { getCollection } from '@/lib/mongodb';
+
+// GET - Get all meals
+export async function GET(request) {
+  try {
+    const blogCollection = await getCollection('blog');
+    const blogs = await blogCollection.find({}).sort({ created_at: -1 }).toArray();
+    return NextResponse.json({ success: true, blogs });
+  } catch (error) {
+    console.error('Error fetching blogs:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Create new blog
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { 
+    id,
+    title,
+    excerpt,
+    author,
+    date,
+    readTime,
+    image,
+    category,
+    content
+    } = body;
+
+    if (!title || !content) {
+      return NextResponse.json(
+        { error: 'Name and meal type are required' },
+        { status: 400 }
+      );
+    }
+
+    const blogCollection = await getCollection('blog');
+    const newBlog = {
+      id: `blog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title,
+      excerpt,
+      author,
+      date,
+      readTime: `${parseInt(readTime)} min`,
+      image,
+      category : category || 'Training',
+      content,
+    };
+
+    await blogCollection.insertOne(newBlog);
+    return NextResponse.json({ success: true, blog: newBlog });
+  } catch (error) {
+    console.error('Error creating blog:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update blog
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const { 
+    id,
+    title,
+    excerpt,
+    author,
+    date,
+    readTime,
+    image,
+    category,
+    content
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Blog ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const blogCollection = await getCollection('blog');
+    const updateData = {
+      updated_at: new Date(),
+    };
+
+    if (title) updateData.title = title;
+    if (excerpt) updateData.excerpt = excerpt;
+    if (author) updateData.author = author;
+    if (date) updateData.date = date;
+    if (readTime) updateData.readTime = `${parseInt(readTime)} min`;
+    if (image) updateData.image = image;
+    if (category) updateData.category = category;
+    if (content) updateData.content = content;
+
+
+    const result = await blogCollection.updateOne(
+      { id },
+      { $set: updateData }
+    );
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { error: 'Blog not found' },
+        { status: 404 }
+      );
+    }
+
+    const updatedBlog = await blogCollection.findOne({ id });
+    return NextResponse.json({ success: true, blog: updatedBlog });
+  } catch (error) {
+    console.error('Error updating blog:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Delete blog
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Blog ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const blogCollection = await getCollection('blog');
+    
+    // Delete by string ID (not parseInt)
+    const result = await blogCollection.deleteOne({ id });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { error: 'Blog not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, message: 'Blog deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting blog:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
+  }
+}
