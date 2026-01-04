@@ -4,56 +4,35 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { FaArrowLeft, FaUser, FaClock, FaTag } from "react-icons/fa"
 import Image from "next/image"
+import { useState, useEffect } from "react"
 
-// Extended blog posts data with full content
-export const allBlogPosts = [
-  // Training Articles
-  {
-    id: 1,
-    title: "10 Essential Exercises for Perfect Form",
-    excerpt: "Learn the fundamental movements that will transform your training and prevent injuries.",
-    author: "Sarah Johnson",
-    date: "March 15, 2024",
-    readTime: "5 min read",
-    image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
-    category: "training",
-    content: `Proper form is the foundation of any successful fitness journey. Whether you're a beginner or an experienced athlete, mastering these fundamental exercises will help you build strength safely and effectively.
 
-**1. The Perfect Squat**
-
-Squats are the king of lower body exercises. Start with your feet shoulder-width apart, toes slightly pointed out. As you descend, imagine sitting back into a chair, keeping your chest up and core engaged. Your knees should track over your toes, never caving inward. Drive through your heels to return to standing.
-
-**2. Deadlift Fundamentals**
-
-The deadlift works your entire posterior chain. Stand with feet hip-width apart, barbell over mid-foot. Hinge at the hips, keeping your back flat and chest proud. Grip the bar just outside your legs, then drive through your heels while keeping the bar close to your body.
-
-**3. Push-Up Perfection**
-
-A proper push-up starts in a plank position with hands slightly wider than shoulders. Your body should form a straight line from head to heels. Lower yourself until your chest nearly touches the ground, keeping elbows at a 45-degree angle. Push back up with control.
-
-**4. The Row Variation**
-
-Rows are essential for back development and posture. Whether using dumbbells, barbells, or cables, focus on pulling your shoulder blades together first, then bending your elbows. Keep your core tight and avoid using momentum.
-
-**5. Overhead Press Technique**
-
-Stand with feet hip-width apart, core braced. Press the weight overhead in a straight line, finishing with your biceps by your ears. Avoid arching your lower back by keeping your glutes engaged throughout the movement.
-
-**Common Mistakes to Avoid**
-
-The most common error across all exercises is rushing through movements. Quality always beats quantity. Take time to feel each muscle working and maintain control throughout the entire range of motion.
-
-**Progressive Overload**
-
-Once you've mastered proper form, gradually increase the challenge through added weight, reps, or time under tension. This progressive approach ensures continued gains while minimizing injury risk.
-
-Remember, perfect form takes practice. Don't be discouraged if it feels awkward at first. Consider working with a qualified trainer to ensure you're performing movements correctly before adding significant weight.`
-  },
-
-]
 
 export default function BlogPost({ postId }) {
-  const post = allBlogPosts.find(p => p.id === parseInt(postId))
+  const [post, setPost] = useState(null)
+  const [allBlogPosts, setAllBlogPosts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/admin/blog')
+        const data = await response.json()
+        if (data.success) {
+          setAllBlogPosts(data.blogs)
+          const foundPost = data.blogs.find(p => p.id === postId)
+          setPost(foundPost)
+        }
+      } catch (error) {
+        console.error('Error fetching blog post:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBlogs()
+  }, [postId])
 
   if (!post) {
     return (
