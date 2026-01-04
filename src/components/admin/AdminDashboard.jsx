@@ -418,10 +418,6 @@ export default function AdminDashboard() {
     }
   }
 
-
-
-
-
 const handleAddMeal = async (e) => {
   e.preventDefault();
   
@@ -810,7 +806,7 @@ const handleUpdateMeal = async (e) => {
   setEquipmentInput("")
   setDetailedIngredientInput({ item: "", amount: "", notes: "" })
   setShowMealForm(true)
-}
+  }
   const openEditProgram = (program) => {
     setEditingItem(program)
     setProgramForm({
@@ -825,6 +821,142 @@ const handleUpdateMeal = async (e) => {
     })
     setShowProgramForm(true)
   }
+
+  const handleAddBlog = async (e) => {
+  e.preventDefault();
+  try {
+    if (!blogForm.title || !blogForm.excerpt || !blogForm.content) {
+      alert("Title, excerpt, and content are required");
+      return;
+    }
+
+    const blogData = {
+      title: blogForm.title,
+      excerpt: blogForm.excerpt,
+      author: blogForm.author,
+      date: blogForm.date || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      readTime: blogForm.readTime,
+      image: blogForm.image,
+      category: blogForm.category,
+      content: blogForm.content,
+    };
+
+    const res = await fetch("/api/admin/blogs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(blogData),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Blog added successfully!");
+      setShowBlogForm(false);
+      setBlogForm({
+        id: "",
+        title: "",
+        excerpt: "",
+        author: "",
+        date: "",
+        readTime: "",
+        image: "",
+        category: "training",
+        content: "",
+      });
+      fetchData();
+    } else {
+      alert(`Error: ${data.error || 'Failed to add blog'}`);
+    }
+  } catch (error) {
+    console.error("Error adding blog:", error);
+    alert(`Failed to add blog: ${error.message}`);
+  }
+};
+
+const handleUpdateBlog = async (e) => {
+  e.preventDefault();
+  try {
+    if (!editingItem || !editingItem.id) {
+      alert("No blog selected for editing");
+      return;
+    }
+
+    const blogData = {
+      id: editingItem.id,
+      title: blogForm.title,
+      excerpt: blogForm.excerpt,
+      author: blogForm.author,
+      date: blogForm.date,
+      readTime: blogForm.readTime,
+      image: blogForm.image,
+      category: blogForm.category,
+      content: blogForm.content,
+    };
+
+    const res = await fetch("/api/admin/blogs", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(blogData),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert("Blog updated successfully!");
+      setShowBlogForm(false);
+      setEditingItem(null);
+      setBlogForm({
+        id: "",
+        title: "",
+        excerpt: "",
+        author: "",
+        date: "",
+        readTime: "",
+        image: "",
+        category: "training",
+        content: "",
+      });
+      fetchData();
+    } else {
+      alert(`Error: ${data.error || 'Failed to update blog'}`);
+    }
+  } catch (error) {
+    console.error("Error updating blog:", error);
+    alert(`Failed to update blog: ${error.message}`);
+  }
+};
+
+const handleDeleteBlog = async (id) => {
+  if (!confirm("Are you sure you want to delete this blog?")) return;
+  try {
+    const res = await fetch(`/api/admin/blogs?id=${id}`, { 
+      method: "DELETE" 
+    });
+    const data = await res.json();
+    if (data.success) {
+      fetchData();
+    } else {
+      alert(`Error: ${data.error}`);
+    }
+  } catch (error) {
+    console.error("Error deleting blog:", error);
+    alert("Failed to delete blog. Please try again.");
+  }
+};
+
+const openEditBlog = (blog) => {
+  setEditingItem(blog);
+  setBlogForm({
+    id: blog.id,
+    title: blog.title || "",
+    excerpt: blog.excerpt || "",
+    author: blog.author || "",
+    date: blog.date || "",
+    readTime: blog.readTime || "",
+    image: blog.image || "",
+    category: blog.category || "training",
+    content: blog.content || "",
+  });
+  setShowBlogForm(true);
+};
 
   const filteredCoaches = coaches.filter(
     (coach) =>
