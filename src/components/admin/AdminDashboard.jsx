@@ -128,12 +128,13 @@ export default function AdminDashboard() {
     setStatsLoading(true)
     try {
       // Fetch all data for stats
-      const [usersRes, coachesRes, videosRes, programsRes, mealsRes] = await Promise.all([
+      const [usersRes, coachesRes, videosRes, programsRes, mealsRes, blogsRes] = await Promise.all([
         fetch("/api/admin/users"),
         fetch("/api/coaches"),
         fetch("/api/admin/videos"),
         fetch("/api/admin/programs"),
         fetch("/api/admin/meals"),
+        fetch("/api/admin/blogs"),
       ])
 
       const usersData = await usersRes.json()
@@ -141,12 +142,14 @@ export default function AdminDashboard() {
       const videosData = await videosRes.json()
       const programsData = await programsRes.json()
       const mealsData = await mealsRes.json()
+      const blogsData = await blogsRes.json()
 
       if (usersData.success) setUsers(usersData.users || [])
       if (coachesData.success) setCoaches(coachesData.coaches || [])
       if (videosData.success) setVideos(videosData.videos || [])
       if (programsData.success) setPrograms(programsData.programs || [])
       if (mealsData.success) setMeals(mealsData.meals || [])
+      if (blogsData.success) setBlogs(blogsData.blogs || [])
 
       
     } catch (error) {
