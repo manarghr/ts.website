@@ -960,7 +960,7 @@ export default function ProfilePage({ userId }) {
               <div className="flex gap-2 px-4 overflow-x-auto scrollbar-hide">
                 {[
                   { id: "overview", label: "Overview", icon: User },
-                  { id: "coaches", label: "Favorite Coaches", icon: Dumbbell },
+                  { id: "coaches", label: "Followed Coaches", icon: Dumbbell },
                   { id: "videos", label: "Liked Videos", icon: Video },
                   { id: "workouts", label: "Enrolled Workouts", icon: Calendar },
                   { id: "meals", label: "Favorite Meals", icon: UtensilsCrossed },
@@ -1300,7 +1300,7 @@ export default function ProfilePage({ userId }) {
               {activeTab === "coaches" && (
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-2xl font-bold text-slate-800">Favorite Coaches</h3>
+                    <h3 className="text-2xl font-bold text-slate-800">Followed Coaches</h3>
                     {isOwnProfile && (
                       <motion.button
                         onClick={() => handlePrivacyToggle("coaches")}
@@ -1362,7 +1362,7 @@ export default function ProfilePage({ userId }) {
                         >
                           <Dumbbell className="w-20 h-20 text-slate-300 mx-auto mb-4" />
                         </motion.div>
-                        <p className="text-slate-600 text-xl font-semibold mb-2">No favorite coaches yet</p>
+                        <p className="text-slate-600 text-xl font-semibold mb-2">No Followed Coaches yet</p>
                         {isOwnProfile && (
                           <p className="text-slate-400 text-sm">Start following coaches to see them here!</p>
                         )}

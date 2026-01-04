@@ -225,14 +225,17 @@ export default function CoachProfile({ coachId }) {
         if (!currentUser) return alert("Please log in to follow coaches");
         const user = JSON.parse(currentUser);
         const action = isFollowing ? "unfollow" : "follow";
+        
         const res = await fetch(`/api/coaches/${coachId}/follow`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: user.id, action }),
         });
+        
         if (!res.ok) throw new Error("Failed to update follow status");
         const data = await res.json();
         setIsFollowing(data.isFollowing);
+        
         if (coach) {
           setCoach({
             ...coach,
@@ -240,6 +243,44 @@ export default function CoachProfile({ coachId }) {
               ? (coach.followers_count || 0) + 1
               : Math.max(0, (coach.followers_count || 0) - 1),
           });
+        }
+
+        if (data.isFollowing) {
+          // Add coach to favoriteCoaches
+          const updatedUser = {
+            ...user,
+            favoriteCoaches: [
+              ...(user.favoriteCoaches || []),
+              {
+                id: coach.id,
+                name: coach.name,
+                category: coach.category,
+                image: coach.image_url || coach.image
+              }
+            ]
+          };
+          localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
+          
+          // Update in users array
+          const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
+          const updatedUsers = users.map(u => u.id === user.id ? updatedUser : u);
+          localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
+          
+          window.dispatchEvent(new Event("userUpdated"));
+        } else {
+          // Remove coach from favoriteCoaches
+          const updatedUser = {
+            ...user,
+            favoriteCoaches: (user.favoriteCoaches || []).filter(c => c.id !== coach.id)
+          };
+          localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
+          
+          // Update in users array
+          const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
+          const updatedUsers = users.map(u => u.id === user.id ? updatedUser : u);
+          localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
+          
+          window.dispatchEvent(new Event("userUpdated"));
         }
       }
     } catch (err) {
