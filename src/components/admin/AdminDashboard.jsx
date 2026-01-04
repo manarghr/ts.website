@@ -22,6 +22,9 @@ import {
   BarChart3,
   Cookie,
   BookOpen,
+  Clock, 
+  Check,
+  User,
 } from "lucide-react"
 import { motion } from "framer-motion"
 
@@ -1007,6 +1010,49 @@ const updateSection = (index, field, value) => {
     totalMeals: meals.length,
     totalBlogs: blogs.length,
   }
+
+  // Add state for pending blogs at the top
+  const [pendingBlogs, setPendingBlogs] = useState([]);
+
+  //load pending blogs
+  useEffect(() => {
+    const pending = JSON.parse(localStorage.getItem("trainsight_pending_blogs") || "[]");
+    setPendingBlogs(pending);
+  }, []);
+
+  // Add handlers for approve/reject
+  const handleApproveBlog = (blogId) => {
+    const pending = JSON.parse(localStorage.getItem("trainsight_pending_blogs") || "[]");
+    const blogToApprove = pending.find(b => b.id === blogId);
+    
+    if (blogToApprove) {
+      // Remove from pending
+      const updatedPending = pending.filter(b => b.id !== blogId);
+      localStorage.setItem("trainsight_pending_blogs", JSON.stringify(updatedPending));
+      
+      // Add to blogs
+      const existingBlogs = JSON.parse(localStorage.getItem("trainsight_blogs") || "[]");
+      const approvedBlog = { ...blogToApprove, status: "approved" };
+      delete approvedBlog.submittedBy;
+      delete approvedBlog.submittedAt;
+      existingBlogs.push(approvedBlog);
+      localStorage.setItem("trainsight_blogs", JSON.stringify(existingBlogs));
+      
+      setPendingBlogs(updatedPending);
+      setBlogs(existingBlogs);
+      alert("Blog approved and published!");
+    }
+  };
+
+  const handleRejectBlog = (blogId) => {
+    if (confirm("Are you sure you want to reject this blog submission?")) {
+      const pending = JSON.parse(localStorage.getItem("trainsight_pending_blogs") || "[]");
+      const updatedPending = pending.filter(b => b.id !== blogId);
+      localStorage.setItem("trainsight_pending_blogs", JSON.stringify(updatedPending));
+      setPendingBlogs(updatedPending);
+      alert("Blog rejected and removed from pending list.");
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-white relative overflow-hidden h-screen w-screen">
@@ -2444,6 +2490,22 @@ const updateSection = (index, field, value) => {
                 {/* Blogs Section */}
                 {activeSection === "blogs" && (
                   <div className="space-y-6">
+                    <button
+                      onClick={() => setActiveSection("pending-blogs")}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                        activeSection === "pending-blogs"
+                          ? "bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <Clock className="w-5 h-5" />
+                      Pending Blogs
+                      {pendingBlogs.length > 0 && (
+                        <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                          {pendingBlogs.length}
+                        </span>
+                      )}
+                    </button>
                     <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                       <div className="flex items-center justify-between mb-6">
                         <div>
@@ -2732,6 +2794,102 @@ const updateSection = (index, field, value) => {
                     )}
                   </div>
                 )}
+
+                {/* pending blogs section */}
+                {activeSection === "pending-blogs" && (
+                      <div className="space-y-6">
+                        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                          <div className="flex items-center justify-between mb-6">
+                            <div>
+                              <h2 className="text-xl font-bold text-[#354F52]">Pending Blog Submissions</h2>
+                              <div className="text-sm text-gray-600 mt-1">
+                                {pendingBlogs.length} blog{pendingBlogs.length !== 1 ? 's' : ''} awaiting review
+                              </div>
+                            </div>
+                          </div>
+
+                          {pendingBlogs.length > 0 ? (
+                            <div className="space-y-6">
+                              {pendingBlogs.map((blog) => (
+                                <div
+                                  key={blog.id}
+                                  className="bg-gradient-to-br from-slate-50 to-white rounded-xl border-2 border-gray-200 p-6 hover:shadow-lg transition-all"
+                                >
+                                  <div className="flex gap-6">
+                                    {blog.image && (
+                                      <div className="w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                                        <img
+                                          src={blog.image}
+                                          alt={blog.title}
+                                          className="w-full h-full object-cover"
+                                          onError={(e) => {
+                                            e.target.src = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800';
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                    <div className="flex-1">
+                                      <div className="flex items-start justify-between mb-3">
+                                        <div>
+                                          <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold mb-2 inline-block">
+                                            Pending Review
+                                          </span>
+                                          <h3 className="font-bold text-xl text-[#354F52] mb-2">{blog.title}</h3>
+                                          <p className="text-sm text-gray-600 mb-3">{blog.excerpt}</p>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                                        <span className="flex items-center gap-1">
+                                          <User className="w-4 h-4" />
+                                          {blog.author}
+                                        </span>
+                                        <span>•</span>
+                                        <span className="capitalize">{blog.category}</span>
+                                        {blog.readTime && (
+                                          <>
+                                            <span>•</span>
+                                            <span>{blog.readTime}</span>
+                                          </>
+                                        )}
+                                      </div>
+
+                                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                                        <p className="text-sm text-blue-800">
+                                          <strong>{blog.sections.length}</strong> section{blog.sections.length !== 1 ? 's' : ''} in this blog
+                                        </p>
+                                      </div>
+
+                                      <div className="flex gap-3">
+                                        <button
+                                          onClick={() => handleApproveBlog(blog.id)}
+                                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold"
+                                        >
+                                          <Check className="w-4 h-4" />
+                                          Approve & Publish
+                                        </button>
+                                        <button
+                                          onClick={() => handleRejectBlog(blog.id)}
+                                          className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-semibold"
+                                        >
+                                          <X className="w-4 h-4" />
+                                          Reject
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-12 text-gray-500">
+                              <Clock className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                              <p>No pending blog submissions</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                 {/* Programs Section */}
                 {activeSection === "programs" && (

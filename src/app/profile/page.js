@@ -29,6 +29,9 @@ import {
   Sun,
   Moon,
   Cookie,
+  Clock, 
+  Check, 
+  Plus
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -174,6 +177,40 @@ const AnimatedBackground = () => {
 };
 
 export default function ProfilePage({ userId }) {
+  const [showBlogSubmissionForm, setShowBlogSubmissionForm] = useState(false);
+  const [blogSubmissionForm, setBlogSubmissionForm] = useState({
+    title: "",
+    excerpt: "",
+    author: "",
+    readTime: "",
+    image: "",
+    category: "training",
+    sections: [{ title: "", content: "" }],
+  });
+
+  const addBlogSection = () => {
+  setBlogSubmissionForm({
+    ...blogSubmissionForm,
+    sections: [...blogSubmissionForm.sections, { title: "", content: "" }]
+    });
+  };
+
+  const removeBlogSection = (index) => {
+    setBlogSubmissionForm({
+      ...blogSubmissionForm,
+      sections: blogSubmissionForm.sections.filter((_, i) => i !== index)
+    });
+  };
+
+  const updateBlogSection = (index, field, value) => {
+    const updatedSections = [...blogSubmissionForm.sections];
+    updatedSections[index][field] = value;
+    setBlogSubmissionForm({
+      ...blogSubmissionForm,
+      sections: updatedSections
+    });
+  };
+
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("trainsight_current_user");
@@ -181,6 +218,48 @@ export default function ProfilePage({ userId }) {
     window.dispatchEvent(new Event("userLoggedOut"));
     // Force page reload to clear any cached images
     window.location.href = "/profile";
+  };
+
+
+  const handleSubmitBlog = async (e) => {
+    e.preventDefault();
+    
+    if (!currentUser) {
+      alert("Please log in to submit a blog");
+      return;
+    }
+
+    // Create blog submission with pending status
+    const blogSubmission = {
+      id: Date.now().toString(),
+      ...blogSubmissionForm,
+      author: blogSubmissionForm.author || currentUser.fullName,
+      date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      status: "pending",
+      submittedBy: currentUser.id,
+      submittedAt: new Date().toISOString(),
+    };
+
+    // Get existing pending blogs
+    const pendingBlogs = JSON.parse(localStorage.getItem("trainsight_pending_blogs") || "[]");
+    
+    // Add new submission
+    pendingBlogs.push(blogSubmission);
+    localStorage.setItem("trainsight_pending_blogs", JSON.stringify(pendingBlogs));
+
+    alert("Blog submitted successfully! It will be reviewed by an admin.");
+    
+    // Reset form
+    setBlogSubmissionForm({
+      title: "",
+      excerpt: "",
+      author: "",
+      readTime: "",
+      image: "",
+      category: "training",
+      sections: [{ title: "", content: "" }],
+    });
+    setShowBlogSubmissionForm(false);
   };
 
   const [currentUser, setCurrentUser] = useState(null);
@@ -985,6 +1064,37 @@ export default function ProfilePage({ userId }) {
               </div>
             </motion.div>
           </div>
+
+          {/* Submit Blog Button */}
+          {isOwnProfile && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="bg-gradient-to-r from-[#52796F] to-[#354F52] rounded-2xl p-6 shadow-2xl border border-white/30"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <Edit2 className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-1">Share Your Story</h3>
+                    <p className="text-white/80 text-sm">Write a blog post about your fitness journey</p>
+                  </div>
+                </div>
+                <motion.button
+                  onClick={() => setShowBlogSubmissionForm(true)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-white text-[#354F52] rounded-xl font-bold hover:shadow-xl transition-all flex items-center gap-2"
+                >
+                  <Edit2 className="w-5 h-5" />
+                  Submit Blog
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
 
           {/* Tabs Content */}
           <motion.div 
@@ -2063,6 +2173,210 @@ export default function ProfilePage({ userId }) {
           )}
         </div>
       </div>
+      {/* Blog Submission Form Modal */}
+      {showBlogSubmissionForm && (
+        <motion.div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowBlogSubmissionForm(false)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <div className="sticky top-0 bg-gradient-to-r from-[#354F52] to-[#52796F] p-6 rounded-t-3xl z-10">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                  <Edit2 className="w-7 h-7" />
+                  Submit Your Blog Post
+                </h3>
+                <motion.button
+                  onClick={() => setShowBlogSubmissionForm(false)}
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                >
+                  <X className="w-6 h-6" />
+                </motion.button>
+              </div>
+              <p className="text-white/80 text-sm mt-2">Your blog will be reviewed by our team before publishing</p>
+            </div>
+
+            <form onSubmit={handleSubmitBlog} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-bold mb-2 text-[#354F52]">Title *</label>
+                <input
+                  type="text"
+                  value={blogSubmissionForm.title}
+                  onChange={(e) => setBlogSubmissionForm({ ...blogSubmissionForm, title: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
+                  placeholder="Enter your blog title..."
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-2 text-[#354F52]">Excerpt *</label>
+                <textarea
+                  value={blogSubmissionForm.excerpt}
+                  onChange={(e) => setBlogSubmissionForm({ ...blogSubmissionForm, excerpt: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none resize-none transition-all"
+                  rows="3"
+                  placeholder="Brief description of your blog post..."
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2 text-[#354F52]">Author Name</label>
+                  <input
+                    type="text"
+                    value={blogSubmissionForm.author}
+                    onChange={(e) => setBlogSubmissionForm({ ...blogSubmissionForm, author: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
+                    placeholder={currentUser?.fullName || "Your name"}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Leave blank to use your profile name</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2 text-[#354F52]">Read Time</label>
+                  <input
+                    type="text"
+                    value={blogSubmissionForm.readTime}
+                    onChange={(e) => setBlogSubmissionForm({ ...blogSubmissionForm, readTime: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
+                    placeholder="e.g., 5 min read"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-2 text-[#354F52]">Category *</label>
+                <select
+                  value={blogSubmissionForm.category}
+                  onChange={(e) => setBlogSubmissionForm({ ...blogSubmissionForm, category: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
+                  required
+                >
+                  <option value="training">Training</option>
+                  <option value="nutrition">Nutrition</option>
+                  <option value="technology">Technology</option>
+                  <option value="wellness">Wellness</option>
+                  <option value="mindset">Mindset</option>
+                  <option value="progress">Progress</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-2 text-[#354F52]">Image URL</label>
+                <input
+                  type="text"
+                  value={blogSubmissionForm.image}
+                  onChange={(e) => setBlogSubmissionForm({ ...blogSubmissionForm, image: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all"
+                  placeholder="https://images.unsplash.com/..."
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-bold text-[#354F52]">Content Sections *</label>
+                  <motion.button
+                    type="button"
+                    onClick={addBlogSection}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="text-[#52796F] hover:text-[#354F52] font-bold text-sm flex items-center gap-1 bg-[#52796F]/10 px-3 py-1.5 rounded-lg"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Section
+                  </motion.button>
+                </div>
+                
+                <div className="space-y-4">
+                  {blogSubmissionForm.sections.map((section, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="border-2 border-gray-200 rounded-xl p-4 bg-gradient-to-br from-slate-50 to-white"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-[#354F52]">Section {index + 1}</span>
+                        {blogSubmissionForm.sections.length > 1 && (
+                          <motion.button
+                            type="button"
+                            onClick={() => removeBlogSection(index)}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Remove
+                          </motion.button>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 text-gray-600">Section Title</label>
+                          <input
+                            type="text"
+                            value={section.title}
+                            onChange={(e) => updateBlogSection(index, 'title', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#52796F] focus:border-transparent outline-none"
+                            placeholder="e.g., Introduction, Key Benefits..."
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 text-gray-600">Section Content</label>
+                          <textarea
+                            value={section.content}
+                            onChange={(e) => updateBlogSection(index, 'content', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#52796F] focus:border-transparent outline-none resize-none"
+                            rows="6"
+                            placeholder="Write the content for this section..."
+                            required
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t">
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white py-3 rounded-xl font-bold hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <Save className="w-5 h-5" />
+                  Submit for Review
+                </motion.button>
+                <motion.button
+                  type="button"
+                  onClick={() => setShowBlogSubmissionForm(false)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </motion.button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   )
 }
