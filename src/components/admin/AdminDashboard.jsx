@@ -1017,32 +1017,40 @@ const updateSection = (index, field, value) => {
   //load pending blogs
   useEffect(() => {
     // Fetch blogs
-    fetch('/api/blogs')
+    fetch('/api/admin/blogs')
       .then(res => res.json())
-      .then(data => setBlogs(data))
+      .then(data => {
+        if (data.success) {
+          setBlogs(data.blogs);
+        }
+      })
       .catch(err => console.error('Error fetching blogs:', err));
     
     // Fetch pending blogs
-    fetch('/api/blogs/pending')
+    fetch('/api/admin/blogs/pending')
       .then(res => res.json())
-      .then(data => setPendingBlogs(data))
+      .then(data => {
+        if (data.success) {
+          setPendingBlogs(data.blogs);
+        }
+      })
       .catch(err => console.error('Error fetching pending blogs:', err));
   }, []);
 
   // Add handlers for approve/reject
   const handleApproveBlog = async (blogId) => {
     try {
-      const response = await fetch(`/api/blogs/pending/${blogId}/approve`, {
+      const response = await fetch(`/api/admin/blogs/pending/${blogId}/approve`, {
         method: 'POST',
       });
 
-      if (!response.ok) throw new Error('Failed to approve blog');
+      const data = await response.json();
 
-      const approvedBlog = await response.json();
-      
+      if (!data.success) throw new Error(data.error || 'Failed to approve blog');
+
       // Update states
-      setPendingBlogs(prev => prev.filter(b => b._id !== blogId));
-      setBlogs(prev => [...prev, approvedBlog]);
+      setPendingBlogs(prev => prev.filter(b => b.id !== blogId));
+      setBlogs(prev => [...prev, data.blog]);
       
       alert("Blog approved and published!");
     } catch (error) {
@@ -1054,13 +1062,15 @@ const updateSection = (index, field, value) => {
   const handleRejectBlog = async (blogId) => {
     if (confirm("Are you sure you want to reject this blog submission?")) {
       try {
-        const response = await fetch(`/api/blogs/pending/${blogId}`, {
+        const response = await fetch(`/api/admin/blogs/pending/${blogId}`, {
           method: 'DELETE',
         });
 
-        if (!response.ok) throw new Error('Failed to reject blog');
+        const data = await response.json();
 
-        setPendingBlogs(prev => prev.filter(b => b._id !== blogId));
+        if (!data.success) throw new Error(data.error || 'Failed to reject blog');
+
+        setPendingBlogs(prev => prev.filter(b => b.id !== blogId));
         alert("Blog rejected and removed from pending list.");
       } catch (error) {
         console.error('Error rejecting blog:', error);

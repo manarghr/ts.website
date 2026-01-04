@@ -222,51 +222,48 @@ export default function ProfilePage({ userId }) {
 
 
   const handleSubmitBlog = async (e) => {
-  e.preventDefault();
-  
-  if (!currentUser) {
-    alert("Please log in to submit a blog");
-    return;
-  }
-
-  try {
-    const blogSubmission = {
-      ...blogSubmissionForm,
-      author: blogSubmissionForm.author || currentUser.fullName,
-      date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      status: "pending",
-      submittedBy: currentUser.id,
-      submittedAt: new Date().toISOString(),
-    };
-
-    const response = await fetch('/api/blogs/pending', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(blogSubmission),
-    });
-
-    if (!response.ok) throw new Error('Failed to submit blog');
-
-    alert("Blog submitted successfully! It will be reviewed by an admin.");
+    e.preventDefault();
     
-    // Reset form
-    setBlogSubmissionForm({
-      title: "",
-      excerpt: "",
-      author: "",
-      readTime: "",
-      image: "",
-      category: "training",
-      sections: [{ title: "", content: "" }],
-    });
-    setShowBlogSubmissionForm(false);
-  } catch (error) {
-    console.error('Error submitting blog:', error);
-    alert('Failed to submit blog. Please try again.');
-  }
-};
+    if (!currentUser) {
+      alert("Please log in to submit a blog");
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/blogs/pending', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...blogSubmissionForm,
+          author: blogSubmissionForm.author || currentUser.fullName,
+          submittedBy: currentUser.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) throw new Error(data.error || 'Failed to submit blog');
+
+      alert("Blog submitted successfully! It will be reviewed by an admin.");
+      
+      // Reset form
+      setBlogSubmissionForm({
+        title: "",
+        excerpt: "",
+        author: "",
+        readTime: "",
+        image: "",
+        category: "training",
+        sections: [{ title: "", content: "" }],
+      });
+      setShowBlogSubmissionForm(false);
+    } catch (error) {
+      console.error('Error submitting blog:', error);
+      alert('Failed to submit blog. Please try again.');
+    }
+  };
 
   const [currentUser, setCurrentUser] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
