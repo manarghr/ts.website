@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, User, Phone, Award, Briefcase, FileText, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function CoachAuthModal({ isOpen, onClose }) {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -49,34 +51,99 @@ export default function CoachAuthModal({ isOpen, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isLogin) {
-      // Handle coach login
-      const coaches = JSON.parse(localStorage.getItem("coaches") || "[]");
-      const coach = coaches.find(
-        (c) => c.email === formData.email && c.password === formData.password
-      );
-      if (coach) {
-        localStorage.setItem("currentCoach", JSON.stringify(coach));
-        alert("Welcome back, Coach " + coach.name + "!");
+    (async () => {
+      try {
+        if (isLogin) {
+          const res = await fetch("/api/coach/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email, password: formData.password }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Login failed");
+          // Ensure exclusivity: clear any user session
+          localStorage.removeItem("trainsight_current_user");
+          // Fetch coach details so navbar can show image/name immediately
+          try {
+            const me = await fetch("/api/coach/me", { cache: "no-store" });
+            const meData = await me.json().catch(() => ({}));
+            if (me.ok && meData?.coachId) {
+              localStorage.setItem(
+                "trainsight_current_coach",
+                JSON.stringify({
+                  coachId: meData.coachId,
+                  name: meData.coach?.name || "",
+                  image_url: meData.coach?.image_url || "",
+                })
+              );
+            } else {
+              localStorage.setItem("trainsight_current_coach", JSON.stringify({ coachId: data.coachId }));
+            }
+          } catch {
+            localStorage.setItem("trainsight_current_coach", JSON.stringify({ coachId: data.coachId }));
+          }
+          alert("Welcome back, Coach!");
+        } else {
+          // Optional: upload certificate image (if provided and is an image)
+          let certificateUrl = null;
+          if (formData.certificateFile && String(formData.certificateFile.type || "").startsWith("image/")) {
+            const fd = new FormData();
+            fd.append("file", formData.certificateFile);
+            const up = await fetch("/api/upload/image", { method: "POST", body: fd });
+            const upData = await up.json().catch(() => ({}));
+            if (up.ok && upData.imageUrl) certificateUrl = upData.imageUrl;
+          }
+
+          const res = await fetch("/api/coach/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: formData.name,
+              email: formData.email,
+              password: formData.password,
+              phone: formData.phone,
+              specialization: formData.specialization,
+              experience: formData.experience,
+              certification: formData.certification,
+              bio: formData.bio,
+              // store certificate as profile image if nothing else (simple MVP)
+              image_url: certificateUrl || "",
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Registration failed");
+          // Ensure exclusivity: clear any user session
+          localStorage.removeItem("trainsight_current_user");
+          // Fetch coach details so navbar can show image/name immediately
+          try {
+            const me = await fetch("/api/coach/me", { cache: "no-store" });
+            const meData = await me.json().catch(() => ({}));
+            if (me.ok && meData?.coachId) {
+              localStorage.setItem(
+                "trainsight_current_coach",
+                JSON.stringify({
+                  coachId: meData.coachId,
+                  name: meData.coach?.name || "",
+                  image_url: meData.coach?.image_url || "",
+                })
+              );
+            } else {
+              localStorage.setItem("trainsight_current_coach", JSON.stringify({ coachId: data.coachId }));
+            }
+          } catch {
+            localStorage.setItem("trainsight_current_coach", JSON.stringify({ coachId: data.coachId }));
+          }
+          alert("Coach profile created!");
+        }
+
         onClose();
-      } else {
-        alert("Invalid credentials. Please try again.");
+        router.push("/coach/dashboard");
+        router.refresh();
+      } catch (err) {
+        console.error(err);
+        alert(err.message || "Something went wrong");
       }
-    } else {
-      // Handle coach signup
-      const newCoach = {
-        id: Date.now(),
-        ...formData,
-        joinedDate: new Date().toISOString(),
-        status: "pending" // Pending approval
-      };
-      const coaches = JSON.parse(localStorage.getItem("coaches") || "[]");
-      coaches.push(newCoach);
-      localStorage.setItem("coaches", JSON.stringify(coaches));
-      localStorage.setItem("currentCoach", JSON.stringify(newCoach));
-      alert("Application submitted! We'll review your profile and get back to you soon.");
-      onClose();
-    }
+    })();
   };
 
   if (!isOpen) return null;
@@ -317,7 +384,6 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                             id="certificate-upload"
                             accept="image/*,.pdf"
                             onChange={handleFileChange}
-                            required
                             className="hidden"
                           />
                           <label

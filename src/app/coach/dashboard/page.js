@@ -1,0 +1,1383 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import MainLayout from "@/components/layout/MainLayout";
+
+function fmtErr(e) {
+  if (!e) return "Unknown error";
+  if (typeof e === "string") return e;
+  return e.message || "Unknown error";
+}
+
+export default function CoachDashboardPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [coachId, setCoachId] = useState(null);
+  const [coach, setCoach] = useState(null);
+  const [tab, setTab] = useState("profile"); // profile | announcements | programs | blogs | videos
+  const [err, setErr] = useState("");
+
+  // profile form
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("Strength");
+  const [bio, setBio] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // announcements
+  const [announcements, setAnnouncements] = useState([]);
+  const [annLoading, setAnnLoading] = useState(false);
+  const [annTitle, setAnnTitle] = useState("");
+  const [annDate, setAnnDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [annContent, setAnnContent] = useState("");
+  const [annSaving, setAnnSaving] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState({ title: "", date: "", content: "" });
+
+  // programs
+  const [programs, setPrograms] = useState([]);
+  const [programLoading, setProgramLoading] = useState(false);
+  const [programSaving, setProgramSaving] = useState(false);
+  const [programName, setProgramName] = useState("");
+  const [programDuration, setProgramDuration] = useState("");
+  const [programGoal, setProgramGoal] = useState("");
+  const [programPrice, setProgramPrice] = useState(0);
+  const [programDescription, setProgramDescription] = useState("");
+  const [programEditingId, setProgramEditingId] = useState(null);
+  const [programDraft, setProgramDraft] = useState({
+    name: "",
+    duration: "",
+    goal: "",
+    price: 0,
+    description: "",
+  });
+
+  // blogs
+  const [blogs, setBlogs] = useState([]);
+  const [blogLoading, setBlogLoading] = useState(false);
+  const [blogSaving, setBlogSaving] = useState(false);
+  const [blogTitle, setBlogTitle] = useState("");
+  const [blogExcerpt, setBlogExcerpt] = useState("");
+  const [blogCategory, setBlogCategory] = useState("training");
+  const [blogImage, setBlogImage] = useState("");
+  const [blogReadTime, setBlogReadTime] = useState("3 min read");
+  const [blogDate, setBlogDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [blogContent, setBlogContent] = useState("");
+  const [blogEditingId, setBlogEditingId] = useState(null);
+  const [blogDraft, setBlogDraft] = useState({
+    title: "",
+    excerpt: "",
+    category: "training",
+    image: "",
+    readTime: "3 min read",
+    date: "",
+    content: "",
+  });
+
+  // videos
+  const [videos, setVideos] = useState([]);
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [videoSaving, setVideoSaving] = useState(false);
+  const [videoTitle, setVideoTitle] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoThumb, setVideoThumb] = useState("");
+  const [videoDuration, setVideoDuration] = useState("");
+  const [videoEditingId, setVideoEditingId] = useState(null);
+  const [videoDraft, setVideoDraft] = useState({
+    title: "",
+    video_url: "",
+    thumbnail_url: "",
+    duration: "",
+  });
+
+  const profileDirty = useMemo(() => {
+    if (!coach) return false;
+    return (
+      name !== (coach.name || "") ||
+      category !== (coach.category || "Strength") ||
+      bio !== (coach.bio || "") ||
+      imageUrl !== (coach.image_url || "")
+    );
+  }, [coach, name, category, bio, imageUrl]);
+
+  const avatarUrl = coach?.image_url || "/placeholder.svg";
+
+  const loadMe = async () => {
+    setErr("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/coach/me", { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setCoachId(data.coachId);
+      setCoach(data.coach);
+
+      setName(data.coach?.name || "");
+      setCategory(data.coach?.category || "Strength");
+      setBio(data.coach?.bio || "");
+      setImageUrl(data.coach?.image_url || "");
+    } catch (e) {
+      setErr(fmtErr(e));
+      setCoachId(null);
+      setCoach(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAnnouncements = async () => {
+    setAnnLoading(true);
+    try {
+      const res = await fetch("/api/coach/announcements", { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setAnnouncements(Array.isArray(data.announcements) ? data.announcements : []);
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setAnnLoading(false);
+    }
+  };
+
+  const loadPrograms = async () => {
+    setProgramLoading(true);
+    try {
+      const res = await fetch("/api/coach/programs", { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setPrograms(Array.isArray(data.programs) ? data.programs : []);
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setProgramLoading(false);
+    }
+  };
+
+  const loadBlogs = async () => {
+    setBlogLoading(true);
+    try {
+      const res = await fetch("/api/coach/blogs", { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setBlogs(Array.isArray(data.blogs) ? data.blogs : []);
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setBlogLoading(false);
+    }
+  };
+
+  const loadVideos = async () => {
+    setVideoLoading(true);
+    try {
+      const res = await fetch("/api/coach/videos", { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setVideos(Array.isArray(data.videos) ? data.videos : []);
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setVideoLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMe();
+  }, []);
+
+  useEffect(() => {
+    if (!coachId) return;
+    if (tab === "announcements") loadAnnouncements();
+    if (tab === "programs") loadPrograms();
+    if (tab === "blogs") loadBlogs();
+    if (tab === "videos") loadVideos();
+  }, [tab, coachId]);
+
+  const logout = async () => {
+    try {
+      await fetch("/api/coach/auth/logout", { method: "POST" });
+    } finally {
+      router.push("/");
+      router.refresh();
+    }
+  };
+
+  const saveProfile = async () => {
+    setSavingProfile(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/coach/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          category,
+          bio,
+          image_url: imageUrl,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setCoach(data.coach);
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const createAnnouncement = async () => {
+    setAnnSaving(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/coach/announcements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: annTitle, content: annContent, date: annDate }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setAnnTitle("");
+      setAnnContent("");
+      await loadAnnouncements();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setAnnSaving(false);
+    }
+  };
+
+  const startEdit = (a) => {
+    setEditingId(a.id);
+    setEditDraft({ title: a.title || "", date: a.date || "", content: a.content || "" });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditDraft({ title: "", date: "", content: "" });
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    setAnnSaving(true);
+    setErr("");
+    try {
+      const res = await fetch(`/api/coach/announcements/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editDraft),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      cancelEdit();
+      await loadAnnouncements();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setAnnSaving(false);
+    }
+  };
+
+  const deleteAnnouncement = async (id) => {
+    if (!id) return;
+    if (!confirm("Delete this announcement?")) return;
+    setAnnSaving(true);
+    setErr("");
+    try {
+      const res = await fetch(`/api/coach/announcements/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      await loadAnnouncements();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setAnnSaving(false);
+    }
+  };
+
+  // -------- Programs CRUD --------
+  const createProgram = async () => {
+    setProgramSaving(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/coach/programs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: programName,
+          description: programDescription,
+          duration: programDuration,
+          goal: programGoal,
+          price: Number(programPrice || 0),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setProgramName("");
+      setProgramDescription("");
+      setProgramDuration("");
+      setProgramGoal("");
+      setProgramPrice(0);
+      await loadPrograms();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setProgramSaving(false);
+    }
+  };
+
+  const startProgramEdit = (p) => {
+    setProgramEditingId(p.id);
+    setProgramDraft({
+      name: p.name || "",
+      duration: p.duration || "",
+      goal: p.goal || "",
+      price: p.price || 0,
+      description: p.description || "",
+    });
+  };
+  const cancelProgramEdit = () => {
+    setProgramEditingId(null);
+    setProgramDraft({ name: "", duration: "", goal: "", price: 0, description: "" });
+  };
+  const saveProgramEdit = async () => {
+    if (!programEditingId) return;
+    setProgramSaving(true);
+    setErr("");
+    try {
+      const res = await fetch(`/api/coach/programs/${programEditingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(programDraft),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      cancelProgramEdit();
+      await loadPrograms();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setProgramSaving(false);
+    }
+  };
+  const deleteProgram = async (id) => {
+    if (!id) return;
+    if (!confirm("Delete this program?")) return;
+    setProgramSaving(true);
+    setErr("");
+    try {
+      const res = await fetch(`/api/coach/programs/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      await loadPrograms();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setProgramSaving(false);
+    }
+  };
+
+  // -------- Blogs CRUD --------
+  const createBlog = async () => {
+    setBlogSaving(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/coach/blogs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: blogTitle,
+          excerpt: blogExcerpt,
+          category: blogCategory,
+          image: blogImage,
+          readTime: blogReadTime,
+          date: blogDate,
+          content: blogContent,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setBlogTitle("");
+      setBlogExcerpt("");
+      setBlogContent("");
+      await loadBlogs();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setBlogSaving(false);
+    }
+  };
+
+  const startBlogEdit = (b) => {
+    setBlogEditingId(b.id);
+    setBlogDraft({
+      title: b.title || "",
+      excerpt: b.excerpt || "",
+      category: b.category || "training",
+      image: b.image || "",
+      readTime: b.readTime || "3 min read",
+      date: b.date || "",
+      content: b.sections?.[0]?.content || "",
+    });
+  };
+  const cancelBlogEdit = () => {
+    setBlogEditingId(null);
+    setBlogDraft({ title: "", excerpt: "", category: "training", image: "", readTime: "3 min read", date: "", content: "" });
+  };
+  const saveBlogEdit = async () => {
+    if (!blogEditingId) return;
+    setBlogSaving(true);
+    setErr("");
+    try {
+      const res = await fetch(`/api/coach/blogs/${blogEditingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(blogDraft),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      cancelBlogEdit();
+      await loadBlogs();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setBlogSaving(false);
+    }
+  };
+  const deleteBlog = async (id) => {
+    if (!id) return;
+    if (!confirm("Delete this blog post?")) return;
+    setBlogSaving(true);
+    setErr("");
+    try {
+      const res = await fetch(`/api/coach/blogs/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      await loadBlogs();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setBlogSaving(false);
+    }
+  };
+
+  // -------- Videos CRUD --------
+  const createVideo = async () => {
+    setVideoSaving(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/coach/videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: videoTitle,
+          video_url: videoUrl,
+          thumbnail_url: videoThumb,
+          duration: videoDuration,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setVideoTitle("");
+      setVideoUrl("");
+      setVideoThumb("");
+      setVideoDuration("");
+      await loadVideos();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setVideoSaving(false);
+    }
+  };
+  const startVideoEdit = (v) => {
+    setVideoEditingId(v.id);
+    setVideoDraft({
+      title: v.title || "",
+      video_url: v.video_url || "",
+      thumbnail_url: v.thumbnail_url || "",
+      duration: v.duration || "",
+    });
+  };
+  const cancelVideoEdit = () => {
+    setVideoEditingId(null);
+    setVideoDraft({ title: "", video_url: "", thumbnail_url: "", duration: "" });
+  };
+  const saveVideoEdit = async () => {
+    if (!videoEditingId) return;
+    setVideoSaving(true);
+    setErr("");
+    try {
+      const res = await fetch(`/api/coach/videos/${videoEditingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(videoDraft),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      cancelVideoEdit();
+      await loadVideos();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setVideoSaving(false);
+    }
+  };
+  const deleteVideo = async (id) => {
+    if (!id) return;
+    if (!confirm("Delete this video?")) return;
+    setVideoSaving(true);
+    setErr("");
+    try {
+      const res = await fetch(`/api/coach/videos/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      await loadVideos();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setVideoSaving(false);
+    }
+  };
+
+  return (
+    <MainLayout>
+      <div className="min-h-screen relative pb-16">
+        {/* Animated soft background */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#e8f0eb] via-[#f5f7f6] to-[#e2ebe4]" />
+          <div className="absolute -top-24 -left-16 w-[420px] h-[420px] bg-[#6BB371]/15 rounded-full blur-[140px]" />
+          <div className="absolute top-10 right-[-120px] w-[520px] h-[520px] bg-[#52796F]/12 rounded-full blur-[160px]" />
+          <div className="absolute bottom-[-160px] left-1/2 -translate-x-1/2 w-[620px] h-[620px] bg-[#354F52]/10 rounded-full blur-[200px]" />
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: `
+              linear-gradient(to right, rgba(53,79,82,0.08) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(53,79,82,0.08) 1px, transparent 1px)
+            `, backgroundSize: "70px 70px" }} />
+        </div>
+        <div className="max-w-6xl mx-auto px-4 md:px-10 pt-12">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#354F52]/10 text-[#354F52] text-xs font-semibold">
+                Coach Control Center
+              </div>
+              <h1 className="text-3xl md:text-4xl font-black text-[#354F52]">Coach Dashboard</h1>
+              <div className="text-sm text-gray-600">
+                {coachId ? (
+                  <span>
+                    Coach ID: <span className="font-semibold text-[#354F52]">{coachId}</span>{" "}
+                    <Link className="text-[#52796F] underline ml-2" href={`/coaches/${coachId}`}>
+                      View public profile
+                    </Link>
+                  </span>
+                ) : (
+                  <span>Log in as a coach to manage your profile.</span>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={logout}
+                className="px-4 py-2 rounded-xl bg-[#354F52] text-white font-semibold shadow-md hover:shadow-lg hover:bg-[#52796F] transition-all"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+
+          {coachId && (
+            <div className="mb-8">
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371] text-white shadow-2xl">
+                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(circle_at_20%_20%,#fff,transparent_25%),radial-gradient(circle_at_80%_0%,#fff,transparent_20%)]" />
+                <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/40 shadow-lg">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={avatarUrl} alt={coach?.name || "Coach"} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <div className="text-sm uppercase tracking-wide text-white/70 font-semibold">Coach</div>
+                      <div className="text-2xl font-bold">{coach?.name || "Coach"}</div>
+                      <div className="text-sm text-white/80">{coach?.category || "Fitness"}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 flex-wrap">
+                    <Link
+                      href={`/coaches/${coachId}`}
+                      className="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 transition-all border border-white/25 text-sm font-semibold shadow-md hover:shadow-lg"
+                    >
+                      View public profile
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="px-4 py-2 rounded-xl bg-white text-[#354F52] font-semibold shadow-md hover:shadow-lg transition-all"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="bg-white rounded-2xl shadow-lg border border-[#C8CDC5]/40 p-8">
+              <div className="text-gray-600">Loading…</div>
+            </div>
+          ) : !coachId ? (
+            <div className="bg-white rounded-2xl shadow-lg border border-[#C8CDC5]/40 p-8">
+              <div className="text-red-700 font-semibold mb-2">Coach session not found</div>
+              <div className="text-gray-700 mb-4">
+                Please go back to the home page and log in using the coach form.
+              </div>
+              {err && <div className="text-sm text-red-600">Error: {err}</div>}
+              <Link
+                href="/"
+                className="inline-flex px-5 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] transition-colors"
+              >
+                Go to Home
+              </Link>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-[240px_1fr] gap-6">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-[#d9e2dc] p-4 h-fit">
+                <button
+                  onClick={() => setTab("profile")}
+                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors ${
+                    tab === "profile" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
+                  }`}
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={() => setTab("announcements")}
+                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors mt-2 ${
+                    tab === "announcements" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
+                  }`}
+                >
+                  Announcements
+                </button>
+                <button
+                  onClick={() => setTab("programs")}
+                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors mt-2 ${
+                    tab === "programs" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
+                  }`}
+                >
+                  Programs
+                </button>
+                <button
+                  onClick={() => setTab("blogs")}
+                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors mt-2 ${
+                    tab === "blogs" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
+                  }`}
+                >
+                  Blogs
+                </button>
+                <button
+                  onClick={() => setTab("videos")}
+                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors mt-2 ${
+                    tab === "videos" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
+                  }`}
+                >
+                  Videos
+                </button>
+
+                {err && (
+                  <div className="mt-4 text-sm bg-red-50/70 border border-red-200 rounded-xl p-3 text-red-700">
+                    {err}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-[#d9e2dc] p-6 md:p-8">
+                {tab === "profile" && (
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#354F52] mb-6">Edit Profile</h2>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-semibold text-gray-700">Name</label>
+                        <input
+                          className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6BB371]"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold text-gray-700">Category</label>
+                        <select
+                          className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6BB371]"
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                        >
+                          {[
+                            "Strength",
+                            "Cardio",
+                            "Yoga",
+                            "Nutrition",
+                            "CrossFit",
+                            "Rehabilitation",
+                            "Sports Performance",
+                            "Personal Training",
+                          ].map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-semibold text-gray-700">Bio</label>
+                        <textarea
+                          rows={5}
+                          className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6BB371]"
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-semibold text-gray-700">Profile Image URL</label>
+                        <input
+                          className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6BB371]"
+                          value={imageUrl}
+                          onChange={(e) => setImageUrl(e.target.value)}
+                          placeholder="/uploads/..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex items-center gap-3">
+                      <button
+                        disabled={!profileDirty || savingProfile}
+                        onClick={saveProfile}
+                        className={`px-6 py-3 rounded-xl font-semibold transition-colors ${
+                          !profileDirty || savingProfile
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            : "bg-[#6BB371] text-white hover:bg-[#5FA361]"
+                        }`}
+                      >
+                        {savingProfile ? "Saving…" : "Save changes"}
+                      </button>
+                      {profileDirty && !savingProfile && (
+                        <div className="text-sm text-gray-600">You have unsaved changes.</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {tab === "announcements" && (
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-6">
+                      <h2 className="text-2xl font-bold text-[#354F52]">Announcements</h2>
+                      <button
+                        onClick={loadAnnouncements}
+                        className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    <div className="bg-[#C8CDC5]/10 border border-[#C8CDC5]/30 rounded-2xl p-5 mb-8">
+                      <h3 className="font-bold text-[#354F52] mb-3">Create new</h3>
+                      <div className="grid md:grid-cols-3 gap-3">
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          placeholder="Title"
+                          value={annTitle}
+                          onChange={(e) => setAnnTitle(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          type="date"
+                          value={annDate}
+                          onChange={(e) => setAnnDate(e.target.value)}
+                        />
+                        <button
+                          disabled={annSaving}
+                          onClick={createAnnouncement}
+                          className="px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
+                        >
+                          {annSaving ? "Saving…" : "Publish"}
+                        </button>
+                      </div>
+                      <textarea
+                        rows={4}
+                        className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
+                        placeholder="Content…"
+                        value={annContent}
+                        onChange={(e) => setAnnContent(e.target.value)}
+                      />
+                    </div>
+
+                    {annLoading ? (
+                      <div className="text-gray-600">Loading announcements…</div>
+                    ) : announcements.length === 0 ? (
+                      <div className="text-gray-600">No announcements yet.</div>
+                    ) : (
+                      <div className="space-y-4">
+                        {announcements.map((a) => (
+                          <div key={a.id} className="border border-[#C8CDC5]/40 rounded-2xl p-5">
+                            {editingId === a.id ? (
+                              <>
+                                <div className="grid md:grid-cols-3 gap-3">
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    value={editDraft.title}
+                                    onChange={(e) => setEditDraft((d) => ({ ...d, title: e.target.value }))}
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    type="date"
+                                    value={editDraft.date}
+                                    onChange={(e) => setEditDraft((d) => ({ ...d, date: e.target.value }))}
+                                  />
+                                  <div className="flex gap-2">
+                                    <button
+                                      disabled={annSaving}
+                                      onClick={saveEdit}
+                                      className="flex-1 px-4 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      disabled={annSaving}
+                                      onClick={cancelEdit}
+                                      className="flex-1 px-4 py-3 rounded-xl border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                                <textarea
+                                  rows={4}
+                                  className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
+                                  value={editDraft.content}
+                                  onChange={(e) => setEditDraft((d) => ({ ...d, content: e.target.value }))}
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between gap-4">
+                                  <div>
+                                    <div className="text-xl font-bold text-[#354F52]">{a.title}</div>
+                                    <div className="text-sm text-gray-500">{a.date}</div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => startEdit(a)}
+                                      className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => deleteAnnouncement(a.id)}
+                                      className="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="mt-3 text-gray-700 whitespace-pre-line">{a.content}</div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {tab === "programs" && (
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-6">
+                      <h2 className="text-2xl font-bold text-[#354F52]">Programs</h2>
+                      <button
+                        onClick={loadPrograms}
+                        className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    <div className="bg-[#C8CDC5]/10 border border-[#C8CDC5]/30 rounded-2xl p-5 mb-8">
+                      <h3 className="font-bold text-[#354F52] mb-3">Create new</h3>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          placeholder="Program name"
+                          value={programName}
+                          onChange={(e) => setProgramName(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          placeholder="Duration (e.g. 12 weeks)"
+                          value={programDuration}
+                          onChange={(e) => setProgramDuration(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          placeholder="Goal (e.g. weight_loss)"
+                          value={programGoal}
+                          onChange={(e) => setProgramGoal(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          type="number"
+                          placeholder="Price"
+                          value={programPrice}
+                          onChange={(e) => setProgramPrice(e.target.value)}
+                        />
+                      </div>
+                      <textarea
+                        rows={4}
+                        className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
+                        placeholder="Description…"
+                        value={programDescription}
+                        onChange={(e) => setProgramDescription(e.target.value)}
+                      />
+                      <button
+                        disabled={programSaving}
+                        onClick={createProgram}
+                        className="mt-3 px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
+                      >
+                        {programSaving ? "Saving…" : "Publish"}
+                      </button>
+                    </div>
+
+                    {programLoading ? (
+                      <div className="text-gray-600">Loading programs…</div>
+                    ) : programs.length === 0 ? (
+                      <div className="text-gray-600">No programs yet.</div>
+                    ) : (
+                      <div className="space-y-4">
+                        {programs.map((p) => (
+                          <div key={p.id} className="border border-[#C8CDC5]/40 rounded-2xl p-5">
+                            {programEditingId === p.id ? (
+                              <>
+                                <div className="grid md:grid-cols-2 gap-3">
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    value={programDraft.name}
+                                    onChange={(e) => setProgramDraft((d) => ({ ...d, name: e.target.value }))}
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    value={programDraft.duration}
+                                    onChange={(e) => setProgramDraft((d) => ({ ...d, duration: e.target.value }))}
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    value={programDraft.goal}
+                                    onChange={(e) => setProgramDraft((d) => ({ ...d, goal: e.target.value }))}
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    type="number"
+                                    value={programDraft.price}
+                                    onChange={(e) => setProgramDraft((d) => ({ ...d, price: e.target.value }))}
+                                  />
+                                </div>
+                                <textarea
+                                  rows={4}
+                                  className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
+                                  value={programDraft.description}
+                                  onChange={(e) => setProgramDraft((d) => ({ ...d, description: e.target.value }))}
+                                />
+                                <div className="mt-3 flex gap-2">
+                                  <button
+                                    disabled={programSaving}
+                                    onClick={saveProgramEdit}
+                                    className="px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    disabled={programSaving}
+                                    onClick={cancelProgramEdit}
+                                    className="px-6 py-3 rounded-xl border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between gap-4">
+                                  <div>
+                                    <div className="text-xl font-bold text-[#354F52]">{p.name}</div>
+                                    <div className="text-sm text-gray-500">
+                                      {p.duration ? `${p.duration} • ` : ""}
+                                      {p.goal ? `Goal: ${p.goal} • ` : ""}
+                                      ${p.price || 0}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => startProgramEdit(p)}
+                                      className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => deleteProgram(p.id)}
+                                      className="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="mt-3 text-gray-700 whitespace-pre-line">{p.description}</div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {tab === "blogs" && (
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-6">
+                      <h2 className="text-2xl font-bold text-[#354F52]">Blogs</h2>
+                      <button
+                        onClick={loadBlogs}
+                        className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    <div className="bg-[#C8CDC5]/10 border border-[#C8CDC5]/30 rounded-2xl p-5 mb-8">
+                      <h3 className="font-bold text-[#354F52] mb-3">Create new</h3>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          placeholder="Title"
+                          value={blogTitle}
+                          onChange={(e) => setBlogTitle(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          placeholder="Read time (e.g. 5 min read)"
+                          value={blogReadTime}
+                          onChange={(e) => setBlogReadTime(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          type="date"
+                          value={blogDate}
+                          onChange={(e) => setBlogDate(e.target.value)}
+                        />
+                        <select
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          value={blogCategory}
+                          onChange={(e) => setBlogCategory(e.target.value)}
+                        >
+                          {["training", "nutrition", "technology", "wellness", "mindset", "progress"].map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
+                          placeholder="Cover image URL"
+                          value={blogImage}
+                          onChange={(e) => setBlogImage(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
+                          placeholder="Excerpt"
+                          value={blogExcerpt}
+                          onChange={(e) => setBlogExcerpt(e.target.value)}
+                        />
+                      </div>
+                      <textarea
+                        rows={6}
+                        className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
+                        placeholder="Content…"
+                        value={blogContent}
+                        onChange={(e) => setBlogContent(e.target.value)}
+                      />
+                      <button
+                        disabled={blogSaving}
+                        onClick={createBlog}
+                        className="mt-3 px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
+                      >
+                        {blogSaving ? "Saving…" : "Publish"}
+                      </button>
+                    </div>
+
+                    {blogLoading ? (
+                      <div className="text-gray-600">Loading blog posts…</div>
+                    ) : blogs.length === 0 ? (
+                      <div className="text-gray-600">No blog posts yet.</div>
+                    ) : (
+                      <div className="space-y-4">
+                        {blogs.map((b) => (
+                          <div key={b.id} className="border border-[#C8CDC5]/40 rounded-2xl p-5">
+                            {blogEditingId === b.id ? (
+                              <>
+                                <div className="grid md:grid-cols-2 gap-3">
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    value={blogDraft.title}
+                                    onChange={(e) => setBlogDraft((d) => ({ ...d, title: e.target.value }))}
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    value={blogDraft.readTime}
+                                    onChange={(e) => setBlogDraft((d) => ({ ...d, readTime: e.target.value }))}
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    type="date"
+                                    value={blogDraft.date}
+                                    onChange={(e) => setBlogDraft((d) => ({ ...d, date: e.target.value }))}
+                                  />
+                                  <select
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    value={blogDraft.category}
+                                    onChange={(e) => setBlogDraft((d) => ({ ...d, category: e.target.value }))}
+                                  >
+                                    {["training", "nutrition", "technology", "wellness", "mindset", "progress"].map((c) => (
+                                      <option key={c} value={c}>
+                                        {c}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
+                                    value={blogDraft.image}
+                                    onChange={(e) => setBlogDraft((d) => ({ ...d, image: e.target.value }))}
+                                    placeholder="Cover image URL"
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
+                                    value={blogDraft.excerpt}
+                                    onChange={(e) => setBlogDraft((d) => ({ ...d, excerpt: e.target.value }))}
+                                    placeholder="Excerpt"
+                                  />
+                                </div>
+                                <textarea
+                                  rows={6}
+                                  className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
+                                  value={blogDraft.content}
+                                  onChange={(e) => setBlogDraft((d) => ({ ...d, content: e.target.value }))}
+                                />
+                                <div className="mt-3 flex gap-2">
+                                  <button
+                                    disabled={blogSaving}
+                                    onClick={saveBlogEdit}
+                                    className="px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    disabled={blogSaving}
+                                    onClick={cancelBlogEdit}
+                                    className="px-6 py-3 rounded-xl border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between gap-4">
+                                  <div>
+                                    <div className="text-xl font-bold text-[#354F52]">{b.title}</div>
+                                    <div className="text-sm text-gray-500">
+                                      {b.category ? `${b.category} • ` : ""}
+                                      {b.date || ""} • {b.readTime || ""}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => startBlogEdit(b)}
+                                      className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => deleteBlog(b.id)}
+                                      className="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="mt-3 text-gray-700">{b.excerpt}</div>
+                                <div className="mt-2 text-sm text-gray-500">
+                                  Public link:{" "}
+                                  <a className="text-[#52796F] underline" href={`/blog/${b.id}`}>
+                                    /blog/{b.id}
+                                  </a>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {tab === "videos" && (
+                  <div>
+                    <div className="flex items-center justify-between gap-4 mb-6">
+                      <h2 className="text-2xl font-bold text-[#354F52]">Videos</h2>
+                      <button
+                        onClick={loadVideos}
+                        className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    <div className="bg-[#C8CDC5]/10 border border-[#C8CDC5]/30 rounded-2xl p-5 mb-8">
+                      <h3 className="font-bold text-[#354F52] mb-3">Create new</h3>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          placeholder="Title"
+                          value={videoTitle}
+                          onChange={(e) => setVideoTitle(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl"
+                          placeholder="Duration (e.g. 8:30)"
+                          value={videoDuration}
+                          onChange={(e) => setVideoDuration(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
+                          placeholder="Video URL"
+                          value={videoUrl}
+                          onChange={(e) => setVideoUrl(e.target.value)}
+                        />
+                        <input
+                          className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
+                          placeholder="Thumbnail URL"
+                          value={videoThumb}
+                          onChange={(e) => setVideoThumb(e.target.value)}
+                        />
+                      </div>
+                      <button
+                        disabled={videoSaving}
+                        onClick={createVideo}
+                        className="mt-3 px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
+                      >
+                        {videoSaving ? "Saving…" : "Publish"}
+                      </button>
+                    </div>
+
+                    {videoLoading ? (
+                      <div className="text-gray-600">Loading videos…</div>
+                    ) : videos.length === 0 ? (
+                      <div className="text-gray-600">No videos yet.</div>
+                    ) : (
+                      <div className="space-y-4">
+                        {videos.map((v) => (
+                          <div key={v.id} className="border border-[#C8CDC5]/40 rounded-2xl p-5">
+                            {videoEditingId === v.id ? (
+                              <>
+                                <div className="grid md:grid-cols-2 gap-3">
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    value={videoDraft.title}
+                                    onChange={(e) => setVideoDraft((d) => ({ ...d, title: e.target.value }))}
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl"
+                                    value={videoDraft.duration}
+                                    onChange={(e) => setVideoDraft((d) => ({ ...d, duration: e.target.value }))}
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
+                                    value={videoDraft.video_url}
+                                    onChange={(e) => setVideoDraft((d) => ({ ...d, video_url: e.target.value }))}
+                                    placeholder="Video URL"
+                                  />
+                                  <input
+                                    className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
+                                    value={videoDraft.thumbnail_url}
+                                    onChange={(e) => setVideoDraft((d) => ({ ...d, thumbnail_url: e.target.value }))}
+                                    placeholder="Thumbnail URL"
+                                  />
+                                </div>
+                                <div className="mt-3 flex gap-2">
+                                  <button
+                                    disabled={videoSaving}
+                                    onClick={saveVideoEdit}
+                                    className="px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    disabled={videoSaving}
+                                    onClick={cancelVideoEdit}
+                                    className="px-6 py-3 rounded-xl border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex items-start justify-between gap-4">
+                                  <div>
+                                    <div className="text-xl font-bold text-[#354F52]">{v.title}</div>
+                                    <div className="text-sm text-gray-500">
+                                      {v.duration ? `${v.duration} • ` : ""}
+                                      views: {v.views || 0} • likes: {v.likes || 0}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => startVideoEdit(v)}
+                                      className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => deleteVideo(v.id)}
+                                      className="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="mt-3 text-sm text-gray-600 break-all">Video: {v.video_url}</div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
+
