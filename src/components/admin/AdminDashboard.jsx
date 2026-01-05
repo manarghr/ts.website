@@ -812,15 +812,33 @@ const handleUpdateMeal = async (e) => {
   }
   const openEditProgram = (program) => {
     setEditingItem(program)
+    // Ensure schedule items have proper structure
+    const normalizedSchedule = (program.schedule || []).map((day) => ({
+      day: day.day || `Day ${day.day || ""}`,
+      focus: day.focus || "",
+      exercises: Array.isArray(day.exercises) ? day.exercises : (day.exercises ? [day.exercises] : []),
+      notes: day.notes || ""
+    }))
+    // Ensure exercises is an array
+    const normalizedExercises = Array.isArray(program.exercises) 
+      ? program.exercises 
+      : (program.exercises ? [program.exercises] : [])
+    
     setProgramForm({
       name: program.name,
       description: program.description,
       duration: program.duration || "",
-      schedule: program.schedule || [],
-      exercises: program.exercises || [],
+      schedule: normalizedSchedule,
+      exercises: normalizedExercises,
       price: program.price || 0,
       discount: program.discount || false,
       discount_percentage: program.discount_percentage || 0,
+      goal: program.goal || "muscle_building",
+      level: program.level || "All Levels",
+      equipment: program.equipment || [],
+      coach_recommendation: program.coach_recommendation || "",
+      coach_id: program.coach_id || "",
+      overview: program.overview || "",
     })
     setShowProgramForm(true)
   }
@@ -3176,66 +3194,140 @@ const updateSection = (index, field, value) => {
                             </div>
                             <div>
                               <label className="block text-sm font-medium mb-1">
-                                Exercises (JSON Array or comma-separated)
+                                Exercises
                               </label>
-                              <textarea
+                              <input
+                                type="text"
                                 value={
                                   Array.isArray(programForm.exercises)
-                                    ? JSON.stringify(programForm.exercises, null, 2)
-                                    : programForm.exercises
+                                    ? programForm.exercises.join(", ")
+                                    : programForm.exercises || ""
                                 }
                                 onChange={(e) => {
-                                  try {
-                                    const parsed = JSON.parse(e.target.value)
-                                    if (Array.isArray(parsed)) {
-                                      setProgramForm({ ...programForm, exercises: parsed })
-                                    } else {
-                                      setProgramForm({
-                                        ...programForm,
-                                        exercises: e.target.value
-                                          .split(",")
-                                          .map((item) => item.trim())
-                                          .filter((item) => item),
-                                      })
-                                    }
-                                  } catch {
-                                    // If not valid JSON, treat as comma-separated
-                                    const exercises = e.target.value
-                                      .split(",")
-                                      .map((item) => item.trim())
-                                      .filter((item) => item)
-                                    setProgramForm({ ...programForm, exercises })
-                                  }
+                                  const exercises = e.target.value
+                                    .split(",")
+                                    .map((item) => item.trim())
+                                    .filter((item) => item)
+                                  setProgramForm({ ...programForm, exercises })
                                 }}
-                                className="w-full px-3 py-2 border rounded-lg font-mono text-sm"
-                                rows="4"
-                                placeholder='["Squats", "Deadlifts", "Bench Press"] or Squats, Deadlifts, Bench Press'
+                                className="w-full px-3 py-2 border rounded-lg"
+                                placeholder="e.g., Squats, Deadlifts, Bench Press, Rows"
                               />
-                              <p className="text-xs text-gray-500 mt-1">Enter as JSON array or comma-separated list</p>
+                              <p className="text-xs text-gray-500 mt-1">Enter exercises separated by commas</p>
                             </div>
                             <div>
-                              <label className="block text-sm font-medium mb-1">
-                                Schedule (JSON Array - Day-by-Day)
-                              </label>
-                              <textarea
-                                value={JSON.stringify(programForm.schedule, null, 2)}
-                                onChange={(e) => {
-                                  try {
-                                    const parsed = JSON.parse(e.target.value)
-                                    if (Array.isArray(parsed)) {
-                                      setProgramForm({ ...programForm, schedule: parsed })
-                                    }
-                                  } catch {
-                                    // Invalid JSON, keep as is
-                                  }
-                                }}
-                                className="w-full px-3 py-2 border rounded-lg font-mono text-sm"
-                                rows="8"
-                                placeholder={`[\n  {\n    "day": "Day 1",\n    "focus": "Upper Body",\n    "exercises": ["Bench Press", "Rows"],\n    "notes": "Focus on form"\n  },\n  {\n    "day": "Day 2",\n    "focus": "Lower Body",\n    "exercises": ["Squats", "Deadlifts"]\n  }\n]`}
-                              />
-                              <p className="text-xs text-gray-500 mt-1">
-                                Format: Array of objects with day, focus, exercises, and optional notes
-                              </p>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium">
+                                  Schedule (Day-by-Day)
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newSchedule = [...(programForm.schedule || []), {
+                                      day: `Day ${(programForm.schedule?.length || 0) + 1}`,
+                                      focus: "",
+                                      exercises: [],
+                                      notes: ""
+                                    }]
+                                    setProgramForm({ ...programForm, schedule: newSchedule })
+                                  }}
+                                  className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                  Add Day
+                                </button>
+                              </div>
+                              <div className="space-y-3">
+                                {programForm.schedule && programForm.schedule.length > 0 ? (
+                                  programForm.schedule.map((day, index) => (
+                                    <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                                      <div className="flex items-center justify-between mb-3">
+                                        <span className="text-sm font-medium text-gray-700">Day {index + 1}</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const newSchedule = programForm.schedule.filter((_, i) => i !== index)
+                                            setProgramForm({ ...programForm, schedule: newSchedule })
+                                          }}
+                                          className="text-red-600 hover:text-red-700"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-3">
+                                        <div>
+                                          <label className="block text-xs font-medium mb-1 text-gray-600">Day Name</label>
+                                          <input
+                                            type="text"
+                                            value={day.day || ""}
+                                            onChange={(e) => {
+                                              const newSchedule = [...programForm.schedule]
+                                              newSchedule[index] = { ...day, day: e.target.value }
+                                              setProgramForm({ ...programForm, schedule: newSchedule })
+                                            }}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            placeholder="e.g., Day 1, Monday, Week 1 Day 1"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs font-medium mb-1 text-gray-600">Focus</label>
+                                          <input
+                                            type="text"
+                                            value={day.focus || ""}
+                                            onChange={(e) => {
+                                              const newSchedule = [...programForm.schedule]
+                                              newSchedule[index] = { ...day, focus: e.target.value }
+                                              setProgramForm({ ...programForm, schedule: newSchedule })
+                                            }}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            placeholder="e.g., Upper Body, Lower Body, Cardio"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs font-medium mb-1 text-gray-600">Exercises</label>
+                                          <input
+                                            type="text"
+                                            value={
+                                              Array.isArray(day.exercises)
+                                                ? day.exercises.join(", ")
+                                                : day.exercises || ""
+                                            }
+                                            onChange={(e) => {
+                                              const exercises = e.target.value
+                                                .split(",")
+                                                .map((item) => item.trim())
+                                                .filter((item) => item)
+                                              const newSchedule = [...programForm.schedule]
+                                              newSchedule[index] = { ...day, exercises }
+                                              setProgramForm({ ...programForm, schedule: newSchedule })
+                                            }}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            placeholder="e.g., Bench Press, Rows, Bicep Curls"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs font-medium mb-1 text-gray-600">Notes (Optional)</label>
+                                          <textarea
+                                            value={day.notes || ""}
+                                            onChange={(e) => {
+                                              const newSchedule = [...programForm.schedule]
+                                              newSchedule[index] = { ...day, notes: e.target.value }
+                                              setProgramForm({ ...programForm, schedule: newSchedule })
+                                            }}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            rows="2"
+                                            placeholder="e.g., Focus on form, Rest 60 seconds between sets"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-center py-6 text-gray-400 text-sm border-2 border-dashed rounded-lg">
+                                    No schedule days added. Click "Add Day" to create a schedule.
+                                  </div>
+                                )}
+                              </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>

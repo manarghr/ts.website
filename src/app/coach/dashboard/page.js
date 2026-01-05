@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
 import Image from "next/image";
-import { Activity, Camera, Dumbbell, ExternalLink, Flame, Sparkles, Trophy } from "lucide-react";
+import { Activity, Camera, Dumbbell, ExternalLink, Flame, Sparkles, Trophy, Plus, Trash2, X } from "lucide-react";
 
 function fmtErr(e) {
   if (!e) return "Unknown error";
@@ -42,18 +42,23 @@ export default function CoachDashboardPage() {
   const [programs, setPrograms] = useState([]);
   const [programLoading, setProgramLoading] = useState(false);
   const [programSaving, setProgramSaving] = useState(false);
-  const [programName, setProgramName] = useState("");
-  const [programDuration, setProgramDuration] = useState("");
-  const [programGoal, setProgramGoal] = useState("");
-  const [programPrice, setProgramPrice] = useState(0);
-  const [programDescription, setProgramDescription] = useState("");
+  const [showProgramForm, setShowProgramForm] = useState(false);
   const [programEditingId, setProgramEditingId] = useState(null);
-  const [programDraft, setProgramDraft] = useState({
+  const [programForm, setProgramForm] = useState({
     name: "",
-    duration: "",
-    goal: "",
-    price: 0,
     description: "",
+    duration: "",
+    schedule: [],
+    exercises: [],
+    price: 0,
+    discount: false,
+    discount_percentage: 0,
+    goal: "muscle_building",
+    level: "All Levels",
+    equipment: [],
+    coach_recommendation: "",
+    coach_id: "",
+    overview: "",
   });
 
   // blogs
@@ -391,28 +396,35 @@ export default function CoachDashboardPage() {
   };
 
   // -------- Programs CRUD --------
-  const createProgram = async () => {
+  const createProgram = async (e) => {
+    e?.preventDefault();
     setProgramSaving(true);
     setErr("");
     try {
       const res = await fetch("/api/coach/programs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: programName,
-          description: programDescription,
-          duration: programDuration,
-          goal: programGoal,
-          price: Number(programPrice || 0),
-        }),
+        body: JSON.stringify(programForm),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      setProgramName("");
-      setProgramDescription("");
-      setProgramDuration("");
-      setProgramGoal("");
-      setProgramPrice(0);
+      setShowProgramForm(false);
+      setProgramForm({
+        name: "",
+        description: "",
+        duration: "",
+        schedule: [],
+        exercises: [],
+        price: 0,
+        discount: false,
+        discount_percentage: 0,
+        goal: "muscle_building",
+        level: "All Levels",
+        equipment: [],
+        coach_recommendation: "",
+        coach_id: "",
+        overview: "",
+      });
       await loadPrograms();
     } catch (e) {
       setErr(fmtErr(e));
@@ -421,21 +433,62 @@ export default function CoachDashboardPage() {
     }
   };
 
-  const startProgramEdit = (p) => {
-    setProgramEditingId(p.id);
-    setProgramDraft({
-      name: p.name || "",
-      duration: p.duration || "",
-      goal: p.goal || "",
-      price: p.price || 0,
-      description: p.description || "",
+  const openEditProgram = (program) => {
+    setProgramEditingId(program.id);
+    // Ensure schedule items have proper structure
+    const normalizedSchedule = (program.schedule || []).map((day) => ({
+      day: day.day || `Day ${day.day || ""}`,
+      focus: day.focus || "",
+      exercises: Array.isArray(day.exercises) ? day.exercises : (day.exercises ? [day.exercises] : []),
+      notes: day.notes || ""
+    }));
+    // Ensure exercises is an array
+    const normalizedExercises = Array.isArray(program.exercises) 
+      ? program.exercises 
+      : (program.exercises ? [program.exercises] : []);
+    
+    setProgramForm({
+      name: program.name,
+      description: program.description,
+      duration: program.duration || "",
+      schedule: normalizedSchedule,
+      exercises: normalizedExercises,
+      price: program.price || 0,
+      discount: program.discount || false,
+      discount_percentage: program.discount_percentage || 0,
+      goal: program.goal || "muscle_building",
+      level: program.level || "All Levels",
+      equipment: program.equipment || [],
+      coach_recommendation: program.coach_recommendation || "",
+      coach_id: program.coach_id || "",
+      overview: program.overview || "",
     });
+    setShowProgramForm(true);
   };
+
   const cancelProgramEdit = () => {
     setProgramEditingId(null);
-    setProgramDraft({ name: "", duration: "", goal: "", price: 0, description: "" });
+    setShowProgramForm(false);
+    setProgramForm({
+      name: "",
+      description: "",
+      duration: "",
+      schedule: [],
+      exercises: [],
+      price: 0,
+      discount: false,
+      discount_percentage: 0,
+      goal: "muscle_building",
+      level: "All Levels",
+      equipment: [],
+      coach_recommendation: "",
+      coach_id: "",
+      overview: "",
+    });
   };
-  const saveProgramEdit = async () => {
+
+  const saveProgramEdit = async (e) => {
+    e?.preventDefault();
     if (!programEditingId) return;
     setProgramSaving(true);
     setErr("");
@@ -443,7 +496,7 @@ export default function CoachDashboardPage() {
       const res = await fetch(`/api/coach/programs/${programEditingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(programDraft),
+        body: JSON.stringify(programForm),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -1155,57 +1208,39 @@ export default function CoachDashboardPage() {
                   <div>
                     <div className="flex items-center justify-between gap-4 mb-6">
                       <h2 className="text-2xl font-bold text-[#354F52]">Programs</h2>
-                      <button
-                        onClick={loadPrograms}
-                        className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
-                      >
-                        Refresh
-                      </button>
-                    </div>
-
-                    <div className="bg-[#C8CDC5]/10 border border-[#C8CDC5]/30 rounded-2xl p-5 mb-8">
-                      <h3 className="font-bold text-[#354F52] mb-3">Create new</h3>
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl"
-                          placeholder="Program name"
-                          value={programName}
-                          onChange={(e) => setProgramName(e.target.value)}
-                        />
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl"
-                          placeholder="Duration (e.g. 12 weeks)"
-                          value={programDuration}
-                          onChange={(e) => setProgramDuration(e.target.value)}
-                        />
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl"
-                          placeholder="Goal (e.g. weight_loss)"
-                          value={programGoal}
-                          onChange={(e) => setProgramGoal(e.target.value)}
-                        />
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl"
-                          type="number"
-                          placeholder="Price"
-                          value={programPrice}
-                          onChange={(e) => setProgramPrice(e.target.value)}
-                        />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setShowProgramForm(true);
+                            setProgramEditingId(null);
+                            setProgramForm({
+                              name: "",
+                              description: "",
+                              duration: "",
+                              schedule: [],
+                              exercises: [],
+                              price: 0,
+                              discount: false,
+                              discount_percentage: 0,
+                              goal: "muscle_building",
+                              level: "All Levels",
+                              equipment: [],
+                              coach_recommendation: "",
+                              coach_id: "",
+                              overview: "",
+                            });
+                          }}
+                          className="px-4 py-2 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] transition-all"
+                        >
+                          + Add Program
+                        </button>
+                        <button
+                          onClick={loadPrograms}
+                          className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                        >
+                          Refresh
+                        </button>
                       </div>
-                      <textarea
-                        rows={4}
-                        className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
-                        placeholder="Description…"
-                        value={programDescription}
-                        onChange={(e) => setProgramDescription(e.target.value)}
-                      />
-                      <button
-                        disabled={programSaving}
-                        onClick={createProgram}
-                        className="mt-3 px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
-                      >
-                        {programSaving ? "Saving…" : "Publish"}
-                      </button>
                     </div>
 
                     {programLoading ? (
@@ -1213,88 +1248,354 @@ export default function CoachDashboardPage() {
                     ) : programs.length === 0 ? (
                       <div className="text-gray-600">No programs yet.</div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {programs.map((p) => (
-                          <div key={p.id} className="border border-[#C8CDC5]/40 rounded-2xl p-5">
-                            {programEditingId === p.id ? (
-                              <>
-                                <div className="grid md:grid-cols-2 gap-3">
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl"
-                                    value={programDraft.name}
-                                    onChange={(e) => setProgramDraft((d) => ({ ...d, name: e.target.value }))}
-                                  />
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl"
-                                    value={programDraft.duration}
-                                    onChange={(e) => setProgramDraft((d) => ({ ...d, duration: e.target.value }))}
-                                  />
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl"
-                                    value={programDraft.goal}
-                                    onChange={(e) => setProgramDraft((d) => ({ ...d, goal: e.target.value }))}
-                                  />
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl"
-                                    type="number"
-                                    value={programDraft.price}
-                                    onChange={(e) => setProgramDraft((d) => ({ ...d, price: e.target.value }))}
-                                  />
-                                </div>
-                                <textarea
-                                  rows={4}
-                                  className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
-                                  value={programDraft.description}
-                                  onChange={(e) => setProgramDraft((d) => ({ ...d, description: e.target.value }))}
-                                />
-                                <div className="mt-3 flex gap-2">
-                                  <button
-                                    disabled={programSaving}
-                                    onClick={saveProgramEdit}
-                                    className="px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    disabled={programSaving}
-                                    onClick={cancelProgramEdit}
-                                    className="px-6 py-3 rounded-xl border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div className="flex items-start justify-between gap-4">
-                                  <div>
-                                    <div className="text-xl font-bold text-[#354F52]">{p.name}</div>
-                                    <div className="text-sm text-gray-500">
-                                      {p.duration ? `${p.duration} • ` : ""}
-                                      {p.goal ? `Goal: ${p.goal} • ` : ""}
-                                      ${p.price || 0}
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => startProgramEdit(p)}
-                                      className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => deleteProgram(p.id)}
-                                      className="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                </div>
-                                <div className="mt-3 text-gray-700 whitespace-pre-line">{p.description}</div>
-                              </>
-                            )}
+                          <div key={p.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all border border-gray-200">
+                            <h3 className="font-bold text-lg mb-2">{p.name}</h3>
+                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{p.description}</p>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-lg font-bold text-blue-600">
+                                $
+                                {p.discount
+                                  ? (p.price * (1 - p.discount_percentage / 100)).toFixed(2)
+                                  : p.price}
+                                {p.discount && (
+                                  <span className="text-xs text-gray-400 line-through ml-2">${p.price}</span>
+                                )}
+                              </span>
+                              {p.discount && (
+                                <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
+                                  {p.discount_percentage}% OFF
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => openEditProgram(p)}
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#52796F]/10 text-[#52796F] rounded hover:bg-[#52796F]/20 transition-colors"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteProgram(p.id)}
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Program Form Modal */}
+                    {showProgramForm && (
+                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-bold text-[#354F52]">
+                              {programEditingId ? "Edit Program" : "Add New Program"}
+                            </h3>
+                            <button
+                              onClick={cancelProgramEdit}
+                              className="text-gray-600 hover:text-gray-800"
+                            >
+                              <X className="w-6 h-6" />
+                            </button>
+                          </div>
+                          <form onSubmit={programEditingId ? saveProgramEdit : createProgram} className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Name *</label>
+                              <input
+                                type="text"
+                                value={programForm.name}
+                                onChange={(e) => setProgramForm({ ...programForm, name: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Description *</label>
+                              <textarea
+                                value={programForm.description}
+                                onChange={(e) => setProgramForm({ ...programForm, description: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                rows="4"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Duration</label>
+                              <input
+                                type="text"
+                                value={programForm.duration}
+                                onChange={(e) => setProgramForm({ ...programForm, duration: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                placeholder="e.g., 4 weeks, 12 weeks"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Goal</label>
+                                <select
+                                  value={programForm.goal}
+                                  onChange={(e) => setProgramForm({ ...programForm, goal: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                >
+                                  <option value="weight_loss">Weight Loss</option>
+                                  <option value="bulking">Bulking</option>
+                                  <option value="muscle_building">Muscle Building</option>
+                                  <option value="endurance">Endurance</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Level</label>
+                                <select
+                                  value={programForm.level}
+                                  onChange={(e) => setProgramForm({ ...programForm, level: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                >
+                                  <option value="Beginner">Beginner</option>
+                                  <option value="Intermediate">Intermediate</option>
+                                  <option value="Advanced">Advanced</option>
+                                  <option value="All Levels">All Levels</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Overview (Extended Description)</label>
+                              <textarea
+                                value={programForm.overview}
+                                onChange={(e) => setProgramForm({ ...programForm, overview: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                rows="3"
+                                placeholder="Additional detailed information about the program"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Equipment (comma-separated)</label>
+                              <input
+                                type="text"
+                                value={
+                                  Array.isArray(programForm.equipment)
+                                    ? programForm.equipment.join(", ")
+                                    : programForm.equipment || ""
+                                }
+                                onChange={(e) => {
+                                  const equipmentList = e.target.value
+                                    .split(",")
+                                    .map((item) => item.trim())
+                                    .filter((item) => item)
+                                  setProgramForm({ ...programForm, equipment: equipmentList })
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                placeholder="e.g., Dumbbells, Barbell, Bench, Resistance Bands"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">Enter equipment separated by commas</p>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Coach Recommendation</label>
+                              <textarea
+                                value={programForm.coach_recommendation}
+                                onChange={(e) =>
+                                  setProgramForm({ ...programForm, coach_recommendation: e.target.value })
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                rows="2"
+                                placeholder="Recommended coach or coaching style for this program"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Exercises</label>
+                              <input
+                                type="text"
+                                value={
+                                  Array.isArray(programForm.exercises)
+                                    ? programForm.exercises.join(", ")
+                                    : programForm.exercises || ""
+                                }
+                                onChange={(e) => {
+                                  const exercises = e.target.value
+                                    .split(",")
+                                    .map((item) => item.trim())
+                                    .filter((item) => item)
+                                  setProgramForm({ ...programForm, exercises })
+                                }}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                placeholder="e.g., Squats, Deadlifts, Bench Press, Rows"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">Enter exercises separated by commas</p>
+                            </div>
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-[#354F52]">
+                                  Schedule (Day-by-Day)
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newSchedule = [...(programForm.schedule || []), {
+                                      day: `Day ${(programForm.schedule?.length || 0) + 1}`,
+                                      focus: "",
+                                      exercises: [],
+                                      notes: ""
+                                    }]
+                                    setProgramForm({ ...programForm, schedule: newSchedule })
+                                  }}
+                                  className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                  Add Day
+                                </button>
+                              </div>
+                              <div className="space-y-3">
+                                {programForm.schedule && programForm.schedule.length > 0 ? (
+                                  programForm.schedule.map((day, index) => (
+                                    <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                                      <div className="flex items-center justify-between mb-3">
+                                        <span className="text-sm font-medium text-gray-700">Day {index + 1}</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const newSchedule = programForm.schedule.filter((_, i) => i !== index)
+                                            setProgramForm({ ...programForm, schedule: newSchedule })
+                                          }}
+                                          className="text-red-600 hover:text-red-700"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                      <div className="space-y-3">
+                                        <div>
+                                          <label className="block text-xs font-medium mb-1 text-gray-600">Day Name</label>
+                                          <input
+                                            type="text"
+                                            value={day.day || ""}
+                                            onChange={(e) => {
+                                              const newSchedule = [...programForm.schedule]
+                                              newSchedule[index] = { ...day, day: e.target.value }
+                                              setProgramForm({ ...programForm, schedule: newSchedule })
+                                            }}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            placeholder="e.g., Day 1, Monday, Week 1 Day 1"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs font-medium mb-1 text-gray-600">Focus</label>
+                                          <input
+                                            type="text"
+                                            value={day.focus || ""}
+                                            onChange={(e) => {
+                                              const newSchedule = [...programForm.schedule]
+                                              newSchedule[index] = { ...day, focus: e.target.value }
+                                              setProgramForm({ ...programForm, schedule: newSchedule })
+                                            }}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            placeholder="e.g., Upper Body, Lower Body, Cardio"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs font-medium mb-1 text-gray-600">Exercises</label>
+                                          <input
+                                            type="text"
+                                            value={
+                                              Array.isArray(day.exercises)
+                                                ? day.exercises.join(", ")
+                                                : day.exercises || ""
+                                            }
+                                            onChange={(e) => {
+                                              const exercises = e.target.value
+                                                .split(",")
+                                                .map((item) => item.trim())
+                                                .filter((item) => item)
+                                              const newSchedule = [...programForm.schedule]
+                                              newSchedule[index] = { ...day, exercises }
+                                              setProgramForm({ ...programForm, schedule: newSchedule })
+                                            }}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            placeholder="e.g., Bench Press, Rows, Bicep Curls"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs font-medium mb-1 text-gray-600">Notes (Optional)</label>
+                                          <textarea
+                                            value={day.notes || ""}
+                                            onChange={(e) => {
+                                              const newSchedule = [...programForm.schedule]
+                                              newSchedule[index] = { ...day, notes: e.target.value }
+                                              setProgramForm({ ...programForm, schedule: newSchedule })
+                                            }}
+                                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                                            rows="2"
+                                            placeholder="e.g., Focus on form, Rest 60 seconds between sets"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-center py-6 text-gray-400 text-sm border-2 border-dashed rounded-lg">
+                                    No schedule days added. Click "Add Day" to create a schedule.
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Price ($)</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={programForm.price}
+                                  onChange={(e) =>
+                                    setProgramForm({ ...programForm, price: Number.parseFloat(e.target.value) || 0 })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Discount %</label>
+                                <input
+                                  type="number"
+                                  value={programForm.discount_percentage}
+                                  onChange={(e) =>
+                                    setProgramForm({
+                                      ...programForm,
+                                      discount_percentage: Number.parseFloat(e.target.value) || 0,
+                                    })
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  disabled={!programForm.discount}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={programForm.discount}
+                                onChange={(e) => setProgramForm({ ...programForm, discount: e.target.checked })}
+                                className="w-4 h-4"
+                              />
+                              <label className="text-sm font-medium text-[#354F52]">Has Discount</label>
+                            </div>
+                            <div className="flex gap-3">
+                              <button
+                                type="submit"
+                                disabled={programSaving}
+                                className="flex-1 bg-[#6BB371] text-white py-2 rounded-lg hover:bg-[#5FA361] transition-colors disabled:opacity-50"
+                              >
+                                {programSaving ? "Saving…" : programEditingId ? "Update" : "Add"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelProgramEdit}
+                                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-[#354F52]"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        </div>
                       </div>
                     )}
                   </div>
