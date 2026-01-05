@@ -122,36 +122,211 @@ export async function getCoachAnnouncements(coachId) {
  * Get coach ratings/comments
  */
 export async function getCoachRatings(coachId, limit = 20) {
-  const ratingsCollection = await getCollection('coach_ratings');
-  return await ratingsCollection
-    .aggregate([
-      { $match: { coach_id: coachId } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'user_id',
-          foreignField: 'id',
-          as: 'user'
-        }
-      },
-      { $unwind: '$user' },
-      {
-        $project: {
-          _id: 0,
-          id: 1,
-          rating: 1,
-          comment: 1,
-          created_at: 1,
-          user: {
-            name: '$user.fullName',
-            id: '$user.id'
+  try {
+    const ratingsCollection = await getCollection('coach_ratings');
+    
+    // Try to get ratings with user lookup
+    const ratingsWithUsers = await ratingsCollection
+      .aggregate([
+        { $match: { coach_id: coachId } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: 'id',
+            as: 'user'
           }
+        },
+        {
+          $project: {
+            _id: 1,
+            id: 1,
+            rating: 1,
+            comment: 1,
+            user_name: 1,
+            created_at: 1,
+            user: {
+              $cond: {
+                if: { $gt: [{ $size: '$user' }, 0] },
+                then: { $arrayElemAt: ['$user', 0] },
+                else: null
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            id: 1,
+            rating: 1,
+            comment: 1,
+            created_at: 1,
+            user_name: {
+              $cond: {
+                if: '$user',
+                then: '$user.fullName',
+                else: '$user_name'
+              }
+            }
+          }
+        },
+        { $sort: { created_at: -1 } },
+        { $limit: limit }
+      ])
+      .toArray();
+    
+    return ratingsWithUsers;
+  } catch (error) {
+    console.error('Error fetching coach ratings:', error);
+    // Fallback to simple query if aggregation fails
+    const ratingsCollection = await getCollection('coach_ratings');
+    return await ratingsCollection
+      .find({ coach_id: coachId })
+      .sort({ created_at: -1 })
+      .limit(limit)
+      .toArray();
+  }
+}
+
+/**
+ * Add a new rating/review for a coach
+ */
+export async function addCoachRating(coachId, userId, userName, rating, comment) {
+  try {
+    const ratingsCollection = await getCollection('coach_ratings');
+    const coachesCollection = await getCollection('coaches');
+    
+    // Check if user already reviewed this coach
+    const existingReview = await ratingsCollection.findOne({
+      coach_id: coachId,
+      user_id: userId
+    });
+    
+    if (existingReview) {
+      // Update existing review
+      await ratingsCollection.updateOne(
+        { coach_id: coachId, user_id: userId },
+        {
+          $set: {
+            rating: parseInt(rating),
+            comment: comment.trim(),
+            updated_at: new Date(),
+          },
         }
-      },
-      { $sort: { created_at: -1 } },
-      { $limit: limit }
-    ])
-    .toArray();
+      );
+    } else {
+      // Create new review
+      await ratingsCollection.insertOne({
+        coach_id: coachId,
+        user_id: userId,
+        user_name: userName,
+        rating: parseInt(rating),
+        comment: comment.trim(),
+        created_at: new Date(),
+      });
+    }
+    
+    // Recalculate average rating
+    const allRatings = await ratingsCollection
+      .find({ coach_id: coachId })
+      .toArray();
+    
+    const avgRating = 
+      allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
+    
+    // Update coach document with new average
+    await coachesCollection.updateOne(
+      { id: coachId },
+      {
+        $set: {
+          rating: Math.round(avgRating * 10) / 10,
+          total_ratings: allRatings.length,
+          updated_at: new Date(),
+        },
+      }
+    );
+    
+    return {
+      success: true,
+      newRating: Math.round(avgRating * 10) / 10,
+      totalRatings: allRatings.length,
+    };
+  } catch (error) {
+    console.error('Error adding coach rating:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a rating/review
+ */
+export async function deleteCoachRating(coachId, userId) {
+  try {
+    const ratingsCollection = await getCollection('coach_ratings');
+    const coachesCollection = await getCollection('coaches');
+    
+    await ratingsCollection.deleteOne({
+      coach_id: coachId,
+      user_id: userId,
+    });
+    
+    // Recalculate average rating
+    const allRatings = await ratingsCollection
+      .find({ coach_id: coachId })
+      .toArray();
+    
+    if (allRatings.length > 0) {
+      const avgRating = 
+        allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
+      
+      await coachesCollection.updateOne(
+        { id: coachId },
+        {
+          $set: {
+            rating: Math.round(avgRating * 10) / 10,
+            total_ratings: allRatings.length,
+            updated_at: new Date(),
+          },
+        }
+      );
+    } else {
+      // No more ratings
+      await coachesCollection.updateOne(
+        { id: coachId },
+        {
+          $set: {
+            rating: 0,
+            total_ratings: 0,
+            updated_at: new Date(),
+          },
+        }
+      );
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting coach rating:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get a specific user's review for a coach
+ */
+export async function getUserReviewForCoach(coachId, userId) {
+  try {
+    const ratingsCollection = await getCollection('coach_ratings');
+    
+    const review = await ratingsCollection.findOne({
+      coach_id: coachId,
+      user_id: userId
+    });
+    
+    return review;
+  } catch (error) {
+    console.error('Error fetching user review:', error);
+    return null;
+  }
 }
 
 /**
@@ -215,4 +390,3 @@ export async function toggleFollow(userId, coachId, action) {
     return { isFollowing: false, message: 'Successfully unfollowed' };
   }
 }
-

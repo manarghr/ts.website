@@ -11,7 +11,6 @@ import {
 
 export async function GET(request, { params }) {
   try {
-    // ✅ FIX
     const { id } = await params;
 
     if (!id) {
@@ -54,7 +53,7 @@ export async function GET(request, { params }) {
       })),
 
       videos: videos.map(video => ({
-        id: video._id?.toString(),
+        id: video._id?.toString() || video.id,
         title: video.title,
         thumbnail: video.thumbnail_url || video.thumbnailUrl,
         video_url: video.video_url || video.videoUrl,
@@ -64,7 +63,7 @@ export async function GET(request, { params }) {
       })),
 
       announcements: announcements.map(a => ({
-        id: a._id?.toString(),
+        id: a._id?.toString() || a.id,
         title: a.title,
         content: a.content,
         date: a.date,
@@ -72,7 +71,8 @@ export async function GET(request, { params }) {
 
       comments: ratings.map(r => ({
         id: r.id || r._id?.toString(),
-        user: r.user?.name || 'Anonymous',
+        userId: r.user_id, // Add userId for deletion check
+        user: r.user_name || 'Anonymous',
         rating: r.rating,
         text: r.comment || '',
         date: r.created_at

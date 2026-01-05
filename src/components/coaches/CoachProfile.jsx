@@ -163,6 +163,13 @@ export default function CoachProfile({ coachId }) {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userHasReviewed, setUserHasReviewed] = useState(false);
+  const [userReviewId, setUserReviewId] = useState(null);
 
   const categoryIcons = {
     Strength: <FaDumbbell />,
@@ -171,12 +178,26 @@ export default function CoachProfile({ coachId }) {
   };
 
   useEffect(() => {
-  fetchCoachData();
-  checkFollowStatus();
-  
-  // Listen for storage changes and user updates
-  const handleStorageChange = () => {
+    // Check if user is logged in
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem("trainsight_current_user");
+      if (user) {
+        setCurrentUser(JSON.parse(user));
+      }
+    }
+
+    fetchCoachData();
     checkFollowStatus();
+    
+    // Listen for storage changes and user updates
+    const handleStorageChange = () => {
+      checkFollowStatus();
+      const user = localStorage.getItem("trainsight_current_user");
+      if (user) {
+        setCurrentUser(JSON.parse(user));
+      } else {
+        setCurrentUser(null);
+      }
     };
     
     window.addEventListener("storage", handleStorageChange);
@@ -187,7 +208,6 @@ export default function CoachProfile({ coachId }) {
       window.removeEventListener("userUpdated", handleStorageChange);
     };
   }, [coachId]);
-
 
   const fetchCoachData = async () => {
     try {
@@ -205,6 +225,18 @@ export default function CoachProfile({ coachId }) {
         followers_count: data.followers_count ?? 0,
         following_count: data.following_count ?? 0,
       });
+      
+      // Check if current user has already reviewed
+      if (currentUser) {
+        const userReview = data.comments.find(c => c.userId === currentUser.id);
+        if (userReview) {
+          setUserHasReviewed(true);
+          setUserReviewId(userReview.id);
+        } else {
+          setUserHasReviewed(false);
+          setUserReviewId(null);
+        }
+      }
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -340,6 +372,119 @@ export default function CoachProfile({ coachId }) {
       if (!res.ok) throw new Error("Failed to submit report");
       alert("Report submitted. Thank you.");
       setShowReportModal(false);
+    }
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    
+    if (!currentUser) {
+      alert("Please log in to leave a review");
+      return;
+    }
+
+    if (reviewRating === 0) {
+      alert("Please select a rating");
+      return;
+    }
+
+    if (!reviewComment.trim()) {
+      alert("Please write a comment");
+      return;
+    }
+
+    if (reviewComment.trim().length < 10) {
+      alert("Review must be at least 10 characters long");
+      return;
+    }
+
+    setSubmittingReview(true);
+
+    try {
+      console.log("Submitting review with data:", {
+        userId: currentUser.id,
+        userName: currentUser.fullName || currentUser.name,
+        rating: reviewRating,
+        comment: reviewComment,
+      });
+
+      const res = await fetch(`/api/coaches/${coachId}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          userName: currentUser.fullName || currentUser.name || "Anonymous",
+          rating: reviewRating,
+          comment: reviewComment,
+        }),
+      });
+
+      console.log("Response status:", res.status);
+      
+      const data = await res.json();
+      console.log("Response data:", data);
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to submit review");
+      }
+      
+      // Refresh coach data to get updated reviews and rating
+      await fetchCoachData();
+
+      // Reset form
+      setReviewRating(0);
+      setReviewComment("");
+      setUserHasReviewed(true);
+      
+      alert("Review submitted successfully!");
+    } catch (err) {
+      console.error("Review submission error:", err);
+      alert(`Failed to submit review: ${err.message}`);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleDeleteReview = async () => {
+    if (!currentUser) {
+      alert("Please log in to delete your review");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete your review?")) {
+      return;
+    }
+
+    try {
+      console.log("Deleting review for user:", currentUser.id);
+
+      const res = await fetch(`/api/coaches/${coachId}/review`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser.id,
+        }),
+      });
+
+      console.log("Delete response status:", res.status);
+      
+      const data = await res.json();
+      console.log("Delete response data:", data);
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete review");
+      }
+      
+      // Refresh coach data to get updated reviews and rating
+      await fetchCoachData();
+      
+      setUserHasReviewed(false);
+      setUserReviewId(null);
+      
+      alert("Review deleted successfully!");
+    } catch (err) {
+      console.error("Review deletion error:", err);
+      alert(`Failed to delete review: ${err.message}`);
     }
   };
 
@@ -622,34 +767,138 @@ export default function CoachProfile({ coachId }) {
 
         {activeTab === "reviews" && (
           <div>
-            <h2 className="text-3xl font-bold text-[#354F52] mb-6">Comments & Ratings</h2>
+            <h2 className="text-3xl font-bold text-[#354F52] mb-6">Reviews & Ratings</h2>
+
+            {/* Add Review Form - Only show if logged in and hasn't reviewed yet */}
+            {currentUser && !userHasReviewed ? (
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 mb-8">
+                <h3 className="text-xl font-bold text-[#354F52] mb-4">Leave a Review</h3>
+                <form onSubmit={handleSubmitReview}>
+                  {/* Star Rating */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Your Rating
+                    </label>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewRating(star)}
+                          className="focus:outline-none transition-transform hover:scale-110"
+                        >
+                          <FaStar
+                            size={32}
+                            className={
+                              star <= reviewRating
+                                ? "text-yellow-400"
+                                : "text-gray-300"
+                            }
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Comment Text Area */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Your Review
+                    </label>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      className="w-full h-32 p-4 border border-gray-300 rounded-lg focus:outline-none focus:border-[#354F52] resize-none"
+                      placeholder="Share your experience with this coach..."
+                      required
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={submittingReview || reviewRating === 0 || !reviewComment.trim()}
+                    className="w-full py-3 bg-[#354F52] text-white font-semibold rounded-lg hover:bg-[#52796F] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submittingReview ? "Submitting..." : "Submit Review"}
+                  </button>
+                </form>
+              </div>
+            ) : currentUser && userHasReviewed ? (
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 mb-8">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#354F52] mb-2">You've already reviewed this coach</h3>
+                    <p className="text-gray-600">You can delete your review below if you'd like to change it.</p>
+                  </div>
+                  <button
+                    onClick={handleDeleteReview}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                  >
+                    Delete My Review
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 mb-8 text-center">
+                <p className="text-gray-600 mb-4">Please log in to leave a review</p>
+                <button
+                  onClick={() => router.push("/signin")}
+                  className="px-6 py-3 bg-[#354F52] text-white rounded-lg hover:bg-[#52796F] transition-colors"
+                >
+                  Sign In
+                </button>
+              </div>
+            )}
+
+            {/* Display Reviews */}
+            <h3 className="text-2xl font-bold text-[#354F52] mb-4">
+              All Reviews ({coach.comments?.length || 0})
+            </h3>
             {coach.comments?.length ? (
               <div className="space-y-4">
                 {coach.comments.map((c) => (
                   <div key={c.id} className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50">
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center text-white font-bold">
-                          {(c.user || "A")[0]}
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          {(c.user || "A")[0].toUpperCase()}
                         </div>
-                        <div>
-                          <div className="font-semibold text-[#354F52]">{c.user || "Anonymous"}</div>
-                          <div className="flex items-center gap-1">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div className="font-semibold text-[#354F52] text-lg">{c.user || "Anonymous"}</div>
+                            {/* Delete button - only show for user's own review */}
+                            {currentUser && c.userId === currentUser.id && (
+                              <button
+                                onClick={handleDeleteReview}
+                                className="px-3 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors font-semibold"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 mt-1">
                             {[...Array(5)].map((_, i) => (
-                              <FaStar key={i} className={i < (c.rating || 0) ? "text-yellow-400" : "text-gray-300"} size={14} />
+                              <FaStar 
+                                key={i} 
+                                className={i < (c.rating || 0) ? "text-yellow-400" : "text-gray-300"} 
+                                size={16} 
+                              />
                             ))}
+                            <span className="ml-2 text-sm text-gray-600">({c.rating}/5)</span>
                           </div>
                         </div>
                       </div>
-                      <span className="text-sm text-gray-500">{c.date}</span>
+                      <span className="text-sm text-gray-500 ml-4">{c.date}</span>
                     </div>
-                    <p className="text-gray-700">{c.text}</p>
+                    <p className="text-gray-700 leading-relaxed">{c.text}</p>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-12 bg-white rounded-xl shadow-lg border border-[#C8CDC5]/50">
-                <p className="text-gray-600">No reviews yet</p>
+                <FaStar className="text-gray-400 mx-auto mb-4" size={48} />
+                <p className="text-gray-600">No reviews yet. Be the first to review!</p>
               </div>
             )}
           </div>
@@ -725,4 +974,3 @@ export default function CoachProfile({ coachId }) {
     </div>
   );
 }
-
