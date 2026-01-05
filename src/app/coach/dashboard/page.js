@@ -18,7 +18,6 @@ export default function CoachDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [coachId, setCoachId] = useState(null);
   const [coach, setCoach] = useState(null);
-  const [isLocalCoach, setIsLocalCoach] = useState(false);
   const [tab, setTab] = useState("profile"); // profile | announcements | programs | blogs | videos
   const [err, setErr] = useState("");
 
@@ -61,22 +60,17 @@ export default function CoachDashboardPage() {
   const [blogs, setBlogs] = useState([]);
   const [blogLoading, setBlogLoading] = useState(false);
   const [blogSaving, setBlogSaving] = useState(false);
-  const [blogTitle, setBlogTitle] = useState("");
-  const [blogExcerpt, setBlogExcerpt] = useState("");
-  const [blogCategory, setBlogCategory] = useState("training");
-  const [blogImage, setBlogImage] = useState("");
-  const [blogReadTime, setBlogReadTime] = useState("3 min read");
-  const [blogDate, setBlogDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [blogContent, setBlogContent] = useState("");
-  const [blogEditingId, setBlogEditingId] = useState(null);
-  const [blogDraft, setBlogDraft] = useState({
+  const [showBlogForm, setShowBlogForm] = useState(false);
+  const [blogForm, setBlogForm] = useState({
+    id: "",
     title: "",
     excerpt: "",
-    category: "training",
-    image: "",
-    readTime: "3 min read",
+    author: "",
     date: "",
-    content: "",
+    readTime: "",
+    image: "",
+    category: "training",
+    sections: [{ title: "", content: "" }],
   });
 
   // videos
@@ -87,6 +81,9 @@ export default function CoachDashboardPage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [videoThumb, setVideoThumb] = useState("");
   const [videoDuration, setVideoDuration] = useState("");
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState("");
   const [videoEditingId, setVideoEditingId] = useState(null);
   const [videoDraft, setVideoDraft] = useState({
     title: "",
@@ -108,7 +105,7 @@ export default function CoachDashboardPage() {
   const avatarUrl = coach?.image_url || "/placeholder.svg";
   const effectivePreviewImage = imageUrl || coach?.image_url || "";
 
-  const handleProfileImageUpload = (e) => {
+  const handleProfileImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -122,25 +119,54 @@ export default function CoachDashboardPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result;
-      setImageUrl(typeof base64 === "string" ? base64 : "");
-    };
-    reader.readAsDataURL(file);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload/image", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.success) throw new Error(data.error || "Failed to upload image");
+      setImageUrl(data.imageUrl || "");
+    } catch (err) {
+      alert(err?.message || "Failed to upload image");
+    }
   };
 
-  const persistLocalCoach = (updatedCoach) => {
+  const handleVideoFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+    if (!validTypes.includes(file.type)) {
+      alert("Please upload a video file (MP4, WebM, OGG, MOV, or AVI)");
+      return;
+    }
+
+    // Validate file size (max 500MB)
+    if (file.size > 500 * 1024 * 1024) {
+      alert("Video size should be less than 500MB");
+      return;
+    }
+
+    setVideoFile(file);
+    setVideoUploading(true);
+    setVideoUploadProgress("Uploading video...");
+
     try {
-      localStorage.setItem("currentCoach", JSON.stringify(updatedCoach));
-      const coaches = JSON.parse(localStorage.getItem("coaches") || "[]");
-      const updated = Array.isArray(coaches)
-        ? coaches.map((c) => (c?.id === updatedCoach?.id ? updatedCoach : c))
-        : [];
-      localStorage.setItem("coaches", JSON.stringify(updated));
-      window.dispatchEvent(new Event("coachUpdated"));
-    } catch (_) {
-      // ignore
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload/video", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.success) throw new Error(data.error || "Failed to upload video");
+      setVideoUrl(data.videoUrl || "");
+      setVideoUploadProgress("Video uploaded successfully!");
+      setTimeout(() => setVideoUploadProgress(""), 3000);
+    } catch (err) {
+      alert(err?.message || "Failed to upload video");
+      setVideoUploadProgress("");
+      setVideoFile(null);
+    } finally {
+      setVideoUploading(false);
     }
   };
 
@@ -166,7 +192,6 @@ export default function CoachDashboardPage() {
         throw new Error(data.error || `HTTP ${res.status}`);
       }
       const data = await res.json();
-      setIsLocalCoach(false);
       setCoachId(data.coachId);
       setCoach(data.coach);
 
@@ -175,39 +200,9 @@ export default function CoachDashboardPage() {
       setBio(data.coach?.bio || "");
       setImageUrl(data.coach?.image_url || "");
     } catch (e) {
-      // Fallback to localStorage-based coach session (used by CoachAuthModal)
-      try {
-        const raw = localStorage.getItem("currentCoach");
-        if (!raw) throw e;
-        const stored = JSON.parse(raw);
-        const normalized = {
-          ...stored,
-          category: stored?.category || titleCase(stored?.specialization) || "Strength",
-          image_url: stored?.image_url || stored?.imageUrl || "",
-          announcements: Array.isArray(stored?.announcements) ? stored.announcements : [],
-          programs: Array.isArray(stored?.programs) ? stored.programs : [],
-          blogs: Array.isArray(stored?.blogs) ? stored.blogs : [],
-          videos: Array.isArray(stored?.videos) ? stored.videos : [],
-        };
-        setIsLocalCoach(true);
-        setCoachId(normalized?.id || normalized?._id || normalized?.coachId || null);
-        setCoach(normalized);
-        setName(normalized?.name || "");
-        setCategory(normalized?.category || "Strength");
-        setBio(normalized?.bio || "");
-        setImageUrl(normalized?.image_url || "");
-
-        // Seed tab data from local coach payload
-        setAnnouncements(normalized.announcements);
-        setPrograms(normalized.programs);
-        setBlogs(normalized.blogs);
-        setVideos(normalized.videos);
-      } catch (e2) {
-        setIsLocalCoach(false);
-        setErr(fmtErr(e2));
-        setCoachId(null);
-        setCoach(null);
-      }
+      setErr(fmtErr(e));
+      setCoachId(null);
+      setCoach(null);
     } finally {
       setLoading(false);
     }
@@ -216,12 +211,6 @@ export default function CoachDashboardPage() {
   const loadAnnouncements = async () => {
     setAnnLoading(true);
     try {
-      if (isLocalCoach) {
-        const raw = localStorage.getItem("currentCoach");
-        const stored = raw ? JSON.parse(raw) : null;
-        setAnnouncements(Array.isArray(stored?.announcements) ? stored.announcements : []);
-        return;
-      }
       const res = await fetch("/api/coach/announcements", { cache: "no-store" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -239,12 +228,6 @@ export default function CoachDashboardPage() {
   const loadPrograms = async () => {
     setProgramLoading(true);
     try {
-      if (isLocalCoach) {
-        const raw = localStorage.getItem("currentCoach");
-        const stored = raw ? JSON.parse(raw) : null;
-        setPrograms(Array.isArray(stored?.programs) ? stored.programs : []);
-        return;
-      }
       const res = await fetch("/api/coach/programs", { cache: "no-store" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -262,12 +245,6 @@ export default function CoachDashboardPage() {
   const loadBlogs = async () => {
     setBlogLoading(true);
     try {
-      if (isLocalCoach) {
-        const raw = localStorage.getItem("currentCoach");
-        const stored = raw ? JSON.parse(raw) : null;
-        setBlogs(Array.isArray(stored?.blogs) ? stored.blogs : []);
-        return;
-      }
       const res = await fetch("/api/coach/blogs", { cache: "no-store" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -285,12 +262,6 @@ export default function CoachDashboardPage() {
   const loadVideos = async () => {
     setVideoLoading(true);
     try {
-      if (isLocalCoach) {
-        const raw = localStorage.getItem("currentCoach");
-        const stored = raw ? JSON.parse(raw) : null;
-        setVideos(Array.isArray(stored?.videos) ? stored.videos : []);
-        return;
-      }
       const res = await fetch("/api/coach/videos", { cache: "no-store" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -319,11 +290,6 @@ export default function CoachDashboardPage() {
 
   const logout = async () => {
     try {
-      if (isLocalCoach) {
-        localStorage.removeItem("currentCoach");
-        window.dispatchEvent(new Event("coachLoggedOut"));
-        return;
-      }
       await fetch("/api/coach/auth/logout", { method: "POST" });
     } finally {
       router.push("/");
@@ -335,19 +301,6 @@ export default function CoachDashboardPage() {
     setSavingProfile(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const updatedCoach = {
-          ...(coach || {}),
-          name,
-          category,
-          specialization: (coach?.specialization ? coach.specialization : category)?.toString(),
-          bio,
-          image_url: imageUrl,
-        };
-        setCoach(updatedCoach);
-        persistLocalCoach(updatedCoach);
-        return;
-      }
       const res = await fetch("/api/coach/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -372,24 +325,6 @@ export default function CoachDashboardPage() {
     setAnnSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const next = {
-          id: Date.now(),
-          title: annTitle,
-          content: annContent,
-          date: annDate,
-        };
-        const updatedCoach = {
-          ...(coach || {}),
-          announcements: [next, ...(Array.isArray(coach?.announcements) ? coach.announcements : [])],
-        };
-        setCoach(updatedCoach);
-        setAnnouncements(updatedCoach.announcements);
-        persistLocalCoach(updatedCoach);
-        setAnnTitle("");
-        setAnnContent("");
-        return;
-      }
       const res = await fetch("/api/coach/announcements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -422,16 +357,6 @@ export default function CoachDashboardPage() {
     setAnnSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const list = Array.isArray(coach?.announcements) ? coach.announcements : [];
-        const updated = list.map((a) => (a?.id === editingId ? { ...a, ...editDraft } : a));
-        const updatedCoach = { ...(coach || {}), announcements: updated };
-        setCoach(updatedCoach);
-        setAnnouncements(updated);
-        persistLocalCoach(updatedCoach);
-        cancelEdit();
-        return;
-      }
       const res = await fetch(`/api/coach/announcements/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -454,15 +379,6 @@ export default function CoachDashboardPage() {
     setAnnSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const list = Array.isArray(coach?.announcements) ? coach.announcements : [];
-        const updated = list.filter((a) => a?.id !== id);
-        const updatedCoach = { ...(coach || {}), announcements: updated };
-        setCoach(updatedCoach);
-        setAnnouncements(updated);
-        persistLocalCoach(updatedCoach);
-        return;
-      }
       const res = await fetch(`/api/coach/announcements/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -479,29 +395,6 @@ export default function CoachDashboardPage() {
     setProgramSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const next = {
-          id: Date.now(),
-          name: programName,
-          description: programDescription,
-          duration: programDuration,
-          goal: programGoal,
-          price: Number(programPrice || 0),
-        };
-        const updatedCoach = {
-          ...(coach || {}),
-          programs: [next, ...(Array.isArray(coach?.programs) ? coach.programs : [])],
-        };
-        setCoach(updatedCoach);
-        setPrograms(updatedCoach.programs);
-        persistLocalCoach(updatedCoach);
-        setProgramName("");
-        setProgramDescription("");
-        setProgramDuration("");
-        setProgramGoal("");
-        setProgramPrice(0);
-        return;
-      }
       const res = await fetch("/api/coach/programs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -547,16 +440,6 @@ export default function CoachDashboardPage() {
     setProgramSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const list = Array.isArray(coach?.programs) ? coach.programs : [];
-        const updated = list.map((p) => (p?.id === programEditingId ? { ...p, ...programDraft } : p));
-        const updatedCoach = { ...(coach || {}), programs: updated };
-        setCoach(updatedCoach);
-        setPrograms(updated);
-        persistLocalCoach(updatedCoach);
-        cancelProgramEdit();
-        return;
-      }
       const res = await fetch(`/api/coach/programs/${programEditingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -578,15 +461,6 @@ export default function CoachDashboardPage() {
     setProgramSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const list = Array.isArray(coach?.programs) ? coach.programs : [];
-        const updated = list.filter((p) => p?.id !== id);
-        const updatedCoach = { ...(coach || {}), programs: updated };
-        setCoach(updatedCoach);
-        setPrograms(updated);
-        persistLocalCoach(updatedCoach);
-        return;
-      }
       const res = await fetch(`/api/coach/programs/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -599,139 +473,104 @@ export default function CoachDashboardPage() {
   };
 
   // -------- Blogs CRUD --------
-  const createBlog = async () => {
+  const handleAddBlog = async (e) => {
+    e.preventDefault();
+    if (!blogForm.title || !blogForm.excerpt) {
+      alert("Title and excerpt are required");
+      return;
+    }
     setBlogSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const next = {
-          id: Date.now(),
-          title: blogTitle,
-          excerpt: blogExcerpt,
-          category: blogCategory,
-          image: blogImage,
-          readTime: blogReadTime,
-          date: blogDate,
-          sections: [{ content: blogContent }],
-        };
-        const updatedCoach = {
-          ...(coach || {}),
-          blogs: [next, ...(Array.isArray(coach?.blogs) ? coach.blogs : [])],
-        };
-        setCoach(updatedCoach);
-        setBlogs(updatedCoach.blogs);
-        persistLocalCoach(updatedCoach);
-        setBlogTitle("");
-        setBlogExcerpt("");
-        setBlogContent("");
-        return;
-      }
       const res = await fetch("/api/coach/blogs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: blogTitle,
-          excerpt: blogExcerpt,
-          category: blogCategory,
-          image: blogImage,
-          readTime: blogReadTime,
-          date: blogDate,
-          content: blogContent,
+          title: blogForm.title,
+          excerpt: blogForm.excerpt,
+          author: blogForm.author || coach?.name || "Coach",
+          date: blogForm.date || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+          readTime: blogForm.readTime || "5 min read",
+          image: blogForm.image || "",
+          category: blogForm.category,
+          sections: blogForm.sections || [{ title: "", content: "" }],
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      setBlogTitle("");
-      setBlogExcerpt("");
-      setBlogContent("");
+      alert(data.message || "Blog submitted for review. It will be published after admin approval.");
+      setShowBlogForm(false);
+      setBlogForm({
+        id: "",
+        title: "",
+        excerpt: "",
+        author: "",
+        date: "",
+        readTime: "",
+        image: "",
+        category: "training",
+        sections: [{ title: "", content: "" }],
+      });
       await loadBlogs();
     } catch (e) {
       setErr(fmtErr(e));
+      alert(fmtErr(e));
     } finally {
       setBlogSaving(false);
     }
   };
 
-  const startBlogEdit = (b) => {
-    setBlogEditingId(b.id);
-    setBlogDraft({
-      title: b.title || "",
-      excerpt: b.excerpt || "",
-      category: b.category || "training",
-      image: b.image || "",
-      readTime: b.readTime || "3 min read",
-      date: b.date || "",
-      content: b.sections?.[0]?.content || "",
+  const openEditBlog = (blog) => {
+    setBlogForm({
+      id: blog.id,
+      title: blog.title || "",
+      excerpt: blog.excerpt || "",
+      author: blog.author || "",
+      date: blog.date || "",
+      readTime: blog.readTime || "",
+      image: blog.image || "",
+      category: blog.category || "training",
+      sections: blog.sections || [{ title: "", content: "" }],
+    });
+    setShowBlogForm(true);
+  };
+
+  const addSection = () => {
+    setBlogForm({
+      ...blogForm,
+      sections: [...blogForm.sections, { title: "", content: "" }]
     });
   };
-  const cancelBlogEdit = () => {
-    setBlogEditingId(null);
-    setBlogDraft({ title: "", excerpt: "", category: "training", image: "", readTime: "3 min read", date: "", content: "" });
+
+  const removeSection = (index) => {
+    const newSections = blogForm.sections.filter((_, i) => i !== index);
+    setBlogForm({ ...blogForm, sections: newSections });
   };
-  const saveBlogEdit = async () => {
-    if (!blogEditingId) return;
-    setBlogSaving(true);
-    setErr("");
-    try {
-      if (isLocalCoach) {
-        const list = Array.isArray(coach?.blogs) ? coach.blogs : [];
-        const updated = list.map((b) =>
-          b?.id === blogEditingId
-            ? {
-                ...b,
-                title: blogDraft.title,
-                excerpt: blogDraft.excerpt,
-                category: blogDraft.category,
-                image: blogDraft.image,
-                readTime: blogDraft.readTime,
-                date: blogDraft.date,
-                sections: [{ content: blogDraft.content }],
-              }
-            : b
-        );
-        const updatedCoach = { ...(coach || {}), blogs: updated };
-        setCoach(updatedCoach);
-        setBlogs(updated);
-        persistLocalCoach(updatedCoach);
-        cancelBlogEdit();
-        return;
-      }
-      const res = await fetch(`/api/coach/blogs/${blogEditingId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(blogDraft),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      cancelBlogEdit();
-      await loadBlogs();
-    } catch (e) {
-      setErr(fmtErr(e));
-    } finally {
-      setBlogSaving(false);
-    }
+
+  const updateSection = (index, field, value) => {
+    const newSections = [...blogForm.sections];
+    newSections[index][field] = value;
+    setBlogForm({ ...blogForm, sections: newSections });
   };
+
   const deleteBlog = async (id) => {
     if (!id) return;
     if (!confirm("Delete this blog post?")) return;
     setBlogSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const list = Array.isArray(coach?.blogs) ? coach.blogs : [];
-        const updated = list.filter((b) => b?.id !== id);
-        const updatedCoach = { ...(coach || {}), blogs: updated };
-        setCoach(updatedCoach);
-        setBlogs(updated);
-        persistLocalCoach(updatedCoach);
-        return;
-      }
-      const res = await fetch(`/api/coach/blogs/${id}`, { method: "DELETE" });
+      // Check if it's a pending blog or approved blog
+      const blog = blogs.find(b => b.id === id);
+      const endpoint = blog?.status === "pending" 
+        ? `/api/admin/blogs/pending/${id}` 
+        : `/api/coach/blogs/${id}`;
+      const res = await fetch(endpoint, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       await loadBlogs();
     } catch (e) {
       setErr(fmtErr(e));
+      alert(fmtErr(e));
     } finally {
       setBlogSaving(false);
     }
@@ -739,30 +578,17 @@ export default function CoachDashboardPage() {
 
   // -------- Videos CRUD --------
   const createVideo = async () => {
+    if (!videoUrl) {
+      alert("Please upload a video file first");
+      return;
+    }
+    if (!videoTitle.trim()) {
+      alert("Please enter a video title");
+      return;
+    }
     setVideoSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const next = {
-          id: Date.now(),
-          title: videoTitle,
-          video_url: videoUrl,
-          thumbnail_url: videoThumb,
-          duration: videoDuration,
-        };
-        const updatedCoach = {
-          ...(coach || {}),
-          videos: [next, ...(Array.isArray(coach?.videos) ? coach.videos : [])],
-        };
-        setCoach(updatedCoach);
-        setVideos(updatedCoach.videos);
-        persistLocalCoach(updatedCoach);
-        setVideoTitle("");
-        setVideoUrl("");
-        setVideoThumb("");
-        setVideoDuration("");
-        return;
-      }
       const res = await fetch("/api/coach/videos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -779,6 +605,8 @@ export default function CoachDashboardPage() {
       setVideoUrl("");
       setVideoThumb("");
       setVideoDuration("");
+      setVideoFile(null);
+      setVideoUploadProgress("");
       await loadVideos();
     } catch (e) {
       setErr(fmtErr(e));
@@ -804,16 +632,6 @@ export default function CoachDashboardPage() {
     setVideoSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const list = Array.isArray(coach?.videos) ? coach.videos : [];
-        const updated = list.map((v) => (v?.id === videoEditingId ? { ...v, ...videoDraft } : v));
-        const updatedCoach = { ...(coach || {}), videos: updated };
-        setCoach(updatedCoach);
-        setVideos(updated);
-        persistLocalCoach(updatedCoach);
-        cancelVideoEdit();
-        return;
-      }
       const res = await fetch(`/api/coach/videos/${videoEditingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -835,15 +653,6 @@ export default function CoachDashboardPage() {
     setVideoSaving(true);
     setErr("");
     try {
-      if (isLocalCoach) {
-        const list = Array.isArray(coach?.videos) ? coach.videos : [];
-        const updated = list.filter((v) => v?.id !== id);
-        const updatedCoach = { ...(coach || {}), videos: updated };
-        setCoach(updatedCoach);
-        setVideos(updated);
-        persistLocalCoach(updatedCoach);
-        return;
-      }
       const res = await fetch(`/api/coach/videos/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -930,14 +739,8 @@ export default function CoachDashboardPage() {
                 )}
               </div>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={logout}
-                className="px-4 py-2 rounded-xl bg-[#354F52] text-white font-semibold shadow-md hover:shadow-lg hover:bg-[#52796F] transition-all"
-              >
-                Logout
-              </button>
-            </div>
+           
+           
           </div>
 
           {coachId && (
@@ -966,20 +769,6 @@ export default function CoachDashboardPage() {
                       <div className="text-2xl font-bold">{displayName || "Coach"}</div>
                       <div className="text-sm text-white/80">{displayCategory || "Fitness"}</div>
                     </div>
-                  </div>
-                  <div className="flex gap-3 flex-wrap">
-                    <Link
-                      href={`/coaches/${coachId}`}
-                      className="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 transition-all border border-white/25 text-sm font-semibold shadow-md hover:shadow-lg"
-                    >
-                      View public profile
-                    </Link>
-                    <button
-                      onClick={logout}
-                      className="px-4 py-2 rounded-xl bg-white text-[#354F52] font-semibold shadow-md hover:shadow-lg transition-all"
-                    >
-                      Logout
-                    </button>
                   </div>
                 </div>
               </div>
@@ -1515,73 +1304,33 @@ export default function CoachDashboardPage() {
                   <div>
                     <div className="flex items-center justify-between gap-4 mb-6">
                       <h2 className="text-2xl font-bold text-[#354F52]">Blogs</h2>
-                      <button
-                        onClick={loadBlogs}
-                        className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
-                      >
-                        Refresh
-                      </button>
-                    </div>
-
-                    <div className="bg-[#C8CDC5]/10 border border-[#C8CDC5]/30 rounded-2xl p-5 mb-8">
-                      <h3 className="font-bold text-[#354F52] mb-3">Create new</h3>
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl"
-                          placeholder="Title"
-                          value={blogTitle}
-                          onChange={(e) => setBlogTitle(e.target.value)}
-                        />
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl"
-                          placeholder="Read time (e.g. 5 min read)"
-                          value={blogReadTime}
-                          onChange={(e) => setBlogReadTime(e.target.value)}
-                        />
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl"
-                          type="date"
-                          value={blogDate}
-                          onChange={(e) => setBlogDate(e.target.value)}
-                        />
-                        <select
-                          className="px-4 py-3 border border-gray-300 rounded-xl"
-                          value={blogCategory}
-                          onChange={(e) => setBlogCategory(e.target.value)}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setShowBlogForm(true);
+                            setBlogForm({
+                              id: "",
+                              title: "",
+                              excerpt: "",
+                              author: "",
+                              date: "",
+                              readTime: "",
+                              image: "",
+                              category: "training",
+                              sections: [{ title: "", content: "" }],
+                            });
+                          }}
+                          className="px-4 py-2 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] transition-all"
                         >
-                          {["training", "nutrition", "technology", "wellness", "mindset", "progress"].map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
-                          placeholder="Cover image URL"
-                          value={blogImage}
-                          onChange={(e) => setBlogImage(e.target.value)}
-                        />
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
-                          placeholder="Excerpt"
-                          value={blogExcerpt}
-                          onChange={(e) => setBlogExcerpt(e.target.value)}
-                        />
+                          + Add Blog
+                        </button>
+                        <button
+                          onClick={loadBlogs}
+                          className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
+                        >
+                          Refresh
+                        </button>
                       </div>
-                      <textarea
-                        rows={6}
-                        className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
-                        placeholder="Content…"
-                        value={blogContent}
-                        onChange={(e) => setBlogContent(e.target.value)}
-                      />
-                      <button
-                        disabled={blogSaving}
-                        onClick={createBlog}
-                        className="mt-3 px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
-                      >
-                        {blogSaving ? "Saving…" : "Publish"}
-                      </button>
                     </div>
 
                     {blogLoading ? (
@@ -1589,111 +1338,265 @@ export default function CoachDashboardPage() {
                     ) : blogs.length === 0 ? (
                       <div className="text-gray-600">No blog posts yet.</div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         {blogs.map((b) => (
-                          <div key={b.id} className="border border-[#C8CDC5]/40 rounded-2xl p-5">
-                            {blogEditingId === b.id ? (
-                              <>
-                                <div className="grid md:grid-cols-2 gap-3">
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl"
-                                    value={blogDraft.title}
-                                    onChange={(e) => setBlogDraft((d) => ({ ...d, title: e.target.value }))}
-                                  />
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl"
-                                    value={blogDraft.readTime}
-                                    onChange={(e) => setBlogDraft((d) => ({ ...d, readTime: e.target.value }))}
-                                  />
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl"
-                                    type="date"
-                                    value={blogDraft.date}
-                                    onChange={(e) => setBlogDraft((d) => ({ ...d, date: e.target.value }))}
-                                  />
-                                  <select
-                                    className="px-4 py-3 border border-gray-300 rounded-xl"
-                                    value={blogDraft.category}
-                                    onChange={(e) => setBlogDraft((d) => ({ ...d, category: e.target.value }))}
-                                  >
-                                    {["training", "nutrition", "technology", "wellness", "mindset", "progress"].map((c) => (
-                                      <option key={c} value={c}>
-                                        {c}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
-                                    value={blogDraft.image}
-                                    onChange={(e) => setBlogDraft((d) => ({ ...d, image: e.target.value }))}
-                                    placeholder="Cover image URL"
-                                  />
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
-                                    value={blogDraft.excerpt}
-                                    onChange={(e) => setBlogDraft((d) => ({ ...d, excerpt: e.target.value }))}
-                                    placeholder="Excerpt"
-                                  />
-                                </div>
-                                <textarea
-                                  rows={6}
-                                  className="mt-3 w-full px-4 py-3 border border-gray-300 rounded-xl"
-                                  value={blogDraft.content}
-                                  onChange={(e) => setBlogDraft((d) => ({ ...d, content: e.target.value }))}
+                          <div key={b.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-200">
+                            {b.image && (
+                              <div className="h-48 overflow-hidden">
+                                <img
+                                  src={b.image}
+                                  alt={b.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.src = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800';
+                                  }}
                                 />
-                                <div className="mt-3 flex gap-2">
-                                  <button
-                                    disabled={blogSaving}
-                                    onClick={saveBlogEdit}
-                                    className="px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    disabled={blogSaving}
-                                    onClick={cancelBlogEdit}
-                                    className="px-6 py-3 rounded-xl border border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div className="flex items-start justify-between gap-4">
-                                  <div>
-                                    <div className="text-xl font-bold text-[#354F52]">{b.title}</div>
-                                    <div className="text-sm text-gray-500">
-                                      {b.category ? `${b.category} • ` : ""}
-                                      {b.date || ""} • {b.readTime || ""}
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => startBlogEdit(b)}
-                                      className="px-4 py-2 rounded-xl border border-gray-300 font-semibold text-[#354F52] hover:bg-gray-50"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => deleteBlog(b.id)}
-                                      className="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                </div>
-                                <div className="mt-3 text-gray-700">{b.excerpt}</div>
-                                <div className="mt-2 text-sm text-gray-500">
-                                  Public link:{" "}
-                                  <a className="text-[#52796F] underline" href={`/blog/${b.id}`}>
-                                    /blog/{b.id}
-                                  </a>
-                                </div>
-                              </>
+                              </div>
                             )}
+                            <div className="p-4">
+                              <div className="mb-2 flex items-center gap-2">
+                                <span className="px-2 py-1 bg-[#52796F]/10 text-[#354F52] rounded text-xs font-medium capitalize">
+                                  {b.category}
+                                </span>
+                                {b.status === "pending" && (
+                                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
+                                    Pending
+                                  </span>
+                                )}
+                                {b.status === "approved" && (
+                                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                                    Published
+                                  </span>
+                                )}
+                              </div>
+                              <h3 className="font-bold text-lg text-[#354F52] mb-2 line-clamp-2">{b.title}</h3>
+                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">{b.excerpt}</p>
+                              <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                                <span>{b.author || "Coach"}</span>
+                                <span>•</span>
+                                <span>{b.readTime}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => openEditBlog(b)}
+                                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#52796F]/10 text-[#52796F] rounded hover:bg-[#52796F]/20 transition-colors"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => deleteBlog(b.id)}
+                                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Blog Form Modal */}
+                    {showBlogForm && (
+                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-bold text-[#354F52]">Add New Blog</h3>
+                            <button
+                              onClick={() => {
+                                setShowBlogForm(false);
+                                setBlogForm({
+                                  id: "",
+                                  title: "",
+                                  excerpt: "",
+                                  author: "",
+                                  date: "",
+                                  readTime: "",
+                                  image: "",
+                                  category: "training",
+                                  sections: [{ title: "", content: "" }],
+                                });
+                              }}
+                              className="text-gray-600 hover:text-gray-800"
+                            >
+                              ×
+                            </button>
+                          </div>
+                          <form onSubmit={handleAddBlog} className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Title *</label>
+                              <input
+                                type="text"
+                                value={blogForm.title}
+                                onChange={(e) => setBlogForm({ ...blogForm, title: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Excerpt *</label>
+                              <textarea
+                                value={blogForm.excerpt}
+                                onChange={(e) => setBlogForm({ ...blogForm, excerpt: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                rows="2"
+                                placeholder="Brief description of the blog post"
+                                required
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Author</label>
+                                <input
+                                  type="text"
+                                  value={blogForm.author}
+                                  onChange={(e) => setBlogForm({ ...blogForm, author: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  placeholder={coach?.name || "Coach name"}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Read Time</label>
+                                <input
+                                  type="text"
+                                  value={blogForm.readTime}
+                                  onChange={(e) => setBlogForm({ ...blogForm, readTime: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  placeholder="e.g., 5 min read"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Date</label>
+                                <input
+                                  type="text"
+                                  value={blogForm.date}
+                                  onChange={(e) => setBlogForm({ ...blogForm, date: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                  placeholder="e.g., March 15, 2024"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium mb-1 text-[#354F52]">Category</label>
+                                <select
+                                  value={blogForm.category}
+                                  onChange={(e) => setBlogForm({ ...blogForm, category: e.target.value })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                >
+                                  <option value="training">Training</option>
+                                  <option value="nutrition">Nutrition</option>
+                                  <option value="technology">Technology</option>
+                                  <option value="wellness">Wellness</option>
+                                  <option value="mindset">Mindset</option>
+                                  <option value="progress">Progress</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1 text-[#354F52]">Image URL</label>
+                              <input
+                                type="text"
+                                value={blogForm.image}
+                                onChange={(e) => setBlogForm({ ...blogForm, image: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                placeholder="https://images.unsplash.com/..."
+                              />
+                            </div>
+
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-[#354F52]">Content Sections *</label>
+                                <button
+                                  type="button"
+                                  onClick={addSection}
+                                  className="text-[#52796F] hover:text-[#6BB371] font-medium text-sm flex items-center gap-1"
+                                >
+                                  <span>+ Add Section</span>
+                                </button>
+                              </div>
+                              
+                              <div className="space-y-4">
+                                {blogForm.sections.map((section, index) => (
+                                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                    <div className="flex items-center justify-between mb-3">
+                                      <span className="text-sm font-medium text-gray-700">Section {index + 1}</span>
+                                      {blogForm.sections.length > 1 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => removeSection(index)}
+                                          className="text-red-500 hover:text-red-700 text-sm"
+                                        >
+                                          Remove
+                                        </button>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                      <div>
+                                        <label className="block text-xs font-medium mb-1 text-gray-600">Section Title</label>
+                                        <input
+                                          type="text"
+                                          value={section.title}
+                                          onChange={(e) => updateSection(index, 'title', e.target.value)}
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent"
+                                          placeholder="e.g., Introduction, Key Benefits, Getting Started..."
+                                          required
+                                        />
+                                      </div>
+                                      
+                                      <div>
+                                        <label className="block text-xs font-medium mb-1 text-gray-600">Section Content</label>
+                                        <textarea
+                                          value={section.content}
+                                          onChange={(e) => updateSection(index, 'content', e.target.value)}
+                                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent font-mono text-sm"
+                                          rows="8"
+                                          placeholder="Write the content for this section..."
+                                          required
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex gap-3">
+                              <button
+                                type="submit"
+                                disabled={blogSaving}
+                                className="flex-1 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white py-2 rounded-lg hover:from-[#6BB371] hover:to-[#52796F] transition-all shadow-lg hover:shadow-[#52796F]/30 disabled:opacity-50"
+                              >
+                                {blogSaving ? "Submitting..." : "Submit for Review"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowBlogForm(false);
+                                  setBlogForm({
+                                    id: "",
+                                    title: "",
+                                    excerpt: "",
+                                    author: "",
+                                    date: "",
+                                    readTime: "",
+                                    image: "",
+                                    category: "training",
+                                    sections: [{ title: "", content: "" }],
+                                  });
+                                }}
+                                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1726,25 +1629,41 @@ export default function CoachDashboardPage() {
                           value={videoDuration}
                           onChange={(e) => setVideoDuration(e.target.value)}
                         />
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-semibold text-[#354F52] mb-2">
+                            Upload Video File
+                          </label>
+                          <input
+                            type="file"
+                            accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo"
+                            onChange={handleVideoFileChange}
+                            disabled={videoUploading}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          {videoUploadProgress && (
+                            <div className={`mt-2 text-sm ${videoUploadProgress.includes("successfully") ? "text-green-600" : "text-blue-600"}`}>
+                              {videoUploadProgress}
+                            </div>
+                          )}
+                          {videoUrl && (
+                            <div className="mt-2 text-sm text-gray-600">
+                              Video URL: <span className="font-mono text-xs break-all">{videoUrl}</span>
+                            </div>
+                          )}
+                        </div>
                         <input
                           className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
-                          placeholder="Video URL"
-                          value={videoUrl}
-                          onChange={(e) => setVideoUrl(e.target.value)}
-                        />
-                        <input
-                          className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
-                          placeholder="Thumbnail URL"
+                          placeholder="Thumbnail URL (optional)"
                           value={videoThumb}
                           onChange={(e) => setVideoThumb(e.target.value)}
                         />
                       </div>
                       <button
-                        disabled={videoSaving}
+                        disabled={videoSaving || videoUploading || !videoUrl}
                         onClick={createVideo}
-                        className="mt-3 px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50"
+                        className="mt-3 px-6 py-3 rounded-xl bg-[#6BB371] text-white font-semibold hover:bg-[#5FA361] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {videoSaving ? "Saving…" : "Publish"}
+                        {videoSaving ? "Saving…" : videoUploading ? "Uploading…" : !videoUrl ? "Upload a video first" : "Publish"}
                       </button>
                     </div>
 
@@ -1763,23 +1682,60 @@ export default function CoachDashboardPage() {
                                     className="px-4 py-3 border border-gray-300 rounded-xl"
                                     value={videoDraft.title}
                                     onChange={(e) => setVideoDraft((d) => ({ ...d, title: e.target.value }))}
+                                    placeholder="Title"
                                   />
                                   <input
                                     className="px-4 py-3 border border-gray-300 rounded-xl"
                                     value={videoDraft.duration}
                                     onChange={(e) => setVideoDraft((d) => ({ ...d, duration: e.target.value }))}
+                                    placeholder="Duration (e.g. 8:30)"
                                   />
-                                  <input
-                                    className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
-                                    value={videoDraft.video_url}
-                                    onChange={(e) => setVideoDraft((d) => ({ ...d, video_url: e.target.value }))}
-                                    placeholder="Video URL"
-                                  />
+                                  <div className="md:col-span-2">
+                                    <label className="block text-sm font-semibold text-[#354F52] mb-2">
+                                      Upload New Video File (or keep existing)
+                                    </label>
+                                    <input
+                                      type="file"
+                                      accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo"
+                                      onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
+                                        if (!validTypes.includes(file.type)) {
+                                          alert("Please upload a video file (MP4, WebM, OGG, MOV, or AVI)");
+                                          return;
+                                        }
+                                        if (file.size > 500 * 1024 * 1024) {
+                                          alert("Video size should be less than 500MB");
+                                          return;
+                                        }
+                                        setVideoUploading(true);
+                                        try {
+                                          const formData = new FormData();
+                                          formData.append("file", file);
+                                          const res = await fetch("/api/upload/video", { method: "POST", body: formData });
+                                          const data = await res.json().catch(() => ({}));
+                                          if (!res.ok || !data?.success) throw new Error(data.error || "Failed to upload video");
+                                          setVideoDraft((d) => ({ ...d, video_url: data.videoUrl || "" }));
+                                          alert("Video uploaded successfully!");
+                                        } catch (err) {
+                                          alert(err?.message || "Failed to upload video");
+                                        } finally {
+                                          setVideoUploading(false);
+                                        }
+                                      }}
+                                      disabled={videoUploading}
+                                      className="w-full px-4 py-3 border border-gray-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                    />
+                                    <div className="mt-2 text-sm text-gray-600">
+                                      Current: <span className="font-mono text-xs break-all">{videoDraft.video_url || "None"}</span>
+                                    </div>
+                                  </div>
                                   <input
                                     className="px-4 py-3 border border-gray-300 rounded-xl md:col-span-2"
                                     value={videoDraft.thumbnail_url}
                                     onChange={(e) => setVideoDraft((d) => ({ ...d, thumbnail_url: e.target.value }))}
-                                    placeholder="Thumbnail URL"
+                                    placeholder="Thumbnail URL (optional)"
                                   />
                                 </div>
                                 <div className="mt-3 flex gap-2">

@@ -160,6 +160,7 @@ export default function CoachProfile({ coachId }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -547,7 +548,8 @@ export default function CoachProfile({ coachId }) {
                 {coach.videos.map((video) => (
                   <div
                     key={video.id}
-                    className="bg-white rounded-xl overflow-hidden shadow-lg border border-[#C8CDC5]/50 hover:shadow-xl transition-all group"
+                    onClick={() => setSelectedVideo(video)}
+                    className="bg-white rounded-xl overflow-hidden shadow-lg border border-[#C8CDC5]/50 hover:shadow-xl transition-all group cursor-pointer"
                   >
                     <div className="relative h-48 bg-gradient-to-br from-[#354F52] to-[#52796F]">
                       <Image
@@ -670,6 +672,53 @@ export default function CoachProfile({ coachId }) {
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
             <h3 className="text-2xl font-bold text-[#354F52] mb-4">Report Coach</h3>
             <ReportModalContent onSubmit={handleSubmitReport} onClose={() => setShowReportModal(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Video Player Modal */}
+      {selectedVideo && (
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedVideo(null)}
+        >
+          <div 
+            className="bg-black rounded-xl overflow-hidden max-w-5xl w-full max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 bg-[#354F52] text-white">
+              <h3 className="text-xl font-bold">{selectedVideo.title}</h3>
+              <button
+                onClick={() => setSelectedVideo(null)}
+                className="text-white hover:text-gray-300 text-2xl font-bold w-8 h-8 flex items-center justify-center"
+              >
+                ×
+              </button>
+            </div>
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <video
+                src={selectedVideo.video_url || selectedVideo.videoUrl}
+                controls
+                autoPlay
+                className="absolute inset-0 w-full h-full"
+                onError={(e) => {
+                  console.error("Video playback error:", e);
+                  alert("Failed to load video. Please check the video URL.");
+                }}
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <div className="p-4 bg-white">
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>{(selectedVideo.views || 0).toLocaleString()} views</span>
+                <span className="flex items-center gap-1">
+                  <FaStar className="text-yellow-400" size={12} />
+                  {selectedVideo.likes || 0} likes
+                </span>
+                <span>{selectedVideo.duration || "0:00"}</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
