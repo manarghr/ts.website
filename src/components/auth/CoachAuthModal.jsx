@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Lock, User, Phone, Award, Briefcase, FileText, Upload } from "lucide-react";
+import { X, Mail, Lock, User, Phone, Award, Briefcase, FileText, Upload, Camera } from "lucide-react";
+import Image from "next/image";
 
 export default function CoachAuthModal({ isOpen, onClose }) {
   const [isLogin, setIsLogin] = useState(false);
@@ -15,9 +16,11 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     experience: "",
     certification: "",
     bio: "",
-    certificateFile: null
+    certificateFile: null,
+    profilePicture: null
   });
   const [certificatePreview, setCertificatePreview] = useState(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState(null);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -47,6 +50,32 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     }
   };
 
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+
+      setFormData({ ...formData, profilePicture: file });
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicturePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isLogin) {
@@ -57,7 +86,24 @@ export default function CoachAuthModal({ isOpen, onClose }) {
       );
       if (coach) {
         localStorage.setItem("currentCoach", JSON.stringify(coach));
+        // Dispatch event to update navbar
+        window.dispatchEvent(new Event("coachUpdated"));
         alert("Welcome back, Coach " + coach.name + "!");
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+          phone: "",
+          specialization: "",
+          experience: "",
+          certification: "",
+          bio: "",
+          certificateFile: null,
+          profilePicture: null
+        });
+        setCertificatePreview(null);
+        setProfilePicturePreview(null);
         onClose();
       } else {
         alert("Invalid credentials. Please try again.");
@@ -67,6 +113,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
       const newCoach = {
         id: Date.now(),
         ...formData,
+        image_url: profilePicturePreview, // Store the base64 image
         joinedDate: new Date().toISOString(),
         status: "pending" // Pending approval
       };
@@ -74,7 +121,24 @@ export default function CoachAuthModal({ isOpen, onClose }) {
       coaches.push(newCoach);
       localStorage.setItem("coaches", JSON.stringify(coaches));
       localStorage.setItem("currentCoach", JSON.stringify(newCoach));
+      // Dispatch event to update navbar
+      window.dispatchEvent(new Event("coachUpdated"));
       alert("Application submitted! We'll review your profile and get back to you soon.");
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        phone: "",
+        specialization: "",
+        experience: "",
+        certification: "",
+        bio: "",
+        certificateFile: null,
+        profilePicture: null
+      });
+      setCertificatePreview(null);
+      setProfilePicturePreview(null);
       onClose();
     }
   };
@@ -191,6 +255,56 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent outline-none transition-all"
                             placeholder="John Doe"
                           />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Profile Picture
+                        </label>
+                        <div className="flex items-center gap-4">
+                          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-50 flex items-center justify-center">
+                            {profilePicturePreview ? (
+                              <Image
+                                src={profilePicturePreview}
+                                alt="Profile preview"
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <Camera className="w-8 h-8 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <input
+                              type="file"
+                              id="profile-picture-upload"
+                              accept="image/*"
+                              onChange={handleProfilePictureChange}
+                              className="hidden"
+                            />
+                            <label
+                              htmlFor="profile-picture-upload"
+                              className="inline-block px-4 py-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white rounded-lg hover:shadow-lg transition-all cursor-pointer text-sm font-medium"
+                            >
+                              {profilePicturePreview ? "Change Picture" : "Upload Picture"}
+                            </label>
+                            {profilePicturePreview && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData({ ...formData, profilePicture: null });
+                                  setProfilePicturePreview(null);
+                                }}
+                                className="ml-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                              >
+                                Remove Picture
+                              </button>
+                            )}
+                            <p className="text-xs text-gray-500 mt-2">
+                              This picture will appear in your profile and navbar. Max size: 5MB
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </>
@@ -334,11 +448,12 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                           </label>
                         </div>
                         {certificatePreview && (
-                          <div className="mt-3 relative">
-                            <img
+                          <div className="mt-3 relative h-40">
+                            <Image
                               src={certificatePreview}
                               alt="Certificate preview"
-                              className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                              fill
+                              className="object-cover rounded-lg border border-gray-200"
                             />
                             <button
                               type="button"
@@ -346,7 +461,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                                 setFormData({ ...formData, certificateFile: null });
                                 setCertificatePreview(null);
                               }}
-                              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
                             >
                               <X className="w-4 h-4" />
                             </button>
