@@ -136,7 +136,7 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
         {filteredPosts.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="sync">
                 {paginatedPosts.map((post, index) => (
                   <motion.article
                     key={`${post.id}-${selectedCategory}-${searchTerm}`}

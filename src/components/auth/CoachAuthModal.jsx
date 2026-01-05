@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -511,4 +512,3 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     </div>
   );
 }
-
