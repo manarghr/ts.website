@@ -540,6 +540,8 @@ export default function Coaches() {
                                 image={getCoachImage(coach, index)}
                                 name={coach.name || 'Unknown Coach'}
                                 description={coach.bio || coach.description || 'Professional fitness coach'}
+                                followers={coach.followers_count || 0}
+                                rating={coach.rating || 5.0}
                               />
                             </div>
                           );

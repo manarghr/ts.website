@@ -3,10 +3,22 @@ import Link from "next/link";
 import { FaStar, FaUsers, FaAward, FaArrowRight } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-export default function Cardes({ image, title, para, name, description, id, className = "" }) {
+export default function Cardes({ 
+  image, 
+  title, 
+  para, 
+  name, 
+  description, 
+  id, 
+  followers, 
+  rating, 
+  className = "" 
+}) {
   const displayName = name || title;
   const displayDescription = description || para;
   const coachId = id || (name ? name.toLowerCase().replace(/\s+/g, '-') : null);
+  const displayFollowers = followers || 200; // Default fallback
+  const displayRating = rating || 5.0; // Default fallback
 
   // Enhanced card design for coaches page
   if (name || description) {
@@ -44,15 +56,15 @@ export default function Cardes({ image, title, para, name, description, id, clas
             {displayDescription}
           </p>
 
-          {/* Stats */}
+          {/* Stats - Updated with dynamic followers and rating */}
           <div className="flex items-center justify-between mb-4 pb-4 border-b border-[#C8CDC5]/50">
             <div className="flex items-center gap-1.5">
               <FaStar className="text-[#6BB371] w-4 h-4" />
-              <span className="text-sm font-semibold text-[#354F52]">5.0</span>
+              <span className="text-sm font-semibold text-[#354F52]">{displayRating}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <FaUsers className="text-[#52796F] w-4 h-4" />
-              <span className="text-sm font-semibold text-gray-600">200+</span>
+              <span className="text-sm font-semibold text-gray-600">{displayFollowers}+</span>
             </div>
             <div className="flex items-center gap-1.5">
               <FaAward className="text-[#6BB371] w-4 h-4" />
@@ -102,6 +114,18 @@ export default function Cardes({ image, title, para, name, description, id, clas
           <h3 className="text-2xl font-bold mb-2">{displayName}</h3>
         </div>
         <p className="text-sm md:text-base text-white/90 leading-relaxed">{displayDescription}</p>
+        
+        {/* Stats for home page version */}
+        <div className="flex items-center gap-4 text-sm text-white/90 mt-3 mb-2">
+          <div className="flex items-center gap-1">
+            <FaUsers className="text-[#6BB371]" />
+            <span>{displayFollowers} followers</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <FaStar className="text-yellow-400" />
+            <span>{displayRating}</span>
+          </div>
+        </div>
         
         {/* View Profile Button */}
         <button className="mt-4 px-4 py-2 bg-[#6BB371] hover:bg-[#52796F] text-white text-sm font-semibold rounded-lg transition-all duration-300 hover:scale-105">
