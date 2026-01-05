@@ -63,7 +63,7 @@ export default function AISportsPage() {
   const [uploadFormScore, setUploadFormScore] = useState(0);
   const [uploadReps, setUploadReps] = useState(0);
   const [uploadAnalyzing, setUploadAnalyzing] = useState(false);
-  const [uploadSyncMode, setUploadSyncMode] = useState(false); // false = smooth playback, true = perfect overlay (main.py mode)
+  const [uploadSyncMode, setUploadSyncMode] = useState(true); // false = smooth playback, true = perfect overlay (main.py mode)
   const uploadStepActiveRef = useRef(false);
   const uploadIntervalRef = useRef(null);
   const uploadInFlightRef = useRef(false);
@@ -1172,8 +1172,8 @@ export default function AISportsPage() {
                         landmarks={backendLandmarks}
                         enabled={useMediaPipe && cameraActive && streamReady}
                         // Lead/prediction can make points look "off-body". Keep it exact.
-                        leadMs={0}
-                        mirror={true}
+                          leadMs={uploadSyncMode ? 0 : uploadLeadMsRef.current}
+                          mirror={false}
                       />
                       {isRecording && (
                         <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full animate-pulse z-10">

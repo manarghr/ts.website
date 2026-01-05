@@ -95,10 +95,6 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     setIsSubmitting(true);
 
     try {
-      // If logging in/signing up as coach, clear any user session so the navbar switches correctly
-      localStorage.removeItem("trainsight_current_user");
-      window.dispatchEvent(new Event("userLoggedOut"));
-
       if (isLogin) {
         const res = await fetch("/api/coach/auth/login", {
           method: "POST",
@@ -130,18 +126,6 @@ export default function CoachAuthModal({ isOpen, onClose }) {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Signup failed");
       }
-
-      // Hydrate coach info from DB-backed session cookie
-      const meRes = await fetch("/api/coach/me", { cache: "no-store" });
-      const meData = await meRes.json().catch(() => ({}));
-      if (meRes.ok && meData?.coach) {
-        localStorage.setItem("currentCoach", JSON.stringify(meData.coach));
-      } else {
-        // Fallback: clear local coach if session didn't hydrate
-        localStorage.removeItem("currentCoach");
-      }
-
-      window.dispatchEvent(new Event("coachUpdated"));
       alert(isLogin ? "Welcome back, Coach!" : "Coach account created!");
 
       // Reset form

@@ -156,6 +156,24 @@ export async function DELETE(request) {
 
     const { getCollection } = await import('@/lib/mongodb');
     const coachesCollection = await getCollection('coaches');
+    const coachAccounts = await getCollection('coach_accounts');
+    const coachSessions = await getCollection('coach_sessions');
+    const announcements = await getCollection('announcements');
+    const programs = await getCollection('training_programs');
+    const videos = await getCollection('videos');
+    const blogs = await getCollection('blog');
+
+    // Delete auth account
+    await coachAccounts.deleteMany({ coach_id: id });
+    // Delete sessions
+    await coachSessions.deleteMany({ coach_id: id });
+    // Delete related content
+    await announcements.deleteMany({ coach_id: id });
+    await programs.deleteMany({ coach_id: id });
+    await videos.deleteMany({ coach_id: id });
+    await blogs.deleteMany({ coach_id: id });
+
+    // Delete public profile
     const result = await coachesCollection.deleteOne({ id });
 
     if (result.deletedCount === 0) {
@@ -165,7 +183,7 @@ export async function DELETE(request) {
       );
     }
 
-    return NextResponse.json({ success: true, message: 'Coach deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Coach deleted successfully (profile, account, sessions, content)' });
   } catch (error) {
     console.error('Error deleting coach:', error);
     return NextResponse.json(
