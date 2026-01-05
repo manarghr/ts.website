@@ -259,11 +259,11 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
                           Profile Picture
                         </label>
-                        <div className="flex items-center gap-4">
-                          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-50 flex items-center justify-center">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-50 flex items-center justify-center flex-shrink-0">
                             {profilePicturePreview ? (
                               <Image
                                 src={profilePicturePreview}
@@ -275,7 +275,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                               <Camera className="w-8 h-8 text-gray-400" />
                             )}
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 w-full">
                             <input
                               type="file"
                               id="profile-picture-upload"
@@ -283,24 +283,26 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                               onChange={handleProfilePictureChange}
                               className="hidden"
                             />
-                            <label
-                              htmlFor="profile-picture-upload"
-                              className="inline-block px-4 py-2 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white rounded-lg hover:shadow-lg transition-all cursor-pointer text-sm font-medium"
-                            >
-                              {profilePicturePreview ? "Change Picture" : "Upload Picture"}
-                            </label>
-                            {profilePicturePreview && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setFormData({ ...formData, profilePicture: null });
-                                  setProfilePicturePreview(null);
-                                }}
-                                className="ml-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                            <div className="flex flex-col gap-2">
+                              <label
+                                htmlFor="profile-picture-upload"
+                                className="inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white rounded-lg hover:shadow-lg transition-all cursor-pointer text-sm font-medium"
                               >
-                                Remove Picture
-                              </button>
-                            )}
+                                {profilePicturePreview ? "Change Picture" : "Upload Picture"}
+                              </label>
+                              {profilePicturePreview && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData({ ...formData, profilePicture: null });
+                                    setProfilePicturePreview(null);
+                                  }}
+                                  className="inline-flex items-center justify-center px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                                >
+                                  Remove Picture
+                                </button>
+                              )}
+                            </div>
                             <p className="text-xs text-gray-500 mt-2">
                               This picture will appear in your profile and navbar. Max size: 5MB
                             </p>
