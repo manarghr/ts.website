@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -22,6 +21,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
   });
   const [certificatePreview, setCertificatePreview] = useState(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState(null);
+  const isProfilePictureLoading = !isLogin && formData.profilePicture && !profilePicturePreview;
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -86,6 +86,10 @@ export default function CoachAuthModal({ isOpen, onClose }) {
         (c) => c.email === formData.email && c.password === formData.password
       );
       if (coach) {
+        // If logging in as coach, ensure any user session is cleared so the navbar switches correctly
+        localStorage.removeItem("trainsight_current_user");
+        window.dispatchEvent(new Event("userLoggedOut"));
+
         localStorage.setItem("currentCoach", JSON.stringify(coach));
         // Dispatch event to update navbar
         window.dispatchEvent(new Event("coachUpdated"));
@@ -121,6 +125,11 @@ export default function CoachAuthModal({ isOpen, onClose }) {
       const coaches = JSON.parse(localStorage.getItem("coaches") || "[]");
       coaches.push(newCoach);
       localStorage.setItem("coaches", JSON.stringify(coaches));
+
+      // If signing up as coach, ensure any user session is cleared so the navbar switches correctly
+      localStorage.removeItem("trainsight_current_user");
+      window.dispatchEvent(new Event("userLoggedOut"));
+
       localStorage.setItem("currentCoach", JSON.stringify(newCoach));
       // Dispatch event to update navbar
       window.dispatchEvent(new Event("coachUpdated"));
@@ -490,9 +499,12 @@ export default function CoachAuthModal({ isOpen, onClose }) {
 
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white font-semibold py-3 rounded-lg hover:shadow-xl hover:shadow-[#52796F]/30 transition-all duration-300 transform hover:scale-105"
+                    disabled={isProfilePictureLoading}
+                    className={`w-full bg-gradient-to-r from-[#52796F] to-[#6BB371] text-white font-semibold py-3 rounded-lg hover:shadow-xl hover:shadow-[#52796F]/30 transition-all duration-300 transform hover:scale-105 ${
+                      isProfilePictureLoading ? "opacity-60 cursor-not-allowed hover:scale-100" : ""
+                    }`}
                   >
-                    {isLogin ? "Login to Dashboard" : "Submit Application"}
+                    {isProfilePictureLoading ? "Processing Picture..." : (isLogin ? "Login to Dashboard" : "Submit Application")}
                   </button>
                 </form>
 

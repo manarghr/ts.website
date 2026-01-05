@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
+import Image from "next/image";
+import { Camera } from "lucide-react";
 
 function fmtErr(e) {
   if (!e) return "Unknown error";
@@ -16,6 +18,7 @@ export default function CoachDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [coachId, setCoachId] = useState(null);
   const [coach, setCoach] = useState(null);
+  const [isLocalCoach, setIsLocalCoach] = useState(false);
   const [tab, setTab] = useState("profile"); // profile | announcements | programs | blogs | videos
   const [err, setErr] = useState("");
 
@@ -103,6 +106,52 @@ export default function CoachDashboardPage() {
   }, [coach, name, category, bio, imageUrl]);
 
   const avatarUrl = coach?.image_url || "/placeholder.svg";
+  const effectivePreviewImage = imageUrl || coach?.image_url || "";
+
+  const handleProfileImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type?.startsWith("image/")) {
+      alert("Please upload an image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size should be less than 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result;
+      setImageUrl(typeof base64 === "string" ? base64 : "");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const persistLocalCoach = (updatedCoach) => {
+    try {
+      localStorage.setItem("currentCoach", JSON.stringify(updatedCoach));
+      const coaches = JSON.parse(localStorage.getItem("coaches") || "[]");
+      const updated = Array.isArray(coaches)
+        ? coaches.map((c) => (c?.id === updatedCoach?.id ? updatedCoach : c))
+        : [];
+      localStorage.setItem("coaches", JSON.stringify(updated));
+      window.dispatchEvent(new Event("coachUpdated"));
+    } catch (_) {
+      // ignore
+    }
+  };
+
+  const titleCase = (s) => {
+    if (!s || typeof s !== "string") return "";
+    return s
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(" ");
+  };
 
   const loadMe = async () => {
     setErr("");
@@ -114,6 +163,7 @@ export default function CoachDashboardPage() {
         throw new Error(data.error || `HTTP ${res.status}`);
       }
       const data = await res.json();
+      setIsLocalCoach(false);
       setCoachId(data.coachId);
       setCoach(data.coach);
 
@@ -122,9 +172,39 @@ export default function CoachDashboardPage() {
       setBio(data.coach?.bio || "");
       setImageUrl(data.coach?.image_url || "");
     } catch (e) {
-      setErr(fmtErr(e));
-      setCoachId(null);
-      setCoach(null);
+      // Fallback to localStorage-based coach session (used by CoachAuthModal)
+      try {
+        const raw = localStorage.getItem("currentCoach");
+        if (!raw) throw e;
+        const stored = JSON.parse(raw);
+        const normalized = {
+          ...stored,
+          category: stored?.category || titleCase(stored?.specialization) || "Strength",
+          image_url: stored?.image_url || stored?.imageUrl || "",
+          announcements: Array.isArray(stored?.announcements) ? stored.announcements : [],
+          programs: Array.isArray(stored?.programs) ? stored.programs : [],
+          blogs: Array.isArray(stored?.blogs) ? stored.blogs : [],
+          videos: Array.isArray(stored?.videos) ? stored.videos : [],
+        };
+        setIsLocalCoach(true);
+        setCoachId(normalized?.id || normalized?._id || normalized?.coachId || null);
+        setCoach(normalized);
+        setName(normalized?.name || "");
+        setCategory(normalized?.category || "Strength");
+        setBio(normalized?.bio || "");
+        setImageUrl(normalized?.image_url || "");
+
+        // Seed tab data from local coach payload
+        setAnnouncements(normalized.announcements);
+        setPrograms(normalized.programs);
+        setBlogs(normalized.blogs);
+        setVideos(normalized.videos);
+      } catch (e2) {
+        setIsLocalCoach(false);
+        setErr(fmtErr(e2));
+        setCoachId(null);
+        setCoach(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -133,6 +213,12 @@ export default function CoachDashboardPage() {
   const loadAnnouncements = async () => {
     setAnnLoading(true);
     try {
+      if (isLocalCoach) {
+        const raw = localStorage.getItem("currentCoach");
+        const stored = raw ? JSON.parse(raw) : null;
+        setAnnouncements(Array.isArray(stored?.announcements) ? stored.announcements : []);
+        return;
+      }
       const res = await fetch("/api/coach/announcements", { cache: "no-store" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -150,6 +236,12 @@ export default function CoachDashboardPage() {
   const loadPrograms = async () => {
     setProgramLoading(true);
     try {
+      if (isLocalCoach) {
+        const raw = localStorage.getItem("currentCoach");
+        const stored = raw ? JSON.parse(raw) : null;
+        setPrograms(Array.isArray(stored?.programs) ? stored.programs : []);
+        return;
+      }
       const res = await fetch("/api/coach/programs", { cache: "no-store" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -167,6 +259,12 @@ export default function CoachDashboardPage() {
   const loadBlogs = async () => {
     setBlogLoading(true);
     try {
+      if (isLocalCoach) {
+        const raw = localStorage.getItem("currentCoach");
+        const stored = raw ? JSON.parse(raw) : null;
+        setBlogs(Array.isArray(stored?.blogs) ? stored.blogs : []);
+        return;
+      }
       const res = await fetch("/api/coach/blogs", { cache: "no-store" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -184,6 +282,12 @@ export default function CoachDashboardPage() {
   const loadVideos = async () => {
     setVideoLoading(true);
     try {
+      if (isLocalCoach) {
+        const raw = localStorage.getItem("currentCoach");
+        const stored = raw ? JSON.parse(raw) : null;
+        setVideos(Array.isArray(stored?.videos) ? stored.videos : []);
+        return;
+      }
       const res = await fetch("/api/coach/videos", { cache: "no-store" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -212,6 +316,11 @@ export default function CoachDashboardPage() {
 
   const logout = async () => {
     try {
+      if (isLocalCoach) {
+        localStorage.removeItem("currentCoach");
+        window.dispatchEvent(new Event("coachLoggedOut"));
+        return;
+      }
       await fetch("/api/coach/auth/logout", { method: "POST" });
     } finally {
       router.push("/");
@@ -223,6 +332,19 @@ export default function CoachDashboardPage() {
     setSavingProfile(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const updatedCoach = {
+          ...(coach || {}),
+          name,
+          category,
+          specialization: (coach?.specialization ? coach.specialization : category)?.toString(),
+          bio,
+          image_url: imageUrl,
+        };
+        setCoach(updatedCoach);
+        persistLocalCoach(updatedCoach);
+        return;
+      }
       const res = await fetch("/api/coach/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -247,6 +369,24 @@ export default function CoachDashboardPage() {
     setAnnSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const next = {
+          id: Date.now(),
+          title: annTitle,
+          content: annContent,
+          date: annDate,
+        };
+        const updatedCoach = {
+          ...(coach || {}),
+          announcements: [next, ...(Array.isArray(coach?.announcements) ? coach.announcements : [])],
+        };
+        setCoach(updatedCoach);
+        setAnnouncements(updatedCoach.announcements);
+        persistLocalCoach(updatedCoach);
+        setAnnTitle("");
+        setAnnContent("");
+        return;
+      }
       const res = await fetch("/api/coach/announcements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -279,6 +419,16 @@ export default function CoachDashboardPage() {
     setAnnSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const list = Array.isArray(coach?.announcements) ? coach.announcements : [];
+        const updated = list.map((a) => (a?.id === editingId ? { ...a, ...editDraft } : a));
+        const updatedCoach = { ...(coach || {}), announcements: updated };
+        setCoach(updatedCoach);
+        setAnnouncements(updated);
+        persistLocalCoach(updatedCoach);
+        cancelEdit();
+        return;
+      }
       const res = await fetch(`/api/coach/announcements/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -301,6 +451,15 @@ export default function CoachDashboardPage() {
     setAnnSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const list = Array.isArray(coach?.announcements) ? coach.announcements : [];
+        const updated = list.filter((a) => a?.id !== id);
+        const updatedCoach = { ...(coach || {}), announcements: updated };
+        setCoach(updatedCoach);
+        setAnnouncements(updated);
+        persistLocalCoach(updatedCoach);
+        return;
+      }
       const res = await fetch(`/api/coach/announcements/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -317,6 +476,29 @@ export default function CoachDashboardPage() {
     setProgramSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const next = {
+          id: Date.now(),
+          name: programName,
+          description: programDescription,
+          duration: programDuration,
+          goal: programGoal,
+          price: Number(programPrice || 0),
+        };
+        const updatedCoach = {
+          ...(coach || {}),
+          programs: [next, ...(Array.isArray(coach?.programs) ? coach.programs : [])],
+        };
+        setCoach(updatedCoach);
+        setPrograms(updatedCoach.programs);
+        persistLocalCoach(updatedCoach);
+        setProgramName("");
+        setProgramDescription("");
+        setProgramDuration("");
+        setProgramGoal("");
+        setProgramPrice(0);
+        return;
+      }
       const res = await fetch("/api/coach/programs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -362,6 +544,16 @@ export default function CoachDashboardPage() {
     setProgramSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const list = Array.isArray(coach?.programs) ? coach.programs : [];
+        const updated = list.map((p) => (p?.id === programEditingId ? { ...p, ...programDraft } : p));
+        const updatedCoach = { ...(coach || {}), programs: updated };
+        setCoach(updatedCoach);
+        setPrograms(updated);
+        persistLocalCoach(updatedCoach);
+        cancelProgramEdit();
+        return;
+      }
       const res = await fetch(`/api/coach/programs/${programEditingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -383,6 +575,15 @@ export default function CoachDashboardPage() {
     setProgramSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const list = Array.isArray(coach?.programs) ? coach.programs : [];
+        const updated = list.filter((p) => p?.id !== id);
+        const updatedCoach = { ...(coach || {}), programs: updated };
+        setCoach(updatedCoach);
+        setPrograms(updated);
+        persistLocalCoach(updatedCoach);
+        return;
+      }
       const res = await fetch(`/api/coach/programs/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -399,6 +600,29 @@ export default function CoachDashboardPage() {
     setBlogSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const next = {
+          id: Date.now(),
+          title: blogTitle,
+          excerpt: blogExcerpt,
+          category: blogCategory,
+          image: blogImage,
+          readTime: blogReadTime,
+          date: blogDate,
+          sections: [{ content: blogContent }],
+        };
+        const updatedCoach = {
+          ...(coach || {}),
+          blogs: [next, ...(Array.isArray(coach?.blogs) ? coach.blogs : [])],
+        };
+        setCoach(updatedCoach);
+        setBlogs(updatedCoach.blogs);
+        persistLocalCoach(updatedCoach);
+        setBlogTitle("");
+        setBlogExcerpt("");
+        setBlogContent("");
+        return;
+      }
       const res = await fetch("/api/coach/blogs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -446,6 +670,29 @@ export default function CoachDashboardPage() {
     setBlogSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const list = Array.isArray(coach?.blogs) ? coach.blogs : [];
+        const updated = list.map((b) =>
+          b?.id === blogEditingId
+            ? {
+                ...b,
+                title: blogDraft.title,
+                excerpt: blogDraft.excerpt,
+                category: blogDraft.category,
+                image: blogDraft.image,
+                readTime: blogDraft.readTime,
+                date: blogDraft.date,
+                sections: [{ content: blogDraft.content }],
+              }
+            : b
+        );
+        const updatedCoach = { ...(coach || {}), blogs: updated };
+        setCoach(updatedCoach);
+        setBlogs(updated);
+        persistLocalCoach(updatedCoach);
+        cancelBlogEdit();
+        return;
+      }
       const res = await fetch(`/api/coach/blogs/${blogEditingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -467,6 +714,15 @@ export default function CoachDashboardPage() {
     setBlogSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const list = Array.isArray(coach?.blogs) ? coach.blogs : [];
+        const updated = list.filter((b) => b?.id !== id);
+        const updatedCoach = { ...(coach || {}), blogs: updated };
+        setCoach(updatedCoach);
+        setBlogs(updated);
+        persistLocalCoach(updatedCoach);
+        return;
+      }
       const res = await fetch(`/api/coach/blogs/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -483,6 +739,27 @@ export default function CoachDashboardPage() {
     setVideoSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const next = {
+          id: Date.now(),
+          title: videoTitle,
+          video_url: videoUrl,
+          thumbnail_url: videoThumb,
+          duration: videoDuration,
+        };
+        const updatedCoach = {
+          ...(coach || {}),
+          videos: [next, ...(Array.isArray(coach?.videos) ? coach.videos : [])],
+        };
+        setCoach(updatedCoach);
+        setVideos(updatedCoach.videos);
+        persistLocalCoach(updatedCoach);
+        setVideoTitle("");
+        setVideoUrl("");
+        setVideoThumb("");
+        setVideoDuration("");
+        return;
+      }
       const res = await fetch("/api/coach/videos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -524,6 +801,16 @@ export default function CoachDashboardPage() {
     setVideoSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const list = Array.isArray(coach?.videos) ? coach.videos : [];
+        const updated = list.map((v) => (v?.id === videoEditingId ? { ...v, ...videoDraft } : v));
+        const updatedCoach = { ...(coach || {}), videos: updated };
+        setCoach(updatedCoach);
+        setVideos(updated);
+        persistLocalCoach(updatedCoach);
+        cancelVideoEdit();
+        return;
+      }
       const res = await fetch(`/api/coach/videos/${videoEditingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -545,6 +832,15 @@ export default function CoachDashboardPage() {
     setVideoSaving(true);
     setErr("");
     try {
+      if (isLocalCoach) {
+        const list = Array.isArray(coach?.videos) ? coach.videos : [];
+        const updated = list.filter((v) => v?.id !== id);
+        const updatedCoach = { ...(coach || {}), videos: updated };
+        setCoach(updatedCoach);
+        setVideos(updated);
+        persistLocalCoach(updatedCoach);
+        return;
+      }
       const res = await fetch(`/api/coach/videos/${id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -750,13 +1046,65 @@ export default function CoachDashboardPage() {
                         />
                       </div>
                       <div className="md:col-span-2">
-                        <label className="text-sm font-semibold text-gray-700">Profile Image URL</label>
-                        <input
-                          className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6BB371]"
-                          value={imageUrl}
-                          onChange={(e) => setImageUrl(e.target.value)}
-                          placeholder="/uploads/..."
-                        />
+                        <label className="text-sm font-semibold text-gray-700">Profile Picture</label>
+                        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-4">
+                          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300 bg-white shadow-sm shrink-0">
+                            {effectivePreviewImage ? (
+                              <Image
+                                src={effectivePreviewImage}
+                                alt={coach?.name || "Coach"}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                <Camera className="w-8 h-8 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex-1 w-full">
+                            <input
+                              type="file"
+                              id="coach-profile-image-upload"
+                              accept="image/*"
+                              onChange={handleProfileImageUpload}
+                              className="hidden"
+                            />
+                            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                              <label
+                                htmlFor="coach-profile-image-upload"
+                                className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[#354F52] text-white font-semibold hover:bg-[#52796F] transition-colors cursor-pointer"
+                              >
+                                {effectivePreviewImage ? "Change Picture" : "Upload Picture"}
+                              </label>
+                              {effectivePreviewImage && (
+                                <button
+                                  type="button"
+                                  onClick={() => setImageUrl("")}
+                                  className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-2">
+                              Max size: 5MB. Save changes to apply.
+                            </div>
+
+                            {/* Optional: allow pasting a URL too */}
+                            <div className="mt-3">
+                              <label className="text-xs font-semibold text-gray-600">Or paste image URL</label>
+                              <input
+                                className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6BB371]"
+                                value={imageUrl}
+                                onChange={(e) => setImageUrl(e.target.value)}
+                                placeholder="https://... or data:image/..."
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 

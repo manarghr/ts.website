@@ -223,6 +223,10 @@ export default function AuthModal({ isOpen, onClose }) {
       setErrors({})
 
       // Save user to localStorage for frontend state
+      // If logging in/signing up as a user, clear any coach session so the navbar switches correctly
+      localStorage.removeItem("currentCoach")
+      window.dispatchEvent(new Event("coachLoggedOut"))
+
       localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
 
       // Dispatch event to update navbar
@@ -291,6 +295,10 @@ export default function AuthModal({ isOpen, onClose }) {
       // Save to localStorage
       const updatedUsers = [...existingUsers, newUser]
       localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
+      // If logging in/signing up as a user, clear any coach session so the navbar switches correctly
+      localStorage.removeItem("currentCoach")
+      window.dispatchEvent(new Event("coachLoggedOut"))
+
       localStorage.setItem("trainsight_current_user", JSON.stringify(newUser))
 
       // Dispatch event to update navbar
@@ -357,6 +365,10 @@ export default function AuthModal({ isOpen, onClose }) {
       setErrors({})
 
       // Save user to localStorage for frontend state
+      // If logging in/signing up as a user, clear any coach session so the navbar switches correctly
+      localStorage.removeItem("currentCoach")
+      window.dispatchEvent(new Event("coachLoggedOut"))
+
       localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
 
       // Dispatch event to update navbar
@@ -409,6 +421,10 @@ export default function AuthModal({ isOpen, onClose }) {
 
       // Save current user (without password)
       const { password, ...userWithoutPassword } = user
+      // If logging in/signing up as a user, clear any coach session so the navbar switches correctly
+      localStorage.removeItem("currentCoach")
+      window.dispatchEvent(new Event("coachLoggedOut"))
+
       localStorage.setItem("trainsight_current_user", JSON.stringify(userWithoutPassword))
 
       // Dispatch event to update navbar

@@ -26,6 +26,16 @@ export default function Navbar() {
     return null
   })
 
+  const [currentCoach, setCurrentCoach] = useState(() => {
+    if (typeof window !== "undefined") {
+      const coach = localStorage.getItem("currentCoach")
+      if (coach) {
+        return JSON.parse(coach)
+      }
+    }
+    return null
+  })
+
   // Listen for storage changes to update profile picture in real-time
   useEffect(() => {
     const handleStorageChange = () => {
@@ -37,22 +47,47 @@ export default function Navbar() {
       }
     }
 
+    const handleCoachStorageChange = () => {
+      const coach = localStorage.getItem("currentCoach")
+      if (coach) {
+        setCurrentCoach(JSON.parse(coach))
+      } else {
+        setCurrentCoach(null)
+      }
+    }
+
     const handleLogout = () => {
       setCurrentUser(null)
+      setShowDropdown(false)
+    }
+
+    const handleCoachLogout = () => {
+      setCurrentCoach(null)
       setShowDropdown(false)
     }
 
     // Listen for custom event when user data is updated
     window.addEventListener("userUpdated", handleStorageChange)
     window.addEventListener("userLoggedOut", handleLogout)
+    window.addEventListener("coachUpdated", handleCoachStorageChange)
+    window.addEventListener("coachLoggedOut", handleCoachLogout)
+
+    // IMPORTANT: hydrate state from localStorage on first client mount
+    // (useState initializers ran during SSR, so they may be null even if storage has data)
+    handleStorageChange()
+    handleCoachStorageChange()
 
     // Also check on focus in case localStorage was updated in another tab
     window.addEventListener("focus", handleStorageChange)
+    window.addEventListener("focus", handleCoachStorageChange)
 
     return () => {
       window.removeEventListener("userUpdated", handleStorageChange)
       window.removeEventListener("userLoggedOut", handleLogout)
+      window.removeEventListener("coachUpdated", handleCoachStorageChange)
+      window.removeEventListener("coachLoggedOut", handleCoachLogout)
       window.removeEventListener("focus", handleStorageChange)
+      window.removeEventListener("focus", handleCoachStorageChange)
     }
   }, [])
 
@@ -62,6 +97,16 @@ export default function Navbar() {
     setShowDropdown(false)
     // Dispatch event to notify other components about logout
     window.dispatchEvent(new Event("userLoggedOut"))
+    router.push("/")
+    router.refresh()
+  }
+
+  const handleCoachLogout = () => {
+    // Remove current coach but keep coaches data
+    localStorage.removeItem("currentCoach")
+    setShowDropdown(false)
+    // Dispatch event to notify other components about logout
+    window.dispatchEvent(new Event("coachLoggedOut"))
     router.push("/")
     router.refresh()
   }
@@ -230,7 +275,7 @@ export default function Navbar() {
         <FaRegBell className="text-white text-lg cursor-pointer hover:text-[#C1B8AE] transition-colors" />
 
         <div className="relative profile-dropdown-container">
-          {currentUser ? (
+          {currentCoach || currentUser ? (
             <button 
               onClick={(e) => {
                 e.stopPropagation()
@@ -238,10 +283,10 @@ export default function Navbar() {
               }} 
               className="flex items-center focus:outline-none hover:opacity-80 transition-opacity"
             >
-              {currentUser?.profilePicture ? (
+              {(currentCoach?.image_url || currentUser?.profilePicture) ? (
                 <Image
-                  src={currentUser.profilePicture || "/placeholder.svg"}
-                  alt={currentUser.fullName || "Profile"}
+                  src={currentCoach?.image_url || currentUser?.profilePicture || "/placeholder.svg"}
+                  alt={currentCoach?.name || currentUser?.fullName || "Profile"}
                   width={40}
                   height={40}
                   className="w-10 h-10 rounded-full object-cover border-2 border-white cursor-pointer hover:border-[#C1B8AE] transition-all hover:scale-110"
@@ -256,7 +301,7 @@ export default function Navbar() {
           )}
 
           <AnimatePresence>
-            {showDropdown && currentUser && (
+            {showDropdown && (currentCoach || currentUser) && (
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -264,22 +309,45 @@ export default function Navbar() {
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50 overflow-hidden border border-gray-100"
               >
-                <Link
-                  href="/profile"
-                  className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={() => setShowDropdown(false)}
-                >
-                  <FaUser className="mr-3 text-gray-500" size={14} />
-                  View Profile
-                </Link>
-                <div className="border-t border-gray-100 my-1"></div>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center w-full px-4 py-3 text-sm text-left text-red-500 hover:bg-red-50 transition-colors"
-                >
-                  <FaSignOutAlt className="mr-3" size={14} />
-                  Logout
-                </button>
+                {currentCoach ? (
+                  <>
+                    <Link
+                      href="/coach/dashboard"
+                      className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowDropdown(false)}
+                    >
+                      <FaUser className="mr-3 text-gray-500" size={14} />
+                      Coach Dashboard
+                    </Link>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button
+                      onClick={handleCoachLogout}
+                      className="flex items-center w-full px-4 py-3 text-sm text-left text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <FaSignOutAlt className="mr-3" size={14} />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/profile"
+                      className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowDropdown(false)}
+                    >
+                      <FaUser className="mr-3 text-gray-500" size={14} />
+                      View Profile
+                    </Link>
+                    <div className="border-t border-gray-100 my-1"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-4 py-3 text-sm text-left text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <FaSignOutAlt className="mr-3" size={14} />
+                      Logout
+                    </button>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
