@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
 
 // DELETE - Reject pending blog
-export async function DELETE(request, { params }) {
+export async function DELETE(request, context) {
   try {
+    // Await params in Next.js 15
+    const params = await context.params;
     const { id } = params;
 
     if (!id) {

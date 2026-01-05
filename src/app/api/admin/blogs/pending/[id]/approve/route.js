@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
 
 // POST - Approve pending blog
-export async function POST(request, { params }) {
+export async function POST(request, context) {
   try {
+    // Await params in Next.js 15
+    const params = await context.params;
     const { id } = params;
 
     if (!id) {

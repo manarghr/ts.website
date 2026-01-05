@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { FaArrowRight, FaCalendarAlt, FaUser, FaClock, FaDumbbell, FaAppleAlt, FaCarrot, FaFish, FaBreadSlice, FaHeartbeat, FaBicycle, FaRunning } from "react-icons/fa";
 import Image from "next/image";
+import { useState, useEffect } from "react";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
@@ -19,40 +21,99 @@ const staggerContainer = {
   viewport: { once: true }
 };
 
-const blogPosts = [
-  {
-    id: 1,
-    title: "10 Essential Exercises for Perfect Form",
-    excerpt: "Learn the fundamental movements that will transform your training and prevent injuries.",
-    author: "Sarah Johnson",
-    date: "March 15, 2024",
-    readTime: "5 min read",
-    image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
-    category: "Training"
-  },
-  {
-    id: 2,
-    title: "Nutrition Tips for Optimal Recovery",
-    excerpt: "Discover how proper nutrition can accelerate your recovery and boost performance.",
-    author: "Mike Chen",
-    date: "March 12, 2024",
-    readTime: "7 min read",
-    image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800",
-    category: "Nutrition"
-  },
-  {
-    id: 3,
-    title: "How AI is Revolutionizing Fitness",
-    excerpt: "Explore the latest AI technology in fitness and how it's changing the way we train.",
-    author: "Emily Davis",
-    date: "March 10, 2024",
-    readTime: "6 min read",
-    image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
-    category: "Technology"
-  }
-];
-
 export default function BlogHome() {
+  // State management
+  const [allBlogPosts, setAllBlogPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [mounted, setMounted] = useState(false);
+  const POSTS_PER_PAGE = 3;
+
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Fetch logic
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/admin/blogs');
+        const data = await response.json();
+        if (data.success) {
+          setAllBlogPosts(data.blogs);
+        }
+      } catch (error) {
+        console.error('Error fetching blogs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlogs();
+  }, []);
+
+  // Get one post per category
+  const categories = ['training', 'nutrition', 'technology', 'wellness', 'mindset', 'progress'];
+
+  const getOnePerCategory = () => {
+    const result = [];
+    categories.forEach(cat => {
+      const post = allBlogPosts.find(p => p.category === cat);
+      if (post) result.push(post);
+    });
+    return result;
+  };
+
+  const filteredPosts = getOnePerCategory();
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+
+  // Ensure currentPage is valid
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [allBlogPosts.length, totalPages, currentPage]);
+
+  // Safe pagination - ensure we don't go out of bounds
+  const validPage = currentPage > totalPages && totalPages > 0 ? 1 : currentPage;
+  const startIndex = (validPage - 1) * POSTS_PER_PAGE;
+  const endIndex = startIndex + POSTS_PER_PAGE;
+  const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    const newPage = Math.max(1, Math.min(page, totalPages));
+    console.log('Changing to page:', newPage, 'Total pages:', totalPages, 'Filtered posts:', filteredPosts.length);
+    setCurrentPage(newPage);
+    if (mounted && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <section className="relative py-12 bg-white overflow-hidden">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
+          <div className="text-center py-16">
+            <div className="text-4xl mb-4">⏳</div>
+            <p className="text-gray-600">Loading articles...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  console.log('Rendering:', {
+    allPosts: allBlogPosts.length,
+    filtered: filteredPosts.length,
+    currentPage,
+    totalPages,
+    paginated: paginatedPosts.length,
+    startIndex,
+    endIndex
+  });
+
   return (
     <section className="relative py-12 bg-white overflow-hidden z-10">
       {/* Floating Gym and Food Icons Background */}
@@ -118,64 +179,125 @@ export default function BlogHome() {
         </motion.div>
 
         {/* Blog Posts Grid */}
-        <motion.div
-          variants={staggerContainer}
-          initial="initial"
-          whileInView="whileInView"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10"
-        >
-          {blogPosts.map((post, index) => (
-            <motion.article
-              key={post.id}
-              variants={fadeInUp}
-              className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 overflow-hidden"
-            >
-              {/* Image */}
-              <div className="relative h-48 overflow-hidden">
-                <Image
-                  src={post.image}
-                  alt={post.title}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4 px-3 py-1 bg-[#52796F] text-white text-xs font-semibold rounded-full">
-                  {post.category}
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-[#354F52] mb-3 group-hover:text-[#52796F] transition-colors line-clamp-2">
-                  {post.title}
-                </h3>
-                <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">
-                  {post.excerpt}
-                </p>
-
-                {/* Meta Info */}
-                <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                  <div className="flex items-center gap-1">
-                    <FaUser className="w-3 h-3" />
-                    <span>{post.author}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <FaClock className="w-3 h-3" />
-                    <span>{post.readTime}</span>
-                  </div>
-                </div>
-
-                <Link
-                  href={`/blog/${post.id}`}
-                  className="inline-flex items-center gap-2 text-[#52796F] font-semibold hover:text-[#354F52] transition-colors group-hover:gap-3"
+        {paginatedPosts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
+              {paginatedPosts.map((post, index) => (
+                <motion.article
+                  key={`${post.id}-page-${currentPage}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 overflow-hidden"
                 >
-                  Read More
-                  <FaArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </motion.article>
-          ))}
-        </motion.div>
+                  {/* Image */}
+                  <div className="relative h-48 overflow-hidden">
+                    <Image
+                      src={post.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800"}
+                      alt={post.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800";
+                      }}
+                    />
+                    <div className="absolute top-4 left-4 px-3 py-1 bg-[#52796F] text-white text-xs font-semibold rounded-full capitalize">
+                      {post.category}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-[#354F52] mb-3 group-hover:text-[#52796F] transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">
+                      {post.excerpt}
+                    </p>
+
+                    {/* Meta Info */}
+                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                      <div className="flex items-center gap-1">
+                        <FaUser className="w-3 h-3" />
+                        <span>{post.author}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <FaClock className="w-3 h-3" />
+                        <span>{post.readTime}</span>
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`/blog/${post.id}`}
+                      className="inline-flex items-center gap-2 text-[#52796F] font-semibold hover:text-[#354F52] transition-colors group-hover:gap-3"
+                    >
+                      Read More
+                      <FaArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </motion.article>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="flex justify-center items-center gap-8 mt-16 mb-12"
+              >
+                {/* Previous Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  aria-label="Previous page"
+                  className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+                >
+                  <IoIosArrowBack size={24} className="group-hover:-translate-x-1 transition-transform" />
+                </button>
+
+                {/* Page Dots Indicator */}
+                <div className="flex gap-3 items-center">
+                  {Array.from({ length: totalPages }).map((_, index) => {
+                    const page = index + 1;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          currentPage === page
+                            ? "bg-[#354F52] w-12 shadow-lg"
+                            : "bg-[#C8CDC5] w-2 hover:bg-[#52796F] hover:w-4"
+                        }`}
+                        aria-label={`Go to page ${page}`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  aria-label="Next page"
+                  className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+                >
+                  <IoIosArrowForward size={24} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </motion.div>
+            )}
+          </>
+        ) : (
+          // Empty State
+          <div className="text-center py-16 mb-12">
+            <div className="text-6xl mb-4">📝</div>
+            <h3 className="text-2xl font-bold text-[#354F52] mb-2">No articles yet</h3>
+            <p className="text-gray-600">Check back soon for new content!</p>
+          </div>
+        )}
 
         {/* View All Button */}
         <motion.div
@@ -197,4 +319,3 @@ export default function BlogHome() {
     </section>
   );
 }
-

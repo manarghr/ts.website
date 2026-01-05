@@ -2879,10 +2879,29 @@ const updateSection = (index, field, value) => {
                                         )}
                                       </div>
 
-                                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                                        <p className="text-sm text-blue-800">
-                                          <strong>{blog.sections.length}</strong> section{blog.sections.length !== 1 ? 's' : ''} in this blog
-                                        </p>
+                                      <div className="space-y-4 mb-4">
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                          <p className="text-sm text-blue-800 font-semibold mb-2">
+                                            Blog Content ({blog.sections.length} section{blog.sections.length !== 1 ? 's' : ''})
+                                          </p>
+                                        </div>
+                                        
+                                        {/* Show all sections */}
+                                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                                          {blog.sections.map((section, idx) => (
+                                            <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                              <h4 className="font-bold text-[#354F52] mb-2 flex items-center gap-2">
+                                                <span className="bg-[#354F52] text-white text-xs px-2 py-1 rounded">
+                                                  Section {idx + 1}
+                                                </span>
+                                                {section.title}
+                                              </h4>
+                                              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                                {section.content}
+                                              </p>
+                                            </div>
+                                          ))}
+                                        </div>
                                       </div>
 
                                       <div className="flex gap-3">
