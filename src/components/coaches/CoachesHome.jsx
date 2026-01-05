@@ -8,7 +8,7 @@ import background from "../assets/Group 2046.png";
 import Link from "next/link";
 import { FaArrowRight, FaUsers, FaStar } from "react-icons/fa";
 
-// Images (exemple)
+// Images (fallback)
 import picture1 from "../assets/picture1.png";
 import picture2 from "../assets/picture2.png";
 import picture3 from "../assets/picture3.png";
@@ -30,9 +30,16 @@ const staggerContainer = {
   viewport: { once: true }
 };
 
+// Default images array for fallback
+const defaultImages = [picture1, picture2, picture3];
+
 export default function CoachesHome() {
   const sectionRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [coaches, setCoaches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [isChanging, setIsChanging] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -57,35 +64,69 @@ export default function CoachesHome() {
     };
   }, []);
 
-  // --- Données des catégories ---
-  const categories = {
-    Strength: [
-      { image: picture1, title: "John Smith", para: "Expert in strength and conditioning.", rating: 5, clients: 250 },
-      { image: picture2, title: "Lucas Grey", para: "Powerlifting coach with 8 years of experience.", rating: 5, clients: 180 },
-      { image: picture3, title: "Sophia Ray", para: "Functional fitness and mobility specialist.", rating: 5, clients: 320 },
-    ],
-    Cardio: [
-      { image: picture1, title: "Michael Lee", para: "Cardio and endurance specialist.", rating: 5, clients: 200 },
-      { image: picture2, title: "Emma White", para: "HIIT and endurance expert.", rating: 5, clients: 280 },
-      { image: picture3, title: "Tom Harris", para: "Marathon and stamina trainer.", rating: 5, clients: 150 },
-    ],
-    Yoga: [
-      { image: picture1, title: "Emma Brown", para: "Certified yoga instructor with 10 years of experience.", rating: 5, clients: 400 },
-      { image: picture2, title: "Lina Patel", para: "Expert in Hatha and Vinyasa yoga.", rating: 5, clients: 350 },
-      { image: picture3, title: "David Kim", para: "Mindfulness and meditation teacher.", rating: 5, clients: 220 },
-    ],
-    "Weight Loss": [
-      { image: picture1, title: "Anna Scott", para: "Nutrition-focused weight loss coach.", rating: 5, clients: 500 },
-      { image: picture2, title: "James Carter", para: "Body transformation specialist.", rating: 5, clients: 380 },
-      { image: picture3, title: "Olivia Chen", para: "Fat-loss and endurance expert.", rating: 5, clients: 290 },
-    ],
+  // Fetch coaches from MongoDB
+  useEffect(() => {
+    const fetchCoaches = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/coaches');
+        const data = await response.json();
+        
+        if (data.success && Array.isArray(data.coaches)) {
+          setCoaches(data.coaches);
+        } else {
+          setCoaches([]);
+        }
+      } catch (err) {
+        console.error('Error fetching coaches:', err);
+        setCoaches([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCoaches();
+  }, []);
+
+  // Group coaches by category and get 3 per category
+  const getCategoriesWithCoaches = () => {
+    const categoryMap = {};
+    coaches.forEach(coach => {
+      const cat = coach.category || 'Other';
+      if (!categoryMap[cat]) {
+        categoryMap[cat] = [];
+      }
+      // Only add if less than 3 coaches in this category
+      if (categoryMap[cat].length < 3) {
+        categoryMap[cat].push({
+          ...coach,
+          rating: 5, // Default rating
+          clients: Math.floor(Math.random() * 400) + 150 // Random client count for demo
+        });
+      }
+    });
+    return categoryMap;
   };
 
-  // --- État pour la catégorie active ---
-  const [activeCategory, setActiveCategory] = useState("Strength");
-  const [isChanging, setIsChanging] = useState(false);
+  const categories = getCategoriesWithCoaches();
+  const categoryNames = Object.keys(categories);
 
-  // --- Changement de catégorie avec animation ---
+  // Set initial active category when coaches load
+  useEffect(() => {
+    if (categoryNames.length > 0 && !activeCategory) {
+      setActiveCategory(categoryNames[0]);
+    }
+  }, [categoryNames.length]);
+
+  // Helper function to get image for coach
+  const getCoachImage = (coach, index) => {
+    if (coach.image_url) {
+      return coach.image_url;
+    }
+    return defaultImages[index % defaultImages.length];
+  };
+
+  // Changement de catégorie avec animation
   const handleCategoryChange = (category) => {
     if (category === activeCategory) return;
     setIsChanging(true);
@@ -94,6 +135,31 @@ export default function CoachesHome() {
       setIsChanging(false);
     }, 300);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <section ref={sectionRef} className="text-center bg-gradient-to-b from-white to-[#C8CDC5]/30 py-20 md:py-28">
+        <div className="text-center py-16">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">Loading coaches...</p>
+        </div>
+      </section>
+    );
+  }
+
+  // Empty state
+  if (coaches.length === 0 || categoryNames.length === 0) {
+    return (
+      <section ref={sectionRef} className="text-center bg-gradient-to-b from-white to-[#C8CDC5]/30 py-20 md:py-28">
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">👥</div>
+          <h3 className="text-2xl font-bold text-[#354F52] mb-2">No coaches available</h3>
+          <p className="text-gray-600">Check back soon for our expert trainers!</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section ref={sectionRef} className="text-center bg-gradient-to-b from-white to-[#C8CDC5]/30 py-20 md:py-28 relative overflow-hidden">
@@ -142,7 +208,7 @@ export default function CoachesHome() {
           viewport={{ once: true }}
           className={`flex justify-center gap-4 mb-16 flex-wrap ${afacad.className}`}
         >
-          {Object.keys(categories).map((category) => (
+          {categoryNames.map((category) => (
             <motion.button
               key={category}
               onClick={() => handleCategoryChange(category)}
@@ -160,21 +226,17 @@ export default function CoachesHome() {
         </motion.div>
 
         {/* Enhanced Coaches Cards Container */}
-        <motion.div
-          variants={staggerContainer}
-          initial="initial"
-          whileInView="whileInView"
-          viewport={{ once: true }}
-          className="relative"
-        >
+        <div className="relative">
           <div
             className={`grid grid-cols-1 md:grid-cols-3 gap-8 transition-all duration-500 
             ${isChanging ? "opacity-0 translate-y-5" : "opacity-100 translate-y-0"}`}
           >
-            {categories[activeCategory].map((coach, i) => (
+            {activeCategory && categories[activeCategory]?.map((coach, i) => (
               <motion.div
-                key={i}
-                variants={fadeInUp}
+                key={`${coach.id}-${activeCategory}-${i}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
                 whileHover={{ y: -10 }}
                 className="group relative"
               >
@@ -189,8 +251,8 @@ export default function CoachesHome() {
                   <div className="relative mb-6 flex justify-center">
                     <div className="relative w-32 h-32 rounded-full overflow-hidden ring-4 ring-[#52796F]/20 group-hover:ring-[#52796F]/40 transition-all duration-300">
                       <Image
-                        src={coach.image}
-                        alt={coach.title}
+                        src={getCoachImage(coach, i)}
+                        alt={coach.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-300"
                       />
@@ -202,10 +264,10 @@ export default function CoachesHome() {
                   {/* Coach Info */}
                   <div className="relative z-10 text-center">
                     <h3 className="text-2xl font-bold text-[#354F52] mb-2 group-hover:text-[#52796F] transition-colors">
-                      {coach.title}
+                      {coach.name}
                     </h3>
-                    <p className="text-gray-600 mb-4 leading-relaxed">
-                      {coach.para}
+                    <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">
+                      {coach.bio || coach.description || 'Professional fitness coach'}
                     </p>
 
                     {/* Stats */}
@@ -233,7 +295,7 @@ export default function CoachesHome() {
               </motion.div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* View All Button */}
         <motion.div
