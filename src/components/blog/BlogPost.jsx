@@ -6,7 +6,8 @@ import { FaArrowLeft, FaUser, FaClock, FaTag, FaChevronLeft, FaChevronRight } fr
 import Image from "next/image"
 import { useState, useEffect } from "react"
 
-
+// Default fallback image
+const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800";
 
 export default function BlogPost({ postId }) {
   const [post, setPost] = useState(null)
@@ -34,6 +35,14 @@ export default function BlogPost({ postId }) {
 
     fetchBlogs()
   }, [postId])
+
+  // Helper to validate image URL
+  const getValidImageUrl = (imageUrl) => {
+    if (!imageUrl || imageUrl.trim() === "") {
+      return DEFAULT_IMAGE;
+    }
+    return imageUrl;
+  };
 
   if (loading) {
     return (
@@ -88,10 +97,7 @@ export default function BlogPost({ postId }) {
   const relatedPosts = allBlogPosts
     .filter(p => p.category === post.category && p.id !== post.id)
 
-
   const postsPerPage = 3;
-
-  
   const totalPages = Math.ceil(relatedPosts.length / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = startIndex + postsPerPage;
@@ -108,14 +114,18 @@ export default function BlogPost({ postId }) {
     <div className="min-h-screen bg-white">
       {/* Hero Section - Enhanced */}
       <section className="relative w-full h-[500px] md:h-[600px] overflow-hidden">
-        {/* Background Image */}
+        {/* Background Image - Only render if valid */}
         <div className="absolute inset-0">
           <Image
-            src={post.image}
+            src={getValidImageUrl(post.image)}
             alt={post.title}
             fill
+            sizes="100vw"
             className="object-cover"
             priority
+            onError={(e) => {
+              e.target.src = DEFAULT_IMAGE;
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
         </div>
@@ -254,7 +264,7 @@ export default function BlogPost({ postId }) {
 
       {/* Related Posts Section */}
       {relatedPosts.length > 0 && (
-        <section className="relative bg-gradient-to-br from-[#CAE5C4]/40 via-[#CAE5C4]/20 to-transparent py-20 md:py-28 overflow-hidden">
+        <section id="related-posts-section" className="relative bg-gradient-to-br from-[#CAE5C4]/40 via-[#CAE5C4]/20 to-transparent py-20 md:py-28 overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-25" style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.3;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
@@ -307,10 +317,14 @@ export default function BlogPost({ postId }) {
                       <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-[#52796F]/30 h-full transform hover:-translate-y-2">
                         <div className="relative h-48 overflow-hidden">
                           <Image
-                            src={relatedPost.image}
+                            src={getValidImageUrl(relatedPost.image)}
                             alt={relatedPost.title}
                             fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             className="object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={(e) => {
+                              e.target.src = DEFAULT_IMAGE;
+                            }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           <div className="absolute top-4 left-4 px-3 py-1.5 bg-[#52796F] text-white text-xs font-bold rounded-full capitalize shadow-lg">
@@ -343,7 +357,7 @@ export default function BlogPost({ postId }) {
               </div>
 
               {/* Pagination */}
-              {totalPages >= 1 && (
+              {totalPages > 1 && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
