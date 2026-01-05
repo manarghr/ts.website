@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { FaRegBell } from "react-icons/fa6"
-import { FaSearch, FaUser, FaSignOutAlt, FaDumbbell, FaBrain, FaUtensils } from "react-icons/fa"
+
+import {  FaUser, FaSignOutAlt, FaDumbbell, FaBrain, FaUtensils } from "react-icons/fa"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
@@ -271,8 +271,7 @@ export default function Navbar() {
       </div>
 
       <div className="flex justify-between items-center gap-10 pr-4">
-        <FaSearch className="text-white text-lg cursor-pointer hover:text-[#C1B8AE] transition-colors" />
-        <FaRegBell className="text-white text-lg cursor-pointer hover:text-[#C1B8AE] transition-colors" />
+
 
         <div className="relative profile-dropdown-container">
           {currentCoach || currentUser ? (
