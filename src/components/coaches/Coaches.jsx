@@ -22,7 +22,8 @@ export default function Coaches() {
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  // Single-select category filter (like Meals). null = all categories.
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
 
   // Fetch coaches from MongoDB API
@@ -131,14 +132,12 @@ export default function Coaches() {
     
     let result = { ...filtered };
     
-    // Filter by selected categories
-    if (selectedCategories.length > 0) {
+    // Filter by selected category (single select)
+    if (selectedCategory) {
       const filteredByCategory = {};
-      selectedCategories.forEach(cat => {
-        if (result[cat]) {
-          filteredByCategory[cat] = result[cat];
-        }
-      });
+      if (result[selectedCategory]) {
+        filteredByCategory[selectedCategory] = result[selectedCategory];
+      }
       result = filteredByCategory;
     }
     
@@ -160,27 +159,23 @@ export default function Coaches() {
     }
     
     return result;
-  }, [coaches, selectedCategories, searchQuery]);
+  }, [coaches, selectedCategory, searchQuery]);
   
   const filteredCategoryNames = Object.keys(filteredCategories).sort();
   
-  // Toggle category filter
+  // Toggle category filter (single select)
   const toggleCategory = (category) => {
-    setSelectedCategories(prev => 
-      prev.includes(category)
-        ? prev.filter(cat => cat !== category)
-        : [...prev, category]
-    );
+    setSelectedCategory((prev) => (prev === category ? null : category));
   };
   
   // Clear all filters
   const clearFilters = () => {
     setSearchQuery("");
-    setSelectedCategories([]);
+    setSelectedCategory(null);
   };
   
   // Check if any filters are active
-  const hasActiveFilters = searchQuery.trim() !== "" || selectedCategories.length > 0;
+  const hasActiveFilters = searchQuery.trim() !== "" || !!selectedCategory;
   
   // Debug: Log categories and coaches
   useEffect(() => {
@@ -377,104 +372,88 @@ export default function Coaches() {
         </div>
       </section>
 
-      {/* Filter Section */}
-      <section className="sticky top-0 z-50 bg-[#F2F5F3]/85 backdrop-blur-xl border-b border-[#C8CDC5]/50 shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-6">
+      {/* Filter Section - styled like Meals */}
+      <div className="relative bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] py-10 px-4 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <span className="absolute top-16 left-10 text-4xl opacity-10 animate-float" style={{ animationDelay: '0s', animationDuration: '6s' }}>🏋️</span>
+          <span className="absolute top-24 right-16 text-3xl opacity-10 animate-float" style={{ animationDelay: '1s', animationDuration: '7s' }}>💪</span>
+          <span className="absolute bottom-20 left-1/4 text-5xl opacity-10 animate-float" style={{ animationDelay: '2s', animationDuration: '8s' }}>🎯</span>
+          <span className="absolute bottom-16 right-1/3 text-4xl opacity-10 animate-float" style={{ animationDelay: '3s', animationDuration: '6.5s' }}>🧠</span>
+          <span className="absolute top-1/2 left-20 text-3xl opacity-10 animate-float" style={{ animationDelay: '1.5s', animationDuration: '7.5s' }}>🔥</span>
+          <span className="absolute top-1/3 right-24 text-4xl opacity-10 animate-float" style={{ animationDelay: '2.5s', animationDuration: '6.5s' }}>🚀</span>
+          <span className="absolute bottom-1/3 left-1/3 text-3xl opacity-10 animate-float" style={{ animationDelay: '0.5s', animationDuration: '8s' }}>⚡</span>
+          <span className="absolute top-20 right-1/4 text-4xl opacity-10 animate-float" style={{ animationDelay: '3.5s', animationDuration: '7s' }}>🤸</span>
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="space-y-6"
           >
-            {/* Search Bar */}
-            <div className="relative">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <div className="relative max-w-2xl mx-auto mb-8">
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 w-5 h-5 z-10" />
               <input
                 type="text"
                 placeholder="Search coaches by name or specialty..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-12 py-4 bg-white border-2 border-[#C8CDC5]/50 rounded-2xl focus:outline-none focus:border-[#52796F] transition-all shadow-md hover:shadow-lg text-gray-700 placeholder-gray-400"
+                className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#6BB371] focus:border-[#6BB371] transition-all duration-300 text-lg"
               />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#52796F] transition-colors"
-                >
-                  <FaTimes className="w-5 h-5" />
-                </button>
-              )}
             </div>
 
-            {/* Category Filters */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FaFilter className="text-[#52796F] w-5 h-5" />
-                  <h3 className="text-lg font-bold text-[#354F52]">Filter by Category</h3>
-                </div>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-sm text-[#52796F] hover:text-[#354F52] font-semibold flex items-center gap-2 transition-colors"
+            <div className="flex flex-wrap justify-center gap-3">
+              {/* All categories button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedCategory(null)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+                  !selectedCategory
+                    ? "bg-[#6BB371] text-white shadow-lg shadow-[#6BB371]/30 scale-105"
+                    : "bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 border border-white/20"
+                }`}
+              >
+                <span>All</span>
+              </motion.button>
+              {categoryNames.map((category) => {
+                const isSelected = selectedCategory === category;
+                return (
+                  <motion.button
+                    key={category}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => toggleCategory(category)}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+                      isSelected
+                        ? "bg-[#6BB371] text-white shadow-lg shadow-[#6BB371]/30 scale-105"
+                        : "bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 border border-white/20"
+                    }`}
                   >
-                    Clear all
-                    <FaTimes className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-              
-              <div className="flex flex-wrap gap-3">
-                {categoryNames.map((category) => {
-                  const isSelected = selectedCategories.includes(category);
-                  const categoryColor = getCategoryColor(category, categoryNames.indexOf(category));
-                  return (
-                    <motion.button
-                      key={category}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => toggleCategory(category)}
-                      className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2 ${
-                        isSelected
-                          ? "bg-gradient-to-r from-[#354F52] to-[#52796F] text-white shadow-xl"
-                          : "bg-white text-[#354F52] hover:bg-[#52796F] hover:text-white border-2 border-[#C8CDC5] hover:border-[#52796F]"
-                      }`}
-                    >
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                        isSelected ? "bg-white/20" : ""
-                      }`} style={isSelected ? {} : { color: categoryColor }}>
-                        {getCategoryIcon(category)}
-                      </div>
-                      <span>{category}</span>
-                      {isSelected && (
-                        <motion.span
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="ml-1"
-                        >
-                          <FaTimes className="w-3 h-3" />
-                        </motion.span>
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
-              
-              {/* Results Count */}
-              {hasActiveFilters && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-sm text-gray-600"
-                >
-                  Showing {filteredCategoryNames.reduce((sum, cat) => sum + (filteredCategories[cat]?.length || 0), 0)} coaches
-                  {selectedCategories.length > 0 && ` in ${selectedCategories.length} ${selectedCategories.length === 1 ? 'category' : 'categories'}`}
-                </motion.div>
-              )}
+                    {getCategoryIcon(category)}
+                    <span>{category}</span>
+                  </motion.button>
+                );
+              })}
             </div>
           </motion.div>
         </div>
-      </section>
+
+        <style jsx>{`
+          @keyframes float {
+            0%, 100% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-18px);
+            }
+          }
+          .animate-float {
+            animation: float 6s ease-in-out infinite;
+          }
+        `}</style>
+      </div>
 
       {/* Coaches Sections - Dynamic */}
       <div className="py-16 md:py-24 relative">
