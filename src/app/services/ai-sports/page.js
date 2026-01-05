@@ -51,6 +51,8 @@ export default function AISportsPage() {
   const [backendSessionId, setBackendSessionId] = useState(null);
   const [backendLandmarks, setBackendLandmarks] = useState(null);
   const aiIntervalRef = useRef(null);
+  const backendLeadMsRef = useRef(0);
+  const backendLastTsRef = useRef(0);
   // Upload video analysis (separate from live camera)
   const uploadVideoRef = useRef(null);
   const uploadCanvasRef = useRef(null);
@@ -61,9 +63,13 @@ export default function AISportsPage() {
   const [uploadFormScore, setUploadFormScore] = useState(0);
   const [uploadReps, setUploadReps] = useState(0);
   const [uploadAnalyzing, setUploadAnalyzing] = useState(false);
+  const [uploadSyncMode, setUploadSyncMode] = useState(false); // false = smooth playback, true = perfect overlay (main.py mode)
+  const uploadStepActiveRef = useRef(false);
   const uploadIntervalRef = useRef(null);
   const uploadInFlightRef = useRef(false);
   const uploadFailCountRef = useRef(0);
+  const uploadLeadMsRef = useRef(0);
+  const uploadLastTsRef = useRef(0);
   const backendInFlightRef = useRef(false);
   const backendFailCountRef = useRef(0);
 
@@ -349,6 +355,7 @@ export default function AISportsPage() {
     try {
       if (backendInFlightRef.current) return;
       backendInFlightRef.current = true;
+      const t0 = performance.now();
 
       const img = captureFrameBase64();
       if (!img) return;
@@ -356,6 +363,11 @@ export default function AISportsPage() {
       let sid = backendSessionId;
       if (!sid) sid = await startBackendSession();
       if (!sid) return;
+
+      // Monotonic timestamps for Tasks VIDEO-mode tracking (stable, less "limb swapping").
+      const candidateTs = Math.round(performance.now());
+      const ts = Math.max(backendLastTsRef.current + 1, candidateTs);
+      backendLastTsRef.current = ts;
 
       const res = await fetch(`/api/ai/analyze`, {
         method: "POST",
@@ -365,10 +377,19 @@ export default function AISportsPage() {
           exercise: selectedExercise,
           sessionId: sid,
           reset,
+          // Live camera frames are sequential => VIDEO mode gives more stable tracking.
+          mode: "video",
+          timestampMs: ts,
         }),
       });
       const data = await res.json();
       if (!data?.ok) return;
+      const rtt = performance.now() - t0;
+      // Smooth RTT a bit (prevents jittery prediction)
+      backendLeadMsRef.current = Math.max(
+        0,
+        Math.min(400, Math.round(0.85 * backendLeadMsRef.current + 0.15 * rtt))
+      );
 
       backendFailCountRef.current = 0;
       setBackendSessionId(data.sessionId);
@@ -398,7 +419,8 @@ export default function AISportsPage() {
     const vh = videoEl.videoHeight || 0;
     if (!vw || !vh) return null;
 
-    const maxW = 960; // better detection, less jitter
+    // Higher resolution for better pose detection (like main.py)
+    const maxW = 1280; // Increased from 960 for better accuracy
     const scale = Math.min(1, maxW / vw);
     const w = Math.max(1, Math.round(vw * scale));
     const h = Math.max(1, Math.round(vh * scale));
@@ -430,17 +452,18 @@ export default function AISportsPage() {
     return null;
   };
 
-  const tickUploadAI = async (reset = false) => {
+  const tickUploadAI = async (reset = false, { allowPaused = true } = {}) => {
     try {
       if (uploadInFlightRef.current) return;
       uploadInFlightRef.current = true;
+      const t0 = performance.now();
 
       const videoEl = uploadVideoRef.current;
       if (!videoEl) return;
       if (videoEl.ended) return;
 
-      // Only analyze while video is playing (feels natural)
-      if (videoEl.paused) return;
+      // In "main.py mode" we analyze while paused + step frames ourselves
+      if (!allowPaused && videoEl.paused) return;
 
       const img = captureFrameBase64FromEl(videoEl);
       if (!img) return;
@@ -448,6 +471,11 @@ export default function AISportsPage() {
       let sid = uploadSessionId;
       if (!sid) sid = await startUploadSession();
       if (!sid) return;
+
+      // Monotonic timestamps for MediaPipe video-mode landmarker
+      const candidateTs = Math.round((videoEl.currentTime || 0) * 1000);
+      const ts = Math.max(uploadLastTsRef.current + 1, candidateTs);
+      uploadLastTsRef.current = ts;
 
       const res = await fetch(`/api/ai/analyze`, {
         method: "POST",
@@ -457,10 +485,26 @@ export default function AISportsPage() {
           exercise: selectedExercise,
           sessionId: sid,
           reset,
+          timestampMs: ts,
+          // Upload Sync: ON seeks/steps (not sequential) => IMAGE mode.
+          // Upload Sync: OFF plays normally (sequential) => VIDEO mode for stable tracking.
+          mode: uploadSyncMode ? "image" : "video",
         }),
       });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+        console.error("Upload AI: HTTP error", res.status, errorData);
+        throw new Error(`HTTP ${res.status}: ${errorData.error || "Server error"}`);
+      }
+
       const data = await res.json();
       if (!data?.ok) return;
+      const rtt = performance.now() - t0;
+      uploadLeadMsRef.current = Math.max(
+        0,
+        Math.min(400, Math.round(0.85 * uploadLeadMsRef.current + 0.15 * rtt))
+      );
 
       uploadFailCountRef.current = 0;
       setUploadSessionId(data.sessionId);
@@ -481,6 +525,7 @@ export default function AISportsPage() {
   };
 
   const stopUploadAnalysis = () => {
+    uploadStepActiveRef.current = false;
     if (uploadIntervalRef.current) {
       clearInterval(uploadIntervalRef.current);
       uploadIntervalRef.current = null;
@@ -500,23 +545,64 @@ export default function AISportsPage() {
     setUploadReps(0);
     setUploadLandmarks(null);
     setUploadSessionId(null);
+    uploadLastTsRef.current = 0;
 
-    // Start playing from current position
-    try {
-      await uploadVideoRef.current.play();
-    } catch {
-      // user may need to press play; we still can analyze once it plays
+    const v = uploadVideoRef.current;
+
+    if (uploadSyncMode) {
+      // Perfect overlay (main.py-style): pause + step through frames; video speed == AI speed
+      try {
+        v.pause();
+      } catch {}
+
+      uploadStepActiveRef.current = true;
+      uploadLeadMsRef.current = 0; // no lead compensation needed when stepped
+
+      const stepSeconds = 1 / 15; // target "fps" for stepping (will slow down if AI is slower)
+
+      const waitForSeek = () =>
+        new Promise((resolve) => {
+          const el = uploadVideoRef.current;
+          if (!el) return resolve();
+          el.addEventListener("seeked", () => resolve(), { once: true });
+        });
+
+      const loop = async (isFirst) => {
+        if (!uploadStepActiveRef.current) return;
+        const el = uploadVideoRef.current;
+        if (!el) return;
+
+        if (el.ended || (Number.isFinite(el.duration) && el.currentTime >= el.duration - 0.001)) {
+          stopUploadAnalysis();
+          return;
+        }
+
+        await tickUploadAI(isFirst, { allowPaused: true });
+        if (!uploadStepActiveRef.current) return;
+
+        const dur = el.duration || 0;
+        const nextTime = dur ? Math.min(dur, el.currentTime + stepSeconds) : el.currentTime + stepSeconds;
+        el.currentTime = nextTime;
+        await waitForSeek();
+
+        loop(false);
+      };
+
+      loop(true);
+    } else {
+      // Smooth playback: keep video playing and analyze in the background (may show some delay)
+      uploadStepActiveRef.current = false;
+      try {
+        await v.play();
+      } catch {}
+
+      await tickUploadAI(true, { allowPaused: false });
+      if (uploadIntervalRef.current) clearInterval(uploadIntervalRef.current);
+      uploadIntervalRef.current = setInterval(() => {
+        tickUploadAI(false, { allowPaused: false });
+        if (uploadVideoRef.current?.ended) stopUploadAnalysis();
+      }, 80);
     }
-
-    await tickUploadAI(true);
-    if (uploadIntervalRef.current) clearInterval(uploadIntervalRef.current);
-    uploadIntervalRef.current = setInterval(() => {
-      tickUploadAI(false);
-      // stop automatically when video ends
-      if (uploadVideoRef.current?.ended) {
-        stopUploadAnalysis();
-      }
-    }, 350);
   };
 
   const onUploadFile = (file) => {
@@ -1085,6 +1171,9 @@ export default function AISportsPage() {
                         canvasRef={canvasRef}
                         landmarks={backendLandmarks}
                         enabled={useMediaPipe && cameraActive && streamReady}
+                        // Lead/prediction can make points look "off-body". Keep it exact.
+                        leadMs={0}
+                        mirror={true}
                       />
                       {isRecording && (
                         <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full animate-pulse z-10">
@@ -1347,9 +1436,11 @@ export default function AISportsPage() {
                       <video
                         ref={uploadVideoRef}
                         src={uploadUrl}
-                        controls
+                        // Native controls add a bottom bar that breaks overlay alignment (canvas covers full element).
+                        // Hide controls while analyzing so landmarks map 1:1 to the displayed video image.
+                        controls={!uploadAnalyzing}
                         className="w-full h-full object-contain"
-                        style={{ transform: "scaleX(-1)" }}
+                        // Uploaded videos are typically already in correct orientation; don't mirror.
                         onEnded={() => stopUploadAnalysis()}
                       />
                       <canvas
@@ -1362,6 +1453,10 @@ export default function AISportsPage() {
                         canvasRef={uploadCanvasRef}
                         landmarks={uploadLandmarks}
                         enabled={useMediaPipe && !!uploadUrl}
+                        // In Sync mode the video is stepped frame-by-frame, so there is no latency to compensate.
+                        // Lead compensation can overshoot and look "off-body", so disable it in Sync mode.
+                        leadMs={uploadSyncMode ? 0 : uploadLeadMsRef.current}
+                        mirror={false}
                       />
                     </div>
                   )}
@@ -1370,6 +1465,33 @@ export default function AISportsPage() {
                 {/* Analysis Panel */}
                 <div className="p-8 bg-gradient-to-br from-white to-[#C8CDC5]/10">
                   <h3 className="text-2xl font-bold text-[#354F52] mb-6">Video Analysis</h3>
+
+                  {/* Upload mode toggle */}
+                  <div className="mb-4 p-3 bg-white/70 border border-[#C8CDC5]/40 rounded-xl">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-[#354F52]">Upload Mode</div>
+                        <div className="text-xs text-gray-600">
+                          {uploadSyncMode
+                            ? "Perfect overlay (video pauses/steps like main.py)"
+                            : "Smooth playback (video plays normally; overlay may lag a bit)"}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={uploadAnalyzing}
+                        onClick={() => setUploadSyncMode((v) => !v)}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          uploadSyncMode
+                            ? "bg-[#354F52] text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        } ${uploadAnalyzing ? "opacity-50 cursor-not-allowed" : ""}`}
+                        title={uploadAnalyzing ? "Stop analysis to change mode" : "Toggle upload mode"}
+                      >
+                        {uploadSyncMode ? "Sync: ON" : "Sync: OFF"}
+                      </button>
+                    </div>
+                  </div>
 
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="bg-gradient-to-br from-[#6BB371] to-[#52796F] rounded-xl p-4 text-white">

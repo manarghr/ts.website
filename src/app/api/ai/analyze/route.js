@@ -11,9 +11,19 @@ export async function POST(request) {
       body: JSON.stringify(body),
     });
 
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => "Unknown error");
+      console.error(`AI backend error (${res.status}):`, errorText);
+      return NextResponse.json(
+        { ok: false, error: `AI server error (${res.status})`, details: errorText },
+        { status: res.status }
+      );
+    }
+
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (e) {
+    console.error("AI server connection error:", e);
     return NextResponse.json(
       { ok: false, error: "AI server not reachable", details: e?.message || String(e) },
       { status: 502 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 // MediaPipe Pose connections (same as POSE_CONNECTIONS)
 const POSE_CONNECTIONS = [
@@ -11,9 +11,7 @@ const POSE_CONNECTIONS = [
   [27, 29],[28, 30],[29, 31],[30, 32],[27, 31],[28, 32],
 ];
 
-export default function PoseOverlay({ videoRef, canvasRef, landmarks, enabled }) {
-  // Exponential moving average smoothing (per landmark, in pixel space)
-  const smoothRef = useRef({ pts: Array(33).fill(null) });
+export default function PoseOverlay({ videoRef, canvasRef, landmarks, enabled, mirror = true }) {
 
   useEffect(() => {
     if (!enabled) return;
@@ -61,38 +59,32 @@ export default function PoseOverlay({ videoRef, canvasRef, landmarks, enabled })
       offsetY = (ch - drawH) / 2;
     }
 
-    // Filter low-confidence landmarks aggressively (reduces random points)
-    const minVis = 0.6;
+    // Confidence threshold:
+    // Hands/wrists often have lower confidence than torso (occlusion / fast motion),
+    // so use per-landmark thresholds to keep hands responsive without letting the whole pose go noisy.
+    const minVisCore = 0.55; // torso/legs
+    const minVisHands = 0.25; // wrists + fingers
+    const handIdx = new Set([15, 16, 17, 18, 19, 20, 21, 22]);
 
-    const rawPts = landmarks.map((lm) => ({
-      // mirror horizontally to match the video (page uses scaleX(-1))
-      x: offsetX + (1 - lm.x) * drawW,
+    const rawPts = landmarks.map((lm, i) => ({
+      // Mirror horizontally only if the video element is mirrored (e.g. live selfie camera).
+      x: offsetX + (mirror ? (1 - lm.x) : lm.x) * drawW,
       y: offsetY + lm.y * drawH,
       v: lm.visibility ?? 1,
+      t: handIdx.has(i) ? minVisHands : minVisCore,
     }));
 
     // If we barely see a person, don't draw anything (prevents "random constellation")
-    const visibleCount = rawPts.reduce((acc, p) => acc + ((p.v ?? 1) >= minVis ? 1 : 0), 0);
-    if (visibleCount < 10) {
-      smoothRef.current.pts = Array(33).fill(null);
+    const visibleCount = rawPts.reduce((acc, p) => acc + ((p.v ?? 1) >= (p.t ?? minVisCore) ? 1 : 0), 0);
+    if (visibleCount < 8) {
       return;
     }
 
-    // Smooth in pixel space (EMA)
-    // Lower alpha => smoother (less jitter) but more lag
-    const alpha = 0.35;
-    const pts = rawPts.map((p, i) => {
-      if ((p.v ?? 1) < minVis) return null;
-      const prev = smoothRef.current.pts[i];
-      if (!prev) {
-        smoothRef.current.pts[i] = { x: p.x, y: p.y, v: p.v };
-        return smoothRef.current.pts[i];
-      }
-      const nx = prev.x + alpha * (p.x - prev.x);
-      const ny = prev.y + alpha * (p.y - prev.y);
-      const nv = p.v;
-      smoothRef.current.pts[i] = { x: nx, y: ny, v: nv };
-      return smoothRef.current.pts[i];
+    // IMPORTANT: Draw raw points only (no prediction).
+    // Prediction can overshoot when landmarks jump between frames and looks like "random" points.
+    const pts = rawPts.map((p) => {
+      if ((p.v ?? 1) < (p.t ?? minVisCore)) return null;
+      return { x: p.x, y: p.y, v: p.v };
     });
 
     // lines
@@ -118,7 +110,7 @@ export default function PoseOverlay({ videoRef, canvasRef, landmarks, enabled })
       ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
       ctx.fill();
     }
-  }, [enabled, videoRef, canvasRef, landmarks]);
+  }, [enabled, videoRef, canvasRef, landmarks, mirror]);
 
   return null;
 }
