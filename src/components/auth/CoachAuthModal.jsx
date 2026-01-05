@@ -89,6 +89,16 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     }
   };
 
+  const uploadProfilePicture = async () => {
+    if (!formData.profilePicture) return "";
+    const fd = new FormData();
+    fd.append("file", formData.profilePicture);
+    const res = await fetch("/api/upload/image", { method: "POST", body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.success) throw new Error(data.error || "Failed to upload profile picture");
+    return data.imageUrl || "";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting || isProfilePictureLoading) return;
@@ -107,6 +117,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Login failed");
       } else {
+        const imageUrl = await uploadProfilePicture();
         const res = await fetch("/api/coach/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -120,13 +131,22 @@ export default function CoachAuthModal({ isOpen, onClose }) {
             certification: formData.certification,
             bio: formData.bio,
             category: toCategory(formData.specialization),
-            image_url: profilePicturePreview || "",
+            image_url: imageUrl,
           }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Signup failed");
       }
       alert(isLogin ? "Welcome back, Coach!" : "Coach account created!");
+
+      // Coaches and users cannot be logged in at the same time
+      try {
+        localStorage.removeItem("trainsight_current_user");
+        window.dispatchEvent(new Event("userLoggedOut"));
+      } catch {
+        // ignore
+      }
+      window.dispatchEvent(new Event("coachSessionUpdated"));
 
       // Reset form
       setFormData({

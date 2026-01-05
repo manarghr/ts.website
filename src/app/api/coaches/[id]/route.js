@@ -57,6 +57,7 @@ export async function GET(request, { params }) {
         id: video._id?.toString(),
         title: video.title,
         thumbnail: video.thumbnail_url || video.thumbnailUrl,
+        video_url: video.video_url || video.videoUrl,
         views: video.views || 0,
         likes: video.likes || 0,
         duration: video.duration || '0:00',
