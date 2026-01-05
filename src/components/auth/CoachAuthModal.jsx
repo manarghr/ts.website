@@ -7,6 +7,7 @@ import Image from "next/image";
 
 export default function CoachAuthModal({ isOpen, onClose }) {
   const [isLogin, setIsLogin] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,6 +23,17 @@ export default function CoachAuthModal({ isOpen, onClose }) {
   const [certificatePreview, setCertificatePreview] = useState(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState(null);
   const isProfilePictureLoading = !isLogin && formData.profilePicture && !profilePicturePreview;
+
+  const toCategory = (specialization) => {
+    const v = String(specialization || "").toLowerCase();
+    if (v === "yoga") return "Yoga";
+    if (v === "cardio") return "Cardio";
+    if (v === "nutrition") return "Nutrition";
+    if (v === "crossfit") return "CrossFit";
+    if (v === "rehabilitation") return "Rehabilitation";
+    if (v === "sports") return "Sports Performance";
+    return "Strength";
+  };
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -77,63 +89,61 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLogin) {
-      // Handle coach login
-      const coaches = JSON.parse(localStorage.getItem("coaches") || "[]");
-      const coach = coaches.find(
-        (c) => c.email === formData.email && c.password === formData.password
-      );
-      if (coach) {
-        // If logging in as coach, ensure any user session is cleared so the navbar switches correctly
-        localStorage.removeItem("trainsight_current_user");
-        window.dispatchEvent(new Event("userLoggedOut"));
+    if (isSubmitting || isProfilePictureLoading) return;
+    setIsSubmitting(true);
 
-        localStorage.setItem("currentCoach", JSON.stringify(coach));
-        // Dispatch event to update navbar
-        window.dispatchEvent(new Event("coachUpdated"));
-        alert("Welcome back, Coach " + coach.name + "!");
-        // Reset form
-        setFormData({
-          name: "",
-          email: "",
-          password: "",
-          phone: "",
-          specialization: "",
-          experience: "",
-          certification: "",
-          bio: "",
-          certificateFile: null,
-          profilePicture: null
-        });
-        setCertificatePreview(null);
-        setProfilePicturePreview(null);
-        onClose();
-      } else {
-        alert("Invalid credentials. Please try again.");
-      }
-    } else {
-      // Handle coach signup
-      const newCoach = {
-        id: Date.now(),
-        ...formData,
-        image_url: profilePicturePreview, // Store the base64 image
-        joinedDate: new Date().toISOString(),
-        status: "pending" // Pending approval
-      };
-      const coaches = JSON.parse(localStorage.getItem("coaches") || "[]");
-      coaches.push(newCoach);
-      localStorage.setItem("coaches", JSON.stringify(coaches));
-
-      // If signing up as coach, ensure any user session is cleared so the navbar switches correctly
+    try {
+      // If logging in/signing up as coach, clear any user session so the navbar switches correctly
       localStorage.removeItem("trainsight_current_user");
       window.dispatchEvent(new Event("userLoggedOut"));
 
-      localStorage.setItem("currentCoach", JSON.stringify(newCoach));
-      // Dispatch event to update navbar
+      if (isLogin) {
+        const res = await fetch("/api/coach/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Login failed");
+      } else {
+        const res = await fetch("/api/coach/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone,
+            specialization: formData.specialization,
+            experience: formData.experience,
+            certification: formData.certification,
+            bio: formData.bio,
+            category: toCategory(formData.specialization),
+            image_url: profilePicturePreview || "",
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Signup failed");
+      }
+
+      // Hydrate coach info from DB-backed session cookie
+      const meRes = await fetch("/api/coach/me", { cache: "no-store" });
+      const meData = await meRes.json().catch(() => ({}));
+      if (meRes.ok && meData?.coach) {
+        localStorage.setItem("currentCoach", JSON.stringify(meData.coach));
+      } else {
+        // Fallback: clear local coach if session didn't hydrate
+        localStorage.removeItem("currentCoach");
+      }
+
       window.dispatchEvent(new Event("coachUpdated"));
-      alert("Application submitted! We'll review your profile and get back to you soon.");
+      alert(isLogin ? "Welcome back, Coach!" : "Coach account created!");
+
       // Reset form
       setFormData({
         name: "",
@@ -145,11 +155,15 @@ export default function CoachAuthModal({ isOpen, onClose }) {
         certification: "",
         bio: "",
         certificateFile: null,
-        profilePicture: null
+        profilePicture: null,
       });
       setCertificatePreview(null);
       setProfilePicturePreview(null);
       onClose();
+    } catch (err) {
+      alert(err?.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

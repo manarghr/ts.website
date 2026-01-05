@@ -56,6 +56,27 @@ export default function Navbar() {
       }
     }
 
+    const hydrateCoachFromServer = async () => {
+      try {
+        const res = await fetch("/api/coach/me", { cache: "no-store" })
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}))
+          if (data?.coach) {
+            setCurrentCoach(data.coach)
+            localStorage.setItem("currentCoach", JSON.stringify(data.coach))
+            return
+          }
+        }
+        // If not authenticated, clear any stale local coach
+        if (res.status === 401) {
+          setCurrentCoach(null)
+          localStorage.removeItem("currentCoach")
+        }
+      } catch (_) {
+        // ignore
+      }
+    }
+
     const handleLogout = () => {
       setCurrentUser(null)
       setShowDropdown(false)
@@ -76,10 +97,12 @@ export default function Navbar() {
     // (useState initializers ran during SSR, so they may be null even if storage has data)
     handleStorageChange()
     handleCoachStorageChange()
+    hydrateCoachFromServer()
 
     // Also check on focus in case localStorage was updated in another tab
     window.addEventListener("focus", handleStorageChange)
     window.addEventListener("focus", handleCoachStorageChange)
+    window.addEventListener("focus", hydrateCoachFromServer)
 
     return () => {
       window.removeEventListener("userUpdated", handleStorageChange)
@@ -88,6 +111,7 @@ export default function Navbar() {
       window.removeEventListener("coachLoggedOut", handleCoachLogout)
       window.removeEventListener("focus", handleStorageChange)
       window.removeEventListener("focus", handleCoachStorageChange)
+      window.removeEventListener("focus", hydrateCoachFromServer)
     }
   }, [])
 
@@ -101,8 +125,13 @@ export default function Navbar() {
     router.refresh()
   }
 
-  const handleCoachLogout = () => {
+  const handleCoachLogout = async () => {
     // Remove current coach but keep coaches data
+    try {
+      await fetch("/api/coach/auth/logout", { method: "POST" })
+    } catch (_) {
+      // ignore
+    }
     localStorage.removeItem("currentCoach")
     setShowDropdown(false)
     // Dispatch event to notify other components about logout
