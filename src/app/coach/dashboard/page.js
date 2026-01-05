@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
 import Image from "next/image";
-import { Camera } from "lucide-react";
+import { Activity, Camera, Dumbbell, ExternalLink, Flame, Sparkles, Trophy } from "lucide-react";
 
 function fmtErr(e) {
   if (!e) return "Unknown error";
@@ -152,6 +152,9 @@ export default function CoachDashboardPage() {
       .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
       .join(" ");
   };
+
+  const displayName = titleCase(coach?.name || name || "Coach");
+  const displayCategory = titleCase(coach?.category || category || "Fitness");
 
   const loadMe = async () => {
     setErr("");
@@ -858,13 +861,52 @@ export default function CoachDashboardPage() {
         {/* Animated soft background */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-[#e8f0eb] via-[#f5f7f6] to-[#e2ebe4]" />
+          <div className="absolute inset-0 opacity-[0.12] bg-[radial-gradient(circle_at_20%_20%,rgba(107,179,113,0.35),transparent_30%),radial-gradient(circle_at_80%_10%,rgba(82,121,111,0.35),transparent_35%),radial-gradient(circle_at_50%_90%,rgba(53,79,82,0.22),transparent_40%)]" />
           <div className="absolute -top-24 -left-16 w-[420px] h-[420px] bg-[#6BB371]/15 rounded-full blur-[140px]" />
           <div className="absolute top-10 right-[-120px] w-[520px] h-[520px] bg-[#52796F]/12 rounded-full blur-[160px]" />
           <div className="absolute bottom-[-160px] left-1/2 -translate-x-1/2 w-[620px] h-[620px] bg-[#354F52]/10 rounded-full blur-[200px]" />
-          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: `
-              linear-gradient(to right, rgba(53,79,82,0.08) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(53,79,82,0.08) 1px, transparent 1px)
-            `, backgroundSize: "70px 70px" }} />
+          {/* Grid overlay (subtle blueprint feel) */}
+          <div
+            className="absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgba(53,79,82,0.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(53,79,82,0.08) 1px, transparent 1px),
+                linear-gradient(to right, rgba(53,79,82,0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(53,79,82,0.04) 1px, transparent 1px)
+              `,
+              backgroundSize: "96px 96px, 96px 96px, 24px 24px, 24px 24px",
+              maskImage: "radial-gradient(circle at 50% 30%, black 0%, black 55%, transparent 85%)",
+              WebkitMaskImage: "radial-gradient(circle at 50% 30%, black 0%, black 55%, transparent 85%)",
+            }}
+          />
+          <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `
+              radial-gradient(rgba(53,79,82,0.25) 1px, transparent 1px)
+            `, backgroundSize: "18px 18px" }} />
+
+          {/* Floating icons */}
+          <div className="absolute inset-0 pointer-events-none select-none">
+            <Dumbbell
+              className="absolute left-[8%] top-[18%] w-10 h-10 text-[#354F52]/20 animate-float hidden sm:block"
+              style={{ animationDelay: "0.2s", animationDuration: "4.2s" }}
+            />
+            <Flame
+              className="absolute right-[12%] top-[22%] w-9 h-9 text-[#6BB371]/25 animate-float hidden sm:block"
+              style={{ animationDelay: "0.8s", animationDuration: "3.6s" }}
+            />
+            <Activity
+              className="absolute left-[18%] bottom-[22%] w-11 h-11 text-[#52796F]/20 animate-float hidden md:block"
+              style={{ animationDelay: "1.2s", animationDuration: "4.8s" }}
+            />
+            <Trophy
+              className="absolute right-[20%] bottom-[18%] w-10 h-10 text-[#354F52]/18 animate-float hidden md:block"
+              style={{ animationDelay: "0.5s", animationDuration: "5.1s" }}
+            />
+            <Sparkles
+              className="absolute left-[48%] top-[10%] w-8 h-8 text-[#6BB371]/25 animate-float"
+              style={{ animationDelay: "1.6s", animationDuration: "3.9s" }}
+            />
+          </div>
         </div>
         <div className="max-w-6xl mx-auto px-4 md:px-10 pt-12">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
@@ -872,7 +914,9 @@ export default function CoachDashboardPage() {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#354F52]/10 text-[#354F52] text-xs font-semibold">
                 Coach Control Center
               </div>
-              <h1 className="text-3xl md:text-4xl font-black text-[#354F52]">Coach Dashboard</h1>
+              <h1 className="text-3xl md:text-4xl font-black text-[#354F52]">
+                Coach Profile{displayName ? <span className="text-[#52796F]"> · {displayName}</span> : null}
+              </h1>
               <div className="text-sm text-gray-600">
                 {coachId ? (
                   <span>
@@ -902,14 +946,25 @@ export default function CoachDashboardPage() {
                 <div className="absolute inset-0 opacity-15 bg-[radial-gradient(circle_at_20%_20%,#fff,transparent_25%),radial-gradient(circle_at_80%_0%,#fff,transparent_20%)]" />
                 <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/40 shadow-lg">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={avatarUrl} alt={coach?.name || "Coach"} className="w-full h-full object-cover" />
+                    <div className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/40 shadow-lg bg-white/10">
+                      {avatarUrl && avatarUrl !== "/placeholder.svg" ? (
+                        <Image
+                          src={avatarUrl}
+                          alt={displayName || "Coach"}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white/80 font-black text-xl">
+                          {(displayName || "C").charAt(0)}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <div className="text-sm uppercase tracking-wide text-white/70 font-semibold">Coach</div>
-                      <div className="text-2xl font-bold">{coach?.name || "Coach"}</div>
-                      <div className="text-sm text-white/80">{coach?.category || "Fitness"}</div>
+                      <div className="text-2xl font-bold">{displayName || "Coach"}</div>
+                      <div className="text-sm text-white/80">{displayCategory || "Fitness"}</div>
                     </div>
                   </div>
                   <div className="flex gap-3 flex-wrap">
@@ -1003,6 +1058,64 @@ export default function CoachDashboardPage() {
               <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-[#d9e2dc] p-6 md:p-8">
                 {tab === "profile" && (
                   <div>
+                    <div className="mb-6 rounded-3xl overflow-hidden border border-white/60 shadow-xl">
+                      <div className="relative bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371] text-white p-6">
+                        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,#fff,transparent_28%),radial-gradient(circle_at_80%_0%,#fff,transparent_22%)]" />
+                        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+                          <div className="flex items-center gap-4">
+                            <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-white/40 bg-white/10 shadow-lg">
+                              {effectivePreviewImage ? (
+                                <Image
+                                  src={effectivePreviewImage}
+                                  alt={displayName || "Coach"}
+                                  fill
+                                  className="object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center font-black text-xl text-white/90">
+                                  {(displayName || "C").charAt(0)}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-semibold w-fit">
+                                <Sparkles className="w-4 h-4" />
+                                Your Coach Profile
+                              </div>
+                              <div className="mt-2 text-2xl font-black leading-tight">{displayName}</div>
+                              <div className="text-sm text-white/85">{displayCategory}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <Link
+                              href={coachId ? `/coaches/${coachId}` : "/coaches"}
+                              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 transition-all border border-white/25 text-sm font-semibold shadow-md hover:shadow-lg"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              View Public Profile
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => setTab("videos")}
+                              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#354F52] font-semibold shadow-md hover:shadow-lg transition-all"
+                            >
+                              Manage Videos
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-white/80 backdrop-blur-sm p-4 text-sm text-[#354F52] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="text-gray-700">
+                          Tip: Upload a photo + write a strong bio to increase trust and conversions.
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Changes are saved when you click <span className="font-semibold">Save changes</span>.
+                        </div>
+                      </div>
+                    </div>
+
                     <h2 className="text-2xl font-bold text-[#354F52] mb-6">Edit Profile</h2>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
