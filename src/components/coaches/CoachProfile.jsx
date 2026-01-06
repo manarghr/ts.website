@@ -168,8 +168,6 @@ export default function CoachProfile({ coachId }) {
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [userHasReviewed, setUserHasReviewed] = useState(false);
-  const [userReviewId, setUserReviewId] = useState(null);
 
   const categoryIcons = {
     Strength: <FaDumbbell />,
@@ -225,18 +223,6 @@ export default function CoachProfile({ coachId }) {
         followers_count: data.followers_count ?? 0,
         following_count: data.following_count ?? 0,
       });
-      
-      // Check if current user has already reviewed
-      if (currentUser) {
-        const userReview = data.comments.find(c => c.userId === currentUser.id);
-        if (userReview) {
-          setUserHasReviewed(true);
-          setUserReviewId(userReview.id);
-        } else {
-          setUserHasReviewed(false);
-          setUserReviewId(null);
-        }
-      }
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -434,7 +420,6 @@ export default function CoachProfile({ coachId }) {
       // Reset form
       setReviewRating(0);
       setReviewComment("");
-      setUserHasReviewed(true);
       
       alert("Review submitted successfully!");
     } catch (err) {
@@ -477,9 +462,6 @@ export default function CoachProfile({ coachId }) {
       
       // Refresh coach data to get updated reviews and rating
       await fetchCoachData();
-      
-      setUserHasReviewed(false);
-      setUserReviewId(null);
       
       alert("Review deleted successfully!");
     } catch (err) {
@@ -769,8 +751,8 @@ export default function CoachProfile({ coachId }) {
           <div>
             <h2 className="text-3xl font-bold text-[#354F52] mb-6">Reviews & Ratings</h2>
 
-            {/* Add Review Form - Only show if logged in and hasn't reviewed yet */}
-            {currentUser && !userHasReviewed ? (
+            {/* Add Review Form - Always show if logged in */}
+            {currentUser ? (
               <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 mb-8">
                 <h3 className="text-xl font-bold text-[#354F52] mb-4">Leave a Review</h3>
                 <form onSubmit={handleSubmitReview}>
@@ -824,21 +806,6 @@ export default function CoachProfile({ coachId }) {
                   </button>
                 </form>
               </div>
-            ) : currentUser && userHasReviewed ? (
-              <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 mb-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-[#354F52] mb-2">You've already reviewed this coach</h3>
-                    <p className="text-gray-600">You can delete your review below if you'd like to change it.</p>
-                  </div>
-                  <button
-                    onClick={handleDeleteReview}
-                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-                  >
-                    Delete My Review
-                  </button>
-                </div>
-              </div>
             ) : (
               <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 mb-8 text-center">
                 <p className="text-gray-600 mb-4">Please log in to leave a review</p>
@@ -857,43 +824,52 @@ export default function CoachProfile({ coachId }) {
             </h3>
             {coach.comments?.length ? (
               <div className="space-y-4">
-                {coach.comments.map((c) => (
-                  <div key={c.id} className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center text-white font-bold text-lg">
-                          {(c.user || "A")[0].toUpperCase()}
+                {coach.comments.map((c) => {
+                  const isOwnReview = currentUser && String(c.userId) === String(currentUser.id);
+                  
+                  return (
+                    <div key={c.id} className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center text-white font-bold text-lg">
+                            {(c.user || "A")[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-[#354F52] text-lg">{c.user || "Anonymous"}</span>
+                              {isOwnReview && (
+                                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">You</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 mt-1">
+                              {[...Array(5)].map((_, i) => (
+                                <FaStar 
+                                  key={i} 
+                                  className={i < (c.rating || 0) ? "text-yellow-400" : "text-gray-300"} 
+                                  size={16} 
+                                />
+                              ))}
+                              <span className="ml-2 text-sm text-gray-600">({c.rating}/5)</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <div className="font-semibold text-[#354F52] text-lg">{c.user || "Anonymous"}</div>
-                            {/* Delete button - only show for user's own review */}
-                            {currentUser && c.userId === currentUser.id && (
-                              <button
-                                onClick={handleDeleteReview}
-                                className="px-3 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors font-semibold"
-                              >
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1 mt-1">
-                            {[...Array(5)].map((_, i) => (
-                              <FaStar 
-                                key={i} 
-                                className={i < (c.rating || 0) ? "text-yellow-400" : "text-gray-300"} 
-                                size={16} 
-                              />
-                            ))}
-                            <span className="ml-2 text-sm text-gray-600">({c.rating}/5)</span>
-                          </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="text-sm text-gray-500">{c.date}</span>
+                          {/* Delete button - only show for user's own review */}
+                          {isOwnReview && (
+                            <button
+                              onClick={handleDeleteReview}
+                              className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold shadow-md"
+                            >
+                              Delete Review
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <span className="text-sm text-gray-500 ml-4">{c.date}</span>
+                      <p className="text-gray-700 leading-relaxed">{c.text}</p>
                     </div>
-                    <p className="text-gray-700 leading-relaxed">{c.text}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-12 bg-white rounded-xl shadow-lg border border-[#C8CDC5]/50">

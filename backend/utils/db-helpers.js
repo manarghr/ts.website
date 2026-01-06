@@ -141,6 +141,7 @@ export async function getCoachRatings(coachId, limit = 20) {
           $project: {
             _id: 1,
             id: 1,
+            user_id: 1, 
             rating: 1,
             comment: 1,
             user_name: 1,
@@ -158,6 +159,7 @@ export async function getCoachRatings(coachId, limit = 20) {
           $project: {
             _id: 1,
             id: 1,
+            user_id: 1,
             rating: 1,
             comment: 1,
             created_at: 1,
