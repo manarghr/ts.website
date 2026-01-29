@@ -8,12 +8,7 @@ import background from "../assets/Group 2046.png";
 import Link from "next/link";
 import { FaArrowRight, FaUsers, FaStar } from "react-icons/fa";
 
-// Images (fallback)
-import picture1 from "../assets/picture1.png";
-import picture2 from "../assets/picture2.png";
-import picture3 from "../assets/picture3.png";
-
-const afacad = Afacad({ subsets: ["latin"], weight: ["400", "600", "700"] });
+const afacad = Afacad({ subsets: ["latin"], weight: ["400", "600", "700"], display: "swap" });
 
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
@@ -30,8 +25,12 @@ const staggerContainer = {
   viewport: { once: true }
 };
 
-// Default images array for fallback
-const defaultImages = [picture1, picture2, picture3];
+// Default images array for fallback (using placeholder URLs)
+const defaultImages = [
+  "https://images.unsplash.com/photo-1571019613452-2df05eb5c3b?w=400",
+  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400",
+  "https://images.unsplash.com/photo-1518611012115-8f740f1e1072?w=400",
+];
 
 export default function CoachesHome() {
   const sectionRef = useRef(null);

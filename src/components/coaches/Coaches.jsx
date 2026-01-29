@@ -6,13 +6,12 @@ import Image from "next/image";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { FaDumbbell, FaRunning, FaLeaf, FaSearch, FaTimes, FaFilter } from "react-icons/fa";
 
-// Images (fallback)
-import picture1 from "../assets/picture1.png";
-import picture2 from "../assets/picture2.png";
-import picture3 from "../assets/picture3.png";
-
-// Default images array for fallback
-const defaultImages = [picture1, picture2, picture3];
+// Default images array for fallback (using placeholder URLs)
+const defaultImages = [
+  "https://images.unsplash.com/photo-1571019613452-2df05eb5c3b?w=400",
+  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400",
+  "https://images.unsplash.com/photo-1518611012115-8f740f1e1072?w=400",
+];
 
 export default function Coaches() {
   const [isVisible, setIsVisible] = useState({});

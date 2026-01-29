@@ -18,10 +18,6 @@ import {
   FaPlay,
 } from "react-icons/fa";
 
-import picture1 from "../assets/picture1.png";
-import picture2 from "../assets/picture2.png";
-import picture3 from "../assets/picture3.png";
-
 // --- Modal components ---
 function MessageModalContent({ onSend, onClose }) {
   const [message, setMessage] = useState("");
@@ -129,13 +125,20 @@ function ReportModalContent({ onSubmit, onClose }) {
   );
 }
 
+// Default images for fallback (using placeholder URLs)
+const defaultImages = [
+  "https://images.unsplash.com/photo-1571019613452-2df05eb5c3b?w=400",
+  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400",
+  "https://images.unsplash.com/photo-1518611012115-8f740f1e1072?w=400",
+];
+
 // Mock fallback data (used if API fails)
 const mockCoaches = {
   sami: {
     id: "sami",
     name: "Sami",
     category: "Strength",
-    image: picture1,
+    image: defaultImages[0],
     bio: "Expert in strength and conditioning with over 10 years of experience.",
     rating: 4.8,
     totalRatings: 127,
@@ -680,7 +683,7 @@ export default function CoachProfile({ coachId }) {
                   >
                     <div className="relative h-48 bg-gradient-to-br from-[#354F52] to-[#52796F]">
                       <Image
-                        src={video.thumbnail || picture1}
+                        src={video.thumbnail || defaultImages[0]}
                         alt={video.title}
                         fill
                         className="object-cover"
