@@ -3,11 +3,8 @@
 
 import { getCollection } from '@/lib/mongodb';
 
-// Dynamic import for bcrypt (native module, must be loaded at runtime)
-async function getBcrypt() {
-  const bcrypt = await import('bcrypt');
-  return bcrypt.default || bcrypt;
-}
+// Use bcryptjs (pure JS, no native build) for password hashing
+import bcrypt from 'bcryptjs';
 
 /**
  * Create a new user
@@ -28,7 +25,6 @@ export async function createUser(userData) {
   }
 
   // Hash password
-  const bcrypt = await getBcrypt();
   const hashedPassword = await bcrypt.hash(userData.password, 10);
 
   const newUser = {
@@ -131,7 +127,6 @@ export async function updateUser(userId, updateData) {
   
   // If password is being updated, hash it
   if (updateData.password) {
-    const bcrypt = await getBcrypt();
     updateData.password = await bcrypt.hash(updateData.password, 10);
   }
 

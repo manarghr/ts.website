@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 
-import { FaUser, FaSignOutAlt, FaDumbbell, FaBrain, FaUtensils } from "react-icons/fa"
+import { FaUser, FaSignOutAlt, FaDumbbell, FaBrain, FaUtensils, FaBars, FaTimes } from "react-icons/fa"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
@@ -18,26 +18,51 @@ export default function Navbar() {
   const [currentUser, setCurrentUser] = useState(null)
   const [currentCoach, setCurrentCoach] = useState(null)
   const [isMounted, setIsMounted] = useState(false) // ← New state to prevent hydration mismatch
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Hydration & real-time updates
   useEffect(() => {
     setIsMounted(true) // Now safe to render client-only content
 
     const handleStorageChange = () => {
-      const user = localStorage.getItem("trainsight_current_user")
-      if (user) {
-        setCurrentUser(JSON.parse(user))
-      } else {
+      try {
+        const user = localStorage.getItem("trainsight_current_user")
+        if (user && user !== "undefined" && user !== "null") {
+          const parsed = JSON.parse(user)
+          setCurrentUser(parsed)
+        } else {
+          setCurrentUser(null)
+          // Clean up invalid data
+          if (user === "undefined" || user === "null") {
+            localStorage.removeItem("trainsight_current_user")
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing user from localStorage:", error)
         setCurrentUser(null)
+        // Clean up corrupted data
+        localStorage.removeItem("trainsight_current_user")
       }
     }
 
     const handleCoachStorageChange = () => {
-      const coach = localStorage.getItem("currentCoach")
-      if (coach) {
-        setCurrentCoach(JSON.parse(coach))
-      } else {
+      try {
+        const coach = localStorage.getItem("currentCoach")
+        if (coach && coach !== "undefined" && coach !== "null") {
+          const parsed = JSON.parse(coach)
+          setCurrentCoach(parsed)
+        } else {
+          setCurrentCoach(null)
+          // Clean up invalid data
+          if (coach === "undefined" || coach === "null") {
+            localStorage.removeItem("currentCoach")
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing coach from localStorage:", error)
         setCurrentCoach(null)
+        // Clean up corrupted data
+        localStorage.removeItem("currentCoach")
       }
     }
 
@@ -128,8 +153,19 @@ export default function Navbar() {
       }
     }
 
+    // Close mobile menu on escape key
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false)
+      }
+    }
+
     document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleEscape)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleEscape)
+    }
   }, [showDropdown, showServicesDropdown])
 
   const links = [
@@ -151,9 +187,18 @@ export default function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 w-full h-[60px] flex justify-between items-center px-6 bg-[#354F52] text-white shadow-md z-50">
-      <div className="flex items-center gap-20">
-        <Link href="/" className="flex items-center gap-3 font-bold text-xl tracking-wide hover:text-[#C1B8AE] transition-colors group">
+    <header className="fixed top-0 left-0 w-full h-[60px] flex justify-between items-center px-4 sm:px-6 bg-[#354F52] text-white shadow-md z-50">
+      <div className="flex items-center gap-4 sm:gap-20 flex-1">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="lg:hidden p-2 text-white hover:text-[#C1B8AE] transition-colors z-50"
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+        </button>
+
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 font-bold text-lg sm:text-xl tracking-wide hover:text-[#C1B8AE] transition-colors group">
           <Image
             src={logo}
             alt="TrainSight Logo"
@@ -161,10 +206,11 @@ export default function Navbar() {
             height={40}
             className="group-hover:scale-110 transition-transform duration-300"
           />
-          TrainSight
+          <span className="hidden sm:inline">TrainSight</span>
         </Link>
 
-        <ul className="flex gap-10 ml-80 items-center">
+        {/* Desktop Navigation - original position (same gap after logo as before) */}
+        <ul className="hidden lg:flex gap-10 items-center lg:ml-80">
           {links.map((link, i) => (
             <li key={i}>
               <Link
@@ -260,7 +306,123 @@ export default function Navbar() {
         </ul>
       </div>
 
-      <div className="flex justify-between items-center gap-10 pr-4">
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            />
+            {/* Mobile Menu */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-[60px] left-0 w-80 max-w-[85vw] h-[calc(100vh-60px)] bg-[#354F52] shadow-2xl z-50 overflow-y-auto lg:hidden"
+            >
+              <div className="p-6 space-y-4">
+                {/* Mobile Links */}
+                {links.map((link, i) => (
+                  <Link
+                    key={i}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block py-3 px-4 text-white hover:bg-[#52796F] rounded-lg transition-colors ${
+                      isActive(link.href) ? "bg-[#52796F] text-[#6BB371]" : ""
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+
+                {/* Mobile Services Section */}
+                <div className="pt-4 border-t border-white/20">
+                  <div className="px-4 py-2 text-sm font-semibold text-white/70 uppercase tracking-wider">
+                    Services
+                  </div>
+                  {services.map((service, i) => {
+                    const Icon = service.icon
+                    return (
+                      <Link
+                        key={i}
+                        href={service.href}
+                        onClick={() => {
+                          setMobileMenuOpen(false)
+                          setShowServicesDropdown(false)
+                        }}
+                        className={`flex items-center py-3 px-4 text-white hover:bg-[#52796F] rounded-lg transition-colors ${
+                          pathname === service.href ? "bg-[#52796F]" : ""
+                        }`}
+                      >
+                        <Icon className="mr-3" size={18} />
+                        <span>{service.name}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+
+                {/* Mobile Profile Section */}
+                {isMounted && (currentCoach || currentUser) && (
+                  <div className="pt-4 border-t border-white/20">
+                    {currentCoach ? (
+                      <>
+                        <Link
+                          href="/coach/dashboard"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center py-3 px-4 text-white hover:bg-[#52796F] rounded-lg transition-colors"
+                        >
+                          <FaUser className="mr-3" size={16} />
+                          Coach Dashboard
+                        </Link>
+                        <button
+                          onClick={() => {
+                            handleCoachLogout()
+                            setMobileMenuOpen(false)
+                          }}
+                          className="flex items-center w-full py-3 px-4 text-red-300 hover:bg-red-900/30 rounded-lg transition-colors"
+                        >
+                          <FaSignOutAlt className="mr-3" size={16} />
+                          Logout
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          href="/profile"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center py-3 px-4 text-white hover:bg-[#52796F] rounded-lg transition-colors"
+                        >
+                          <FaUser className="mr-3" size={16} />
+                          View Profile
+                        </Link>
+                        <button
+                          onClick={() => {
+                            handleLogout()
+                            setMobileMenuOpen(false)
+                          }}
+                          className="flex items-center w-full py-3 px-4 text-red-300 hover:bg-red-900/30 rounded-lg transition-colors"
+                        >
+                          <FaSignOutAlt className="mr-3" size={16} />
+                          Logout
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Profile */}
+      <div className="hidden lg:flex justify-between items-center gap-4 xl:gap-10">
         <div className="relative profile-dropdown-container">
           <button
             onClick={(e) => {

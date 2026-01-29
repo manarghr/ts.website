@@ -21,17 +21,7 @@ const nextConfig = {
         fs: false,
         path: false,
         crypto: false,
-        bcrypt: false,
       };
-    }
-    // Mark bcrypt as external for server-side builds (it's a native module)
-    if (isServer) {
-      config.externals = config.externals || [];
-      if (Array.isArray(config.externals)) {
-        config.externals.push('bcrypt');
-      } else {
-        config.externals = [config.externals, 'bcrypt'];
-      }
     }
     return config;
   },

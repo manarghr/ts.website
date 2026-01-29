@@ -1,7 +1,7 @@
 // LocalStorage-based Authentication (Fallback when MongoDB is not available)
 // File: backend/utils/localStorage-auth.js
 
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 // Note: This is a fallback for development/demo purposes
 // In production, always use MongoDB

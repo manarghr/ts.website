@@ -467,7 +467,7 @@ export default function AuthModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 pt-20 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 py-6 sm:py-8 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto min-h-screen">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -475,7 +475,7 @@ export default function AuthModal({ isOpen, onClose }) {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
       
-      <div className="relative bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300 scrollbar-hide border border-white/20 backdrop-blur-xl">
+      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300 border border-white/20 backdrop-blur-xl flex-shrink-0">
         {/* Sporty decorative elements */}
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"></div>
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-transparent rounded-bl-full"></div>
@@ -496,7 +496,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
         {!showSuccess && !showForgotPassword && (
           <>
-            <div className="flex border-b bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] rounded-t-2xl overflow-hidden relative">
+            <div className="flex shrink-0 border-b bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] rounded-t-2xl overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-gradient"></div>
               {["signup", "login"].map((tab) => (
                 <button
@@ -531,7 +531,7 @@ export default function AuthModal({ isOpen, onClose }) {
               ))}
             </div>
 
-            <div className="p-6 md:p-8 relative">
+            <div className="p-6 md:p-8 relative overflow-y-auto min-h-0 flex-1" style={{ maxHeight: 'calc(85vh - 56px)' }}>
               {activeTab === "signup" ? (
                 <form onSubmit={handleSignup} className="space-y-5" autoComplete="off">
                   <div className="text-center mb-8 animate-fadeInUp">
@@ -1287,24 +1287,22 @@ export default function AuthModal({ isOpen, onClose }) {
                   <div className="animate-fadeInUp">
                     <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                       <Mail className="w-4 h-4 text-[#52796F]" />
-                      Email or Username *
+                      Email *
                     </label>
                     <div className="relative group">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#52796F] transition-colors duration-300" />
                       <input
-                        type="text"
+                        type="email"
                         name="email"
                         value={loginData.email}
                         onChange={handleInputChange}
-                        autoComplete="username"
-                        readOnly
-                        onFocus={(e) => e.target.removeAttribute('readOnly')}
+                        autoComplete="email"
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md ${
                           errors.email 
                             ? "border-red-500 focus:ring-red-500 focus:border-red-500 animate-pulse" 
                             : "border-slate-200 hover:border-[#52796F]/50"
                         }`}
-                        placeholder="Enter your email or username"
+                        placeholder="Enter your email"
                       />
                     </div>
                     {errors.email && (
@@ -1326,9 +1324,7 @@ export default function AuthModal({ isOpen, onClose }) {
                         name="password"
                         value={loginData.password}
                         onChange={handleInputChange}
-                        autoComplete="new-password"
-                        readOnly
-                        onFocus={(e) => e.target.removeAttribute('readOnly')}
+                        autoComplete="current-password"
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md ${
                           errors.password 
                             ? "border-red-500 focus:ring-red-500 focus:border-red-500 animate-pulse" 

@@ -5,11 +5,8 @@ import crypto from "crypto";
 import { getCollection } from "@/lib/mongodb";
 import { createCoach, getCoachById } from "@/backend/utils/db-helpers";
 
-// Dynamic import for bcrypt (native module, must be loaded at runtime)
-async function getBcrypt() {
-  const bcrypt = await import("bcrypt");
-  return bcrypt.default || bcrypt;
-}
+// Use bcryptjs (pure JS, no native build) for password hashing
+import bcrypt from "bcryptjs";
 
 const SESSION_COOKIE_NAME = "trainsight_coach_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -57,7 +54,6 @@ export async function createCoachAccount(coachData) {
   const short = crypto.randomBytes(3).toString("hex");
   const coachId = `${base}-${short}`;
 
-  const bcrypt = await getBcrypt();
   const passwordHash = await bcrypt.hash(coachData.password, 10);
   const category = coachData.category || mapSpecializationToCategory(coachData.specialization);
 
@@ -94,7 +90,6 @@ export async function authenticateCoach(email, password) {
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const account = await coachAccounts.findOne({ email: normalizedEmail });
   if (!account) throw new Error("Invalid email or password");
-  const bcrypt = await getBcrypt();
   const ok = await bcrypt.compare(password, account.password);
   if (!ok) throw new Error("Invalid email or password");
   return { coachId: account.coach_id };
