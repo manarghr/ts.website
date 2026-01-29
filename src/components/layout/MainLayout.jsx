@@ -1,6 +1,6 @@
 "use client";
 
-import Navbar from "@/components/navBar/NavBar";
+import Navbar from "@/components/navbar/NavBar";
 import Footer from "@/components/footer/Footer";
 
 export default function MainLayout({ children }) {
