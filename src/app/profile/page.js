@@ -384,24 +384,48 @@ export default function ProfilePage({ userId }) {
     setEditForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleProfilePictureChange = (e) => {
+  // Upload the file and store the returned URL -- never the base64 string itself.
+  // (Storing base64 here would put a multi-megabyte blob on the user document.)
+  const handleProfilePictureChange = async (e) => {
     const file = e.target.files?.[0]
-    if (file && isOwnProfile) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const updatedUser = { ...currentUser, profilePicture: reader.result }
-        setCurrentUser(updatedUser)
-        setProfileUser(updatedUser)
+    if (!file || !isOwnProfile) return
 
-        localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
+    if (!file.type.startsWith("image/")) {
+      alert("Please choose an image file")
+      return
+    }
 
-        const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-        const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
-        localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
+    // Must match the 5MB limit enforced in /api/upload/image
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be smaller than 5MB")
+      return
+    }
 
-        window.dispatchEvent(new Event("userUpdated"))
+    try {
+      const body = new FormData()
+      body.append("file", file)
+
+      const res = await fetch("/api/upload/image", { method: "POST", body })
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "Upload failed")
       }
-      reader.readAsDataURL(file)
+
+      const updatedUser = { ...currentUser, profilePicture: data.imageUrl }
+      setCurrentUser(updatedUser)
+      setProfileUser(updatedUser)
+
+      localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
+
+      const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
+      const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
+      localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
+
+      window.dispatchEvent(new Event("userUpdated"))
+    } catch (error) {
+      console.error("Profile picture upload failed:", error)
+      alert("Could not upload image. Please try again.")
     }
   }
 

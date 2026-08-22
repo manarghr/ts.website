@@ -43,6 +43,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
   // State for image preview
   const [profilePreview, setProfilePreview] = useState("")
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false)
 
   // Effect 1: Manage body overflow
   useEffect(() => {
@@ -94,17 +95,56 @@ export default function AuthModal({ isOpen, onClose }) {
     }
   }
 
-  const handleProfilePictureChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      // Convert to base64 for storage (for demo - in production, upload to server)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64String = reader.result
-        setFormData((prev) => ({ ...prev, profilePicture: base64String }))
-        setProfilePreview(base64String)
+  // The picked file is uploaded to /api/upload/image and only the returned URL is
+  // stored on the user. The base64 string is used for the on-screen preview ONLY --
+  // writing it to the database would put a ~2.7 MB blob in every user document and
+  // drag it along on every query.
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      setErrors((prev) => ({ ...prev, profilePicture: "Please choose an image file" }))
+      return
+    }
+
+    // Must match the 5MB limit enforced in /api/upload/image
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, profilePicture: "Image must be smaller than 5MB" }))
+      return
+    }
+
+    setErrors((prev) => {
+      const next = { ...prev }
+      delete next.profilePicture
+      return next
+    })
+
+    // Instant local preview while the upload runs.
+    const reader = new FileReader()
+    reader.onloadend = () => setProfilePreview(reader.result)
+    reader.readAsDataURL(file)
+
+    setIsUploadingPicture(true)
+    try {
+      const body = new FormData()
+      body.append("file", file)
+
+      const res = await fetch("/api/upload/image", { method: "POST", body })
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "Upload failed")
       }
-      reader.readAsDataURL(file)
+
+      setFormData((prev) => ({ ...prev, profilePicture: data.imageUrl }))
+    } catch (error) {
+      console.error("Profile picture upload failed:", error)
+      setErrors((prev) => ({ ...prev, profilePicture: "Could not upload image. Please try again." }))
+      setProfilePreview("")
+      setFormData((prev) => ({ ...prev, profilePicture: "" }))
+    } finally {
+      setIsUploadingPicture(false)
     }
   }
 
@@ -674,11 +714,25 @@ export default function AuthModal({ isOpen, onClose }) {
                         <div className="flex-1">
                           <p className="text-sm font-medium text-slate-700 mb-1">Upload a profile picture</p>
                           <p className="text-xs text-slate-500">JPG, PNG or GIF (max 5MB)</p>
-                          <div className="mt-2 flex gap-1">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
-                            <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" style={{ animationDelay: '400ms' }}></div>
-                          </div>
+
+                          {isUploadingPicture && (
+                            <p className="text-xs text-[#52796F] font-medium mt-2">Uploading...</p>
+                          )}
+
+                          {errors.profilePicture && (
+                            <p className="text-xs text-red-600 font-medium mt-2 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              {errors.profilePicture}
+                            </p>
+                          )}
+
+                          {!isUploadingPicture && !errors.profilePicture && (
+                            <div className="mt-2 flex gap-1">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
+                              <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" style={{ animationDelay: '400ms' }}></div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1092,7 +1146,9 @@ export default function AuthModal({ isOpen, onClose }) {
 
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    /* Also blocked while the picture uploads, so the account isn't
+                       created before we have the image URL to attach to it. */
+                    disabled={isSubmitting || isUploadingPicture}
                     className="w-full mt-8 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
                   >
                     {/* Animated background */}

@@ -44,3 +44,6 @@ next-env.d.ts
 BACKEND_GUIDE.md
 BACKEND_PROGRESS.md
 mongo.guide.md
+
+# user-uploaded files (belong in cloud storage, not the repo)
+/public/uploads/

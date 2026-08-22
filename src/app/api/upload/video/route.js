@@ -27,11 +27,14 @@ export async function POST(request) {
       );
     }
 
-    // Validate file size (max 500MB for videos)
-    const maxSize = 500 * 1024 * 1024; // 500MB
+    // Was 500MB, which filled the disk and could never work in production anyway:
+    // Vercel caps a serverless request body at 4.5MB, so large uploads must go
+    // straight from the browser to Cloudinary/S3 rather than through this route.
+    // 50MB keeps local development usable until that is wired up.
+    const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File size too large. Maximum size is 500MB.' },
+        { error: 'File size too large. Maximum size is 50MB.' },
         { status: 400 }
       );
     }

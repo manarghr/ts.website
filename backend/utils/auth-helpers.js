@@ -28,6 +28,17 @@ export function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
+/**
+ * HTML inputs always hand back strings, so `age` arrived as "22" and broke range
+ * queries -- Mongo compares strings lexically, where "9" > "22". Store numbers.
+ * Empty / missing / non-numeric becomes null rather than NaN.
+ */
+function toNumberOrNull(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 /** Never let the password hash leave this module. */
 function toPublicUser(user) {
   if (!user) return null;
@@ -71,11 +82,11 @@ export async function createUser(userData) {
     phone,
     password: await bcrypt.hash(userData.password, BCRYPT_ROUNDS),
     gender: userData.gender || "",
-    age: userData.age ?? null,
-    weight: userData.weight ?? null,
-    height: userData.height ?? null,
+    age: toNumberOrNull(userData.age),
+    weight: toNumberOrNull(userData.weight),
+    height: toNumberOrNull(userData.height),
     workoutExperience: userData.workoutExperience || "",
-    sportsRating: userData.sportsRating || "",
+    sportsRating: toNumberOrNull(userData.sportsRating),
     selectedPlan: userData.selectedPlan || "",
     profilePicture: userData.profilePicture || "",
     bio: userData.bio || "",
@@ -132,9 +143,14 @@ export async function getUserByEmail(email) {
 export async function updateUser(userId, updateData) {
   const users = await getCollection("users");
 
+  const NUMERIC_FIELDS = ["age", "weight", "height", "sportsRating"];
+
   const patch = {};
   for (const field of EDITABLE_FIELDS) {
-    if (updateData[field] !== undefined) patch[field] = updateData[field];
+    if (updateData[field] === undefined) continue;
+    patch[field] = NUMERIC_FIELDS.includes(field)
+      ? toNumberOrNull(updateData[field])
+      : updateData[field];
   }
 
   if (Object.keys(patch).length === 0) throw new Error("No valid fields to update");
