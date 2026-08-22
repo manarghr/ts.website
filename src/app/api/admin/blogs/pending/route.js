@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
+import { requireAdmin, getCurrentSession, ROLES } from "@/backend/utils/session";
 
 // GET - Get all pending blogs
 export async function GET(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const pendingBlogCollection = await getCollection('pending_blogs');
     const pendingBlogs = await pendingBlogCollection.find({}).sort({ created_at: -1 }).toArray();
@@ -16,11 +22,23 @@ export async function GET(request) {
   }
 }
 
-// POST - Create new pending blog (from user submission)
+// POST - Submit a blog for review.
+// Not admin-only: any signed-in user or coach may submit. But they must be signed
+// in, and the author is taken from their session -- previously `submittedBy` came
+// straight from the request body, so anyone could submit as anyone.
 export async function POST(request) {
   try {
+    const session = await getCurrentSession(request);
+
+    if (!session || (session.role !== ROLES.USER && session.role !== ROLES.COACH)) {
+      return NextResponse.json(
+        { error: 'You must be signed in to submit a blog' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
-    const { 
+    const {
       title,
       excerpt,
       author,
@@ -28,8 +46,11 @@ export async function POST(request) {
       image,
       category,
       sections,
-      submittedBy
     } = body;
+
+    if (!title || !String(title).trim()) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    }
 
     const pendingBlogCollection = await getCollection('pending_blogs');
     const newPendingBlog = {
@@ -43,7 +64,8 @@ export async function POST(request) {
       category: category || 'training',
       sections,
       status: 'pending',
-      submittedBy,
+      submittedBy: session.principalId,
+      submittedByRole: session.role,
       created_at: new Date(),
     };
 

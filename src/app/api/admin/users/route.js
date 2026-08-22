@@ -3,8 +3,14 @@
 
 import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
+import { requireAdmin } from "@/backend/utils/session";
 
 export async function GET(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const usersCollection = await getCollection('users');
     const users = await usersCollection.find({}).toArray();

@@ -3,9 +3,15 @@
 
 import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
+import { requireAdmin } from "@/backend/utils/session";
 
 // GET - Get all videos
 export async function GET(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const videosCollection = await getCollection('videos');
     const videos = await videosCollection.find({}).sort({ created_at: -1 }).toArray();
@@ -21,6 +27,11 @@ export async function GET(request) {
 
 // POST - Create new video
 export async function POST(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { title, description, video_url, thumbnail_url, bio, price, discount, discount_percentage, coach_id } = body;
@@ -63,6 +74,11 @@ export async function POST(request) {
 
 // PUT - Update video
 export async function PUT(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { id, title, description, video_url, thumbnail_url, bio, price, discount, discount_percentage } = body;
@@ -113,6 +129,11 @@ export async function PUT(request) {
 
 // DELETE - Delete video
 export async function DELETE(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

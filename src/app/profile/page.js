@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { motion } from "framer-motion"
 import {
   User,
@@ -291,93 +291,124 @@ export default function ProfilePage({ userId }) {
   const [editingComment, setEditingComment] = useState(null)
   const [commentText, setCommentText] = useState("")
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const current = localStorage.getItem("trainsight_current_user")
-      if (current) {
-        const userData = JSON.parse(current)
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCurrentUser(userData)
+  // Pull the signed-in user from the server (the session cookie decides who that is)
+  // and the saved coaches/videos/meals from /api/favorites, which returns the real
+  // items looked up fresh rather than stale copies stored on the user document.
+  const loadProfile = useCallback(async () => {
+    try {
+      const meRes = await fetch("/api/auth/me", { cache: "no-store" })
+      const me = await meRes.json().catch(() => ({}))
 
-        if (userId && userId !== userData.id) {
-          // Viewing another user's profile
-          const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-          const targetUser = users.find((u) => u.id === userId)
-          setProfileUser(targetUser || null)
-          setIsOwnProfile(false)
-        } else {
-          // Viewing own profile
-          setProfileUser(userData)
-          setIsOwnProfile(true)
-          setEditBio(userData.bio || "")
-          setEditForm({
-            fullName: userData.fullName || "",
-            phone: userData.phone || "",
-            email: userData.email || "",
-            age: userData.age || "",
-            gender: userData.gender || "",
-            workoutExperience: userData.workoutExperience || "",
-            sportsRating: userData.sportsRating || "",
-          })
-          setPrivacySettings(
-            userData.privacySettings || {
-              coaches: "public",
-              videos: "public",
-              workouts: "public",
-              meals: "public",
-            },
-          )
-        }
+      if (!me?.authenticated || !me.user) {
+        setCurrentUser(null)
+        setProfileUser(null)
+        return
       }
+
+      const userData = me.user
+      setCurrentUser(userData)
+
+      // Viewing someone else's profile is not supported without a public profile
+      // endpoint; fall back to your own rather than reading other users locally.
+      const own = !userId || userId === userData.id
+      setIsOwnProfile(own)
+
+      const [coaches, videos, meals] = await Promise.all(
+        ["coach", "video", "meal"].map(async (type) => {
+          const res = await fetch(`/api/favorites?type=${type}`, { cache: "no-store" })
+          if (!res.ok) return []
+          const data = await res.json().catch(() => ({}))
+          return data?.items || []
+        })
+      )
+
+      const hydrated = {
+        ...userData,
+        favoriteCoaches: coaches,
+        likedVideos: videos,
+        favoriteMeals: meals,
+      }
+
+      setProfileUser(hydrated)
+      setEditBio(userData.bio || "")
+      setEditForm({
+        fullName: userData.fullName || "",
+        phone: userData.phone || "",
+        email: userData.email || "",
+        age: userData.age ?? "",
+        gender: userData.gender || "",
+        workoutExperience: userData.workoutExperience || "",
+        sportsRating: userData.sportsRating ?? "",
+      })
+      setPrivacySettings(
+        userData.privacySettings || {
+          coaches: "public",
+          videos: "public",
+          workouts: "public",
+          meals: "public",
+        },
+      )
+    } catch (error) {
+      console.error("Failed to load profile:", error)
     }
-    const handleUserUpdate = () => {
-      const current = localStorage.getItem("trainsight_current_user");
-      if (current) {
-        const userData = JSON.parse(current);
-        setCurrentUser(userData);
-        if (isOwnProfile) {
-          setProfileUser(userData);
-        }
-      };
-    };
-    window.addEventListener("userUpdated", handleUserUpdate);
-    return () => window.removeEventListener("userUpdated", handleUserUpdate);
   }, [userId])
 
-  const handleSaveBio = () => {
-    if (!isOwnProfile || !currentUser) return
+  useEffect(() => {
+    loadProfile()
+    window.addEventListener("userUpdated", loadProfile)
+    return () => window.removeEventListener("userUpdated", loadProfile)
+  }, [loadProfile])
 
-    const updatedUser = { ...currentUser, bio: editBio }
-    setCurrentUser(updatedUser)
-    setProfileUser(updatedUser)
+  /**
+   * Single path for every profile write: send the changed fields to the server,
+   * then apply what the server returns. The server is the source of truth, so a
+   * rejected or sanitised value shows up immediately instead of the UI displaying
+   * something the database never accepted.
+   *
+   * The localStorage copy is kept only so the navbar can paint instantly on the
+   * next page load -- nothing reads it for permissions.
+   */
+  const saveProfile = async (fields) => {
+    if (!isOwnProfile || !currentUser) return false
 
-    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
+    try {
+      const res = await fetch("/api/auth/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      })
 
-    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-    const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
-    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
+      const data = await res.json().catch(() => ({}))
 
-    window.dispatchEvent(new Event("userUpdated"))
+      if (!res.ok || !data?.user) {
+        alert(data?.error || "Could not save your changes. Please try again.")
+        return false
+      }
 
-    setIsEditingBio(false)
+      setCurrentUser(data.user)
+      setProfileUser((prev) => ({ ...prev, ...data.user }))
+      localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
+      window.dispatchEvent(new Event("userUpdated"))
+      return true
+    } catch (error) {
+      console.error("Failed to save profile:", error)
+      alert("Could not reach the server. Please try again.")
+      return false
+    }
   }
 
-  const handleSaveInfo = () => {
-    if (!isOwnProfile || !currentUser) return
+  const handleSaveBio = async () => {
+    if (await saveProfile({ bio: editBio })) {
+      setIsEditingBio(false)
+    }
+  }
 
-    const updatedUser = { ...currentUser, ...editForm }
-    setCurrentUser(updatedUser)
-    setProfileUser(updatedUser)
-
-    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
-
-    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-    const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
-    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
-
-    window.dispatchEvent(new Event("userUpdated"))
-
-    setIsEditingInfo(false)
+  const handleSaveInfo = async () => {
+    // email is displayed in the form but is not editable server-side
+    const { email, ...editable } = editForm
+    if (await saveProfile(editable)) {
+      setIsEditingInfo(false)
+    }
   }
 
   const handleInputChange = (field, value) => {
@@ -412,80 +443,100 @@ export default function ProfilePage({ userId }) {
         throw new Error(data?.error || "Upload failed")
       }
 
-      const updatedUser = { ...currentUser, profilePicture: data.imageUrl }
-      setCurrentUser(updatedUser)
-      setProfileUser(updatedUser)
-
-      localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
-
-      const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-      const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
-      localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
-
-      window.dispatchEvent(new Event("userUpdated"))
+      await saveProfile({ profilePicture: data.imageUrl })
     } catch (error) {
       console.error("Profile picture upload failed:", error)
       alert("Could not upload image. Please try again.")
     }
   }
 
-  const handlePrivacyToggle = (section) => {
+  const handlePrivacyToggle = async (section) => {
+    const previous = privacySettings
     const newSettings = {
       ...privacySettings,
       [section]: privacySettings[section] === "public" ? "private" : "public",
     }
+
+    // Flip the switch immediately, then roll back if the server refuses --
+    // a privacy control that lags behind the click feels broken.
     setPrivacySettings(newSettings)
 
-    const updatedUser = { ...currentUser, privacySettings: newSettings }
-    setCurrentUser(updatedUser)
-    setProfileUser(updatedUser)
-
-    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
-
-    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-    const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
-    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
-
-    window.dispatchEvent(new Event("userUpdated"))
+    if (!(await saveProfile({ privacySettings: newSettings }))) {
+      setPrivacySettings(previous)
+    }
   }
 
-  const handleUnlikeMeal = (mealId) => {
+  const handleUnfavoriteCoach = async (coach) => {
     if (!isOwnProfile || !currentUser) return
+    if (!window.confirm(`Unfollow ${coach.name}?`)) return
 
-    const updatedFavorites = (currentUser.favoriteMeals || []).filter(m => m.id !== mealId)
-    const updatedUser = { ...currentUser, favoriteMeals: updatedFavorites }
-    setCurrentUser(updatedUser)
-    setProfileUser(updatedUser)
+    const previous = profileUser?.favoriteCoaches || []
+    setProfileUser((prev) => ({
+      ...prev,
+      favoriteCoaches: previous.filter((c) => c.id !== coach.id),
+    }))
 
-    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
-
-    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-    const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
-    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
-
-    window.dispatchEvent(new Event("userUpdated"))
+    try {
+      const res = await fetch(`/api/favorites?type=coach&itemId=${encodeURIComponent(coach.id)}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Request failed")
+      window.dispatchEvent(new Event("userUpdated"))
+    } catch (error) {
+      console.error("Failed to unfollow coach:", error)
+      setProfileUser((prev) => ({ ...prev, favoriteCoaches: previous }))
+      alert("Could not unfollow. Please try again.")
+    }
   }
 
-  const handleSaveComment = (mealId) => {
+  const handleUnlikeMeal = async (mealId) => {
     if (!isOwnProfile || !currentUser) return
 
-    const updatedFavorites = (currentUser.favoriteMeals || []).map(m => 
-      m.id === mealId ? { ...m, comment: commentText } : m
-    )
-    const updatedUser = { ...currentUser, favoriteMeals: updatedFavorites }
-    setCurrentUser(updatedUser)
-    setProfileUser(updatedUser)
+    // Drop it from the list right away, restore it if the request fails.
+    const previous = profileUser?.favoriteMeals || []
+    setProfileUser((prev) => ({
+      ...prev,
+      favoriteMeals: previous.filter((m) => m.id !== mealId),
+    }))
 
-    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser))
+    try {
+      const res = await fetch(`/api/favorites?type=meal&itemId=${encodeURIComponent(mealId)}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Request failed")
+    } catch (error) {
+      console.error("Failed to remove saved meal:", error)
+      setProfileUser((prev) => ({ ...prev, favoriteMeals: previous }))
+      alert("Could not remove this meal. Please try again.")
+    }
+  }
 
-    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-    const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u))
-    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
+  const handleSaveComment = async (mealId) => {
+    if (!isOwnProfile || !currentUser) return
 
-    window.dispatchEvent(new Event("userUpdated"))
-    
-    setEditingComment(null)
-    setCommentText("")
+    // The note lives on the favorite row, not on the meal -- it is the user's own
+    // text about a meal that everyone else also sees unchanged.
+    try {
+      const res = await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "meal", itemId: mealId, comment: commentText }),
+      })
+      if (!res.ok) throw new Error("Request failed")
+
+      setProfileUser((prev) => ({
+        ...prev,
+        favoriteMeals: (prev?.favoriteMeals || []).map((m) =>
+          m.id === mealId ? { ...m, comment: commentText } : m
+        ),
+      }))
+
+      setEditingComment(null)
+      setCommentText("")
+    } catch (error) {
+      console.error("Failed to save note:", error)
+      alert("Could not save your note. Please try again.")
+    }
   }
 
   const isContentVisible = (section) => {
@@ -747,32 +798,7 @@ export default function ProfilePage({ userId }) {
                   )}
                   {isOwnProfile && (
                     <motion.button
-                      onClick={async () => {
-                        if (window.confirm(`Unfollow ${coach.name}?`)) {
-                          // Remove from favoriteCoaches
-                          const updatedUser = {
-                            ...currentUser,
-                            favoriteCoaches: (currentUser.favoriteCoaches || []).filter(c => c.id !== coach.id)
-                          };
-                          setCurrentUser(updatedUser);
-                          setProfileUser(updatedUser);
-                          
-                          // Update localStorage
-                          localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
-                          
-                          // Update users array
-                          const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
-                          const updatedUsers = users.map(u => u.id === currentUser.id ? updatedUser : u);
-                          localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
-                          
-                          // Dispatch event to notify other components
-                          window.dispatchEvent(new Event("userUpdated"));
-                          window.dispatchEvent(new StorageEvent("storage", {
-                            key: "trainsight_current_user",
-                            newValue: JSON.stringify(updatedUser)
-                          }));
-                        }
-                      }}
+                      onClick={() => handleUnfavoriteCoach(coach)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all text-sm font-bold"
@@ -1556,25 +1582,7 @@ export default function ProfilePage({ userId }) {
                               </Link>
                               {isOwnProfile && (
                                 <motion.button
-                                  onClick={async () => {
-                                    if (window.confirm(`Unfollow ${coach.name}?`)) {
-                                      // Remove from favoriteCoaches
-                                      const updatedUser = {
-                                        ...currentUser,
-                                        favoriteCoaches: (currentUser.favoriteCoaches || []).filter(c => c.id !== coach.id)
-                                      };
-                                      setCurrentUser(updatedUser);
-                                      setProfileUser(updatedUser);
-                                      
-                                      localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
-                                      
-                                      const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
-                                      const updatedUsers = users.map(u => u.id === currentUser.id ? updatedUser : u);
-                                      localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
-                                      
-                                      window.dispatchEvent(new Event("userUpdated"));
-                                    }
-                                  }}
+                                  onClick={() => handleUnfavoriteCoach(coach)}
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                   className="px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all text-sm font-bold"

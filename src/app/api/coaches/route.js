@@ -3,6 +3,8 @@
 
 import { NextResponse } from 'next/server';
 import { getCoaches, createCoach } from '../../../../backend/utils/db-helpers';
+import { requireAdmin } from '@/backend/utils/session';
+import { deleteCoachCascade } from '@/backend/utils/cascade-helpers';
 
 // GET /api/coaches - list coaches with optional filters
 export async function GET(request) {
@@ -71,6 +73,11 @@ export async function GET(request) {
 
 // POST /api/coaches - create coach (for Postman)
 export async function POST(request) {
+  // Admin-only: creating and editing coach profiles is a dashboard action.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { id, name, category, bio, image_url } = body;
@@ -95,6 +102,11 @@ export async function POST(request) {
 
 // PUT /api/coaches - update coach
 export async function PUT(request) {
+  // Admin-only: creating and editing coach profiles is a dashboard action.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { id, name, category, bio, image_url } = body;
@@ -143,53 +155,38 @@ export async function PUT(request) {
 
 // DELETE /api/coaches - delete coach
 export async function DELETE(request) {
+  // Admin-only: this removes a coach and everything attached to them.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Coach ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Coach ID is required' }, { status: 400 });
     }
 
     const { getCollection } = await import('@/lib/mongodb');
-    const coachesCollection = await getCollection('coaches');
-    const coachAccounts = await getCollection('coach_accounts');
-    const coachSessions = await getCollection('coach_sessions');
-    const announcements = await getCollection('announcements');
-    const programs = await getCollection('training_programs');
-    const videos = await getCollection('videos');
-    const blogs = await getCollection('blog');
+    const coaches = await getCollection('coaches');
 
-    // Delete auth account
-    await coachAccounts.deleteMany({ coach_id: id });
-    // Delete sessions
-    await coachSessions.deleteMany({ coach_id: id });
-    // Delete related content
-    await announcements.deleteMany({ coach_id: id });
-    await programs.deleteMany({ coach_id: id });
-    await videos.deleteMany({ coach_id: id });
-    await blogs.deleteMany({ coach_id: id });
-
-    // Delete public profile
-    const result = await coachesCollection.deleteOne({ id });
-
-    if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { error: 'Coach not found' },
-        { status: 404 }
-      );
+    // Check existence first so a bad id returns 404 rather than a silent success.
+    const existing = await coaches.findOne({ id });
+    if (!existing) {
+      return NextResponse.json({ error: 'Coach not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, message: 'Coach deleted successfully (profile, account, sessions, content)' });
+    const deleted = await deleteCoachCascade(id);
+    console.log(`[cascade] admin deleted coach ${id}:`, deleted);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Coach deleted along with their content, reviews, follows and saved entries',
+      deleted,
+    });
   } catch (error) {
-    console.error('Error deleting coach:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    console.error('DELETE /api/coaches:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

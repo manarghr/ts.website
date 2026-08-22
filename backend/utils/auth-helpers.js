@@ -22,7 +22,24 @@ const EDITABLE_FIELDS = [
   "workoutExperience",
   "sportsRating",
   "selectedPlan",
+  "privacySettings",
 ];
+
+// Which parts of a profile can be hidden, and the only two values allowed.
+// Validated because this object comes straight from the client.
+const PRIVACY_SECTIONS = ["coaches", "videos", "workouts", "meals"];
+const PRIVACY_VALUES = ["public", "private"];
+
+function sanitizePrivacySettings(value) {
+  if (!value || typeof value !== "object") return undefined;
+
+  const clean = {};
+  for (const section of PRIVACY_SECTIONS) {
+    const v = value[section];
+    clean[section] = PRIVACY_VALUES.includes(v) ? v : "public";
+  }
+  return clean;
+}
 
 export function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
@@ -148,6 +165,13 @@ export async function updateUser(userId, updateData) {
   const patch = {};
   for (const field of EDITABLE_FIELDS) {
     if (updateData[field] === undefined) continue;
+
+    if (field === "privacySettings") {
+      const clean = sanitizePrivacySettings(updateData[field]);
+      if (clean) patch[field] = clean;
+      continue;
+    }
+
     patch[field] = NUMERIC_FIELDS.includes(field)
       ? toNumberOrNull(updateData[field])
       : updateData[field];

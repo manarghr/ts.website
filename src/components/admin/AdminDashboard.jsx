@@ -28,7 +28,7 @@ import {
 } from "lucide-react"
 import { motion } from "framer-motion"
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onLogout }) {
   const [activeSection, setActiveSection] = useState("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [users, setUsers] = useState([])
@@ -197,8 +197,14 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("admin_authenticated")
+  // Ends the session server-side too -- clearing a local flag used to be the whole
+  // "logout", which left the account reachable from any other tab or device.
+  const handleLogout = async () => {
+    if (onLogout) {
+      await onLogout()
+      return
+    }
+    await fetch("/api/admin/auth/logout", { method: "POST" }).catch(() => {})
     window.location.reload()
   }
 

@@ -274,7 +274,19 @@ const generateSampleCoaches = () => {
   return coaches;
 };
 
+// Seeding endpoints must never be reachable on a deployed site -- anyone who found
+// the URL could stuff the database with junk. NODE_ENV is "production" on Vercel.
+function blockedInProduction() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+  return null;
+}
+
 export async function POST(request) {
+  const blocked = blockedInProduction();
+  if (blocked) return blocked;
+
   try {
     const coachesCollection = await getCollection('coaches');
     
@@ -331,6 +343,9 @@ export async function POST(request) {
 
 // GET method to show instructions
 export async function GET() {
+  const blocked = blockedInProduction();
+  if (blocked) return blocked;
+
   return NextResponse.json({
     message: 'Create Sample Coaches Endpoint',
     instructions: {

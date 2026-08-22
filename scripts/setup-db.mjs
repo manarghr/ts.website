@@ -66,6 +66,11 @@ const INDEXES = [
   ["coach_ratings", { coach_id: 1, user_id: 1 }, { unique: true }],
   ["follows", { user_id: 1, coach_id: 1 }, { unique: true }],
 
+  // saved coaches / liked videos / saved meals.
+  // The unique index is what stops a double-click creating two identical saves.
+  ["favorites", { user_id: 1, type: 1, item_id: 1 }, { unique: true }],
+  ["favorites", { user_id: 1, type: 1, created_at: -1 }, {}],
+
   // --- content ---
   ["training_programs", { coach_id: 1 }, {}],
   ["training_programs", { id: 1 }, { sparse: true }],

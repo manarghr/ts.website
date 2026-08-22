@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import MainLayout from "@/components/layout/MainLayout";
 import { useRouter } from "next/navigation";
@@ -37,47 +37,53 @@ const [currentPages, setCurrentPages] = useState({
 
 
 
-  // Toggle favorite meal
-  const toggleFavorite = (meal) => {
-    if (typeof window === "undefined") return;
-    
-    const currentUser = localStorage.getItem("trainsight_current_user");
-    if (!currentUser) {
-      alert("Please login to favorite meals");
-      return;
+  // Saved meals live in the `favorites` collection, keyed off the session cookie.
+  const loadFavorites = useCallback(async () => {
+    try {
+      const res = await fetch("/api/favorites?type=meal", { cache: "no-store" });
+      if (!res.ok) {
+        setFavoriteMeals([]);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      setFavoriteMeals(data?.items || []);
+    } catch (error) {
+      console.error("Failed to load saved meals:", error);
+      setFavoriteMeals([]);
     }
+  }, []);
 
-    const userData = JSON.parse(currentUser);
-    const favorites = userData.favoriteMeals || [];
-    const mealIndex = favorites.findIndex(f => f.id === meal.id);
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
 
-    let updatedFavorites;
-    if (mealIndex >= 0) {
-      // Remove from favorites
-      updatedFavorites = favorites.filter(f => f.id !== meal.id);
-    } else {
-      // Add to favorites
-      updatedFavorites = [...favorites, {
-        ...meal,
-        likedAt: new Date().toISOString(),
-        comment: ""
-      }];
+  const toggleFavorite = async (meal) => {
+    const next = !favoriteMeals.some((f) => f.id === meal.id);
+    const previous = favoriteMeals;
+
+    // Optimistic: update the heart immediately, roll back if the server refuses.
+    setFavoriteMeals(next ? [...previous, meal] : previous.filter((f) => f.id !== meal.id));
+
+    try {
+      const res = await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "meal", itemId: meal.id, favorited: next }),
+      });
+
+      if (res.status === 401) {
+        setFavoriteMeals(previous);
+        alert("Please login to save meals");
+        return;
+      }
+      if (!res.ok) throw new Error("Request failed");
+
+      window.dispatchEvent(new Event("userUpdated"));
+    } catch (error) {
+      console.error("Failed to update saved meal:", error);
+      setFavoriteMeals(previous);
+      alert("Could not save this meal. Please try again.");
     }
-
-    const updatedUser = {
-      ...userData,
-      favoriteMeals: updatedFavorites
-    };
-
-    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
-    
-    // Update users array
-    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
-    const updatedUsers = users.map(u => u.id === userData.id ? updatedUser : u);
-    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
-
-    setFavoriteMeals(updatedFavorites);
-    window.dispatchEvent(new Event("userUpdated"));
   };
 
   const isFavorite = (mealId) => {

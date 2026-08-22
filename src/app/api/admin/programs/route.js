@@ -3,9 +3,15 @@
 
 import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
+import { requireAdmin } from "@/backend/utils/session";
 
 // GET - Get all training programs
 export async function GET(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const programsCollection = await getCollection('training_programs');
     const programs = await programsCollection.find({}).sort({ created_at: -1 }).toArray();
@@ -21,6 +27,11 @@ export async function GET(request) {
 
 // POST - Create new training program
 export async function POST(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { name, description, duration, schedule, exercises, price, discount, discount_percentage } = body;
@@ -60,6 +71,11 @@ export async function POST(request) {
 
 // PUT - Update training program
 export async function PUT(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { id, name, description, duration, schedule, exercises, price, discount, discount_percentage } = body;
@@ -110,6 +126,11 @@ export async function PUT(request) {
 
 // DELETE - Delete training program
 export async function DELETE(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

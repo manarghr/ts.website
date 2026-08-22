@@ -1,23 +1,28 @@
-// Follow/Unfollow Coach API Route with MongoDB
+// Follow / unfollow a coach
 // File: src/app/api/coaches/[id]/follow/route.js
+//
+// The follower is taken from the session cookie. It used to come from `userId` in
+// the request body / query string, which meant anyone could make any user follow
+// any coach, or read who someone else follows.
 
 import { NextResponse } from 'next/server';
 import { checkFollowStatus, toggleFollow } from '../../../../../../backend/utils/db-helpers';
+import { requireUser } from '@/backend/utils/session';
 
-// POST - Follow or unfollow a coach
+// POST - follow or unfollow
 export async function POST(request, { params }) {
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { userId, action } = body; // action: 'follow' or 'unfollow'
 
-    // Validate inputs
-    if (!userId || !action) {
+    const userId = await requireUser(request);
+    if (!userId) {
       return NextResponse.json(
-        { error: 'User ID and action are required' },
-        { status: 400 }
+        { error: 'You must be signed in to follow coaches' },
+        { status: 401 }
       );
     }
+
+    const { action } = await request.json();
 
     if (action !== 'follow' && action !== 'unfollow') {
       return NextResponse.json(
@@ -26,49 +31,37 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Use helper function
     const result = await toggleFollow(userId, id, action);
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       message: result.message,
-      isFollowing: result.isFollowing 
+      isFollowing: result.isFollowing,
     });
   } catch (error) {
-    console.error('Error in follow action:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    console.error('POST /api/coaches/[id]/follow:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// GET - Check if user is following a coach
+// GET - am I following this coach?
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
 
+    // Signed out is a valid answer here, not an error -- the button just renders
+    // as "Follow" for visitors.
+    const userId = await requireUser(request);
     if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ isFollowing: false, authenticated: false });
     }
 
-    // Use helper function
-    const isFollowing = await checkFollowStatus(userId, id);
-    
-    return NextResponse.json({ 
-      isFollowing 
+    return NextResponse.json({
+      isFollowing: await checkFollowStatus(userId, id),
+      authenticated: true,
     });
   } catch (error) {
-    console.error('Error checking follow status:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    console.error('GET /api/coaches/[id]/follow:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

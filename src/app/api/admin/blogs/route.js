@@ -3,6 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
+import { requireAdmin } from "@/backend/utils/session";
 
 // GET - Get all meals
 export async function GET(request) {
@@ -21,6 +22,11 @@ export async function GET(request) {
 
 // POST - Create new blog
 export async function POST(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { 
@@ -64,6 +70,11 @@ export async function POST(request) {
 
 // PUT - Update blog
 export async function PUT(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { 
@@ -125,6 +136,11 @@ export async function PUT(request) {
 
 // DELETE - Delete blog
 export async function DELETE(request) {
+  // Admin-only. Without this, anyone who knew the URL could call it.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

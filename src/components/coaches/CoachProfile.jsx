@@ -236,23 +236,16 @@ export default function CoachProfile({ coachId }) {
     }
   };
 
+  // Whether you follow this coach is a server fact now, not a localStorage guess.
   const checkFollowStatus = async () => {
     try {
-      if (typeof window !== "undefined") {
-        const currentUser = localStorage.getItem("trainsight_current_user");
-        if (currentUser) {
-          const user = JSON.parse(currentUser);
-          
-          // Check localStorage directly for favoriteCoaches
-          const favoriteCoaches = user.favoriteCoaches || [];
-          const isFollowingLocally = favoriteCoaches.some(
-            c => c.id === coachId || c.id === coach?.id
-          );
-          setIsFollowing(isFollowingLocally);
-        } else {
-          setIsFollowing(false);
-        }
+      const res = await fetch(`/api/coaches/${coachId}/follow`, { cache: "no-store" });
+      if (!res.ok) {
+        setIsFollowing(false);
+        return;
       }
+      const data = await res.json().catch(() => ({}));
+      setIsFollowing(Boolean(data?.isFollowing));
     } catch (err) {
       console.error("Follow status error", err);
       setIsFollowing(false);
@@ -261,69 +254,48 @@ export default function CoachProfile({ coachId }) {
 
   const handleFollow = async () => {
     try {
-      if (typeof window !== "undefined") {
-        const currentUser = localStorage.getItem("trainsight_current_user");
-        if (!currentUser) return alert("Please log in to follow coaches");
-        const user = JSON.parse(currentUser);
-        const action = isFollowing ? "unfollow" : "follow";
-        
-        const res = await fetch(`/api/coaches/${coachId}/follow`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user.id, action }),
-        });
-        
-        if (!res.ok) throw new Error("Failed to update follow status");
-        const data = await res.json();
-        setIsFollowing(data.isFollowing);
-        
-        if (coach) {
-          setCoach({
-            ...coach,
-            followers_count: data.isFollowing
-              ? (coach.followers_count || 0) + 1
-              : Math.max(0, (coach.followers_count || 0) - 1),
-          });
-        }
+      const action = isFollowing ? "unfollow" : "follow";
 
-        if (data.isFollowing) {
-          // Add coach to favoriteCoaches
-          const updatedUser = {
-            ...user,
-            favoriteCoaches: [
-              ...(user.favoriteCoaches || []),
-              {
-                id: coach.id,
-                name: coach.name,
-                category: coach.category,
-                image: coach.image_url || coach.image
-              }
-            ]
-          };
-          localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
-          
-          // Update in users array
-          const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
-          const updatedUsers = users.map(u => u.id === user.id ? updatedUser : u);
-          localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
-          
-          window.dispatchEvent(new Event("userUpdated"));
-        } else {
-          // Remove coach from favoriteCoaches
-          const updatedUser = {
-            ...user,
-            favoriteCoaches: (user.favoriteCoaches || []).filter(c => c.id !== coach.id)
-          };
-          localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
-          
-          // Update in users array
-          const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
-          const updatedUsers = users.map(u => u.id === user.id ? updatedUser : u);
-          localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
-          
-          window.dispatchEvent(new Event("userUpdated"));
-        }
+      // Two records, deliberately: `follows` drives the coach's follower count,
+      // `favorites` drives the user's saved-coaches list. Both are keyed off the
+      // session cookie, so no user id is sent from the browser.
+      const res = await fetch(`/api/coaches/${coachId}/follow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+
+      if (res.status === 401) {
+        alert("Please log in to follow coaches");
+        return;
       }
+      if (!res.ok) throw new Error("Failed to update follow status");
+
+      const data = await res.json();
+      setIsFollowing(data.isFollowing);
+
+      if (coach) {
+        setCoach({
+          ...coach,
+          followers_count: data.isFollowing
+            ? (coach.followers_count || 0) + 1
+            : Math.max(0, (coach.followers_count || 0) - 1),
+        });
+      }
+
+      // `favorited` is explicit rather than a toggle, so this always lands on the
+      // same state as the follow above even if the two ever drifted apart.
+      await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "coach",
+          itemId: coachId,
+          favorited: data.isFollowing,
+        }),
+      }).catch(() => {});
+
+      window.dispatchEvent(new Event("userUpdated"));
     } catch (err) {
       console.error(err);
       alert("Failed to update follow status");

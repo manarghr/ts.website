@@ -7,52 +7,87 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Whether you are an admin is decided by the server reading an httpOnly session
+  // cookie. The old version trusted localStorage.admin_authenticated === "true",
+  // which anyone could set from the browser console.
   useEffect(() => {
-    // Check if already authenticated
-    const authStatus = localStorage.getItem("admin_authenticated");
-    if (authStatus === "true") {
-      setIsAuthenticated(true);
-    }
+    let cancelled = false;
 
-    // Auto-logout when user leaves the page (closes tab, navigates away, or refreshes)
-    const handleBeforeUnload = () => {
-      localStorage.removeItem("admin_authenticated");
-    };
-
-    // Auto-logout when page visibility changes (user switches tabs or minimizes window)
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        localStorage.removeItem("admin_authenticated");
-        setIsAuthenticated(false);
+    const check = async () => {
+      try {
+        const res = await fetch("/api/admin/me", { cache: "no-store" });
+        if (!cancelled) setIsAuthenticated(res.ok);
+      } catch {
+        if (!cancelled) setIsAuthenticated(false);
+      } finally {
+        if (!cancelled) setIsChecking(false);
       }
     };
 
-    // Add event listeners
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    check();
 
-    // Cleanup event listeners
+    // Stale leftover from the old scheme -- remove it so nothing reads it again.
+    localStorage.removeItem("admin_authenticated");
+
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      cancelled = true;
     };
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Simple login check for demo (password: admin123, username can be anything or empty)
-    if (password === "admin123") {
-      localStorage.setItem("admin_authenticated", "true");
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: username, password }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(data?.error || "Incorrect email or password.");
+        setPassword("");
+        return;
+      }
+
       setIsAuthenticated(true);
-      setError("");
-    } else {
-      setError("Incorrect password. Please try again.");
+      setPassword("");
+    } catch {
+      setError("Could not reach the server. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const handleAdminLogout = async () => {
+    try {
+      await fetch("/api/admin/auth/logout", { method: "POST" });
+    } catch {
+      // clearing local state below is still the right move
+    }
+    setIsAuthenticated(false);
+  };
+
+  // Avoid flashing the login form for a logged-in admin while /api/admin/me resolves.
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46]">
+        <p className="text-white/70 font-medium">Checking access...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -220,6 +255,22 @@ export default function AdminPage() {
             <div>
               <label className="block text-sm font-medium text-[#354F52] mb-2 flex items-center gap-2">
                 <Lock className="w-4 h-4" />
+                Email
+              </label>
+              <input
+                type="email"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent outline-none transition-all"
+                placeholder="Enter admin email"
+                autoComplete="username"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#354F52] mb-2 flex items-center gap-2">
+                <Lock className="w-4 h-4" />
                 Password
               </label>
               <input
@@ -228,6 +279,7 @@ export default function AdminPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6BB371] focus:border-transparent outline-none transition-all"
                 placeholder="Enter admin password"
+                autoComplete="current-password"
                 required
               />
             </div>
@@ -244,9 +296,10 @@ export default function AdminPage() {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#52796F] to-[#354F52] text-white font-semibold py-3 px-6 rounded-lg hover:shadow-xl hover:shadow-[#52796F]/30 transition-all duration-300 transform hover:scale-105 active:scale-95"
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-[#52796F] to-[#354F52] text-white font-semibold py-3 px-6 rounded-lg hover:shadow-xl hover:shadow-[#52796F]/30 transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              Login
+              {isSubmitting ? "Signing in..." : "Login"}
             </button>
           </form>
         </motion.div>
@@ -254,6 +307,6 @@ export default function AdminPage() {
     );
   }
 
-  return <AdminDashboard />;
+  return <AdminDashboard onLogout={handleAdminLogout} />;
 }
 

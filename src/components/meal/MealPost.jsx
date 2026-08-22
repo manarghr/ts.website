@@ -47,57 +47,49 @@ export default function MealPost({ postId }) {
 
   loadMeal();
 
-  // Check if meal is favorited
-  const currentUser = localStorage.getItem("trainsight_current_user");
-  if (currentUser) {
+  // Ask the server whether this meal is saved. Signed-out visitors just get false.
+  const loadFavoriteState = async () => {
     try {
-      const userData = JSON.parse(currentUser);
-      const favorites = userData.favoriteMeals || [];
-      setIsFavorite(favorites.some(f => f.id === postId));
+      const res = await fetch("/api/favorites?type=meal", { cache: "no-store" });
+      if (!res.ok) {
+        setIsFavorite(false);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      setIsFavorite((data?.items || []).some((m) => m.id === postId));
     } catch (error) {
       console.error("Error loading favorites:", error);
+      setIsFavorite(false);
     }
-  }
+  };
+
+  loadFavoriteState();
 }, [postId]);
 
-  const toggleFavorite = () => {
-    if (typeof window === "undefined") return;
-    
-    const currentUser = localStorage.getItem("trainsight_current_user");
-    if (!currentUser) {
-      alert("Please login to favorite meals");
-      return;
+  const toggleFavorite = async () => {
+    const next = !isFavorite;
+    setIsFavorite(next); // optimistic -- a save button that lags feels broken
+
+    try {
+      const res = await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "meal", itemId: meal.id, favorited: next }),
+      });
+
+      if (res.status === 401) {
+        setIsFavorite(!next);
+        alert("Please login to save meals");
+        return;
+      }
+      if (!res.ok) throw new Error("Request failed");
+
+      window.dispatchEvent(new Event("userUpdated"));
+    } catch (error) {
+      console.error("Failed to update saved meal:", error);
+      setIsFavorite(!next);
+      alert("Could not save this meal. Please try again.");
     }
-
-    const userData = JSON.parse(currentUser);
-    const favorites = userData.favoriteMeals || [];
-    const mealIndex = favorites.findIndex(f => f.id === meal.id);
-
-    let updatedFavorites;
-    if (mealIndex >= 0) {
-      updatedFavorites = favorites.filter(f => f.id !== meal.id);
-      setIsFavorite(false);
-    } else {
-      updatedFavorites = [...favorites, {
-        ...meal,
-        likedAt: new Date().toISOString(),
-        comment: ""
-      }];
-      setIsFavorite(true);
-    }
-
-    const updatedUser = {
-      ...userData,
-      favoriteMeals: updatedFavorites
-    };
-
-    localStorage.setItem("trainsight_current_user", JSON.stringify(updatedUser));
-    
-    const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]");
-    const updatedUsers = users.map(u => u.id === userData.id ? updatedUser : u);
-    localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers));
-
-    window.dispatchEvent(new Event("userUpdated"));
   };
 
   if (!meal) {
