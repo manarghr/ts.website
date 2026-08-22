@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { X, Mail, Lock, User, Phone, Calendar, Dumbbell, Upload, Camera, AlertCircle, Users, Star, Gift, Trophy, Zap, Edit, CreditCard, Globe, Hash, CheckCircle2 } from "lucide-react"
 
 const initialFormData = {
@@ -295,10 +296,18 @@ export default function AuthModal({ isOpen, onClose }) {
     }, 1000)
   }
 
-  if (!isOpen) return null
+  // The modal is rendered into <body> via a portal (see the bottom of this file).
+  // It used to render inside the page tree, where an ancestor in page.js
+  // (`overflow-x-hidden relative min-h-screen`) created a clipping context that cut
+  // off the bottom of the form -- including the submit button.
+  // (Body scroll is already locked by "Effect 1" near the top of this component.)
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => setIsMounted(true), [])
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 py-6 sm:py-8 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto min-h-screen">
+  if (!isOpen || !isMounted) return null
+
+  const modal = (
+    <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 py-6 sm:py-8 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -306,7 +315,7 @@ export default function AuthModal({ isOpen, onClose }) {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
       
-      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300 border border-white/20 backdrop-blur-xl flex-shrink-0">
+      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col animate-in zoom-in-95 duration-300 border border-white/20 backdrop-blur-xl flex-shrink-0">
         {/* Sporty decorative elements */}
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"></div>
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-transparent rounded-bl-full"></div>
@@ -362,7 +371,12 @@ export default function AuthModal({ isOpen, onClose }) {
               ))}
             </div>
 
-            <div className="p-6 md:p-8 relative overflow-y-auto min-h-0 flex-1" style={{ maxHeight: 'calc(85vh - 56px)' }}>
+            {/* No hardcoded maxHeight here. `flex-1 min-h-0` inside the flex-col parent
+                (which carries the max-h) lets this area size itself to whatever space is
+                left after the header, at any viewport height. The old
+                `calc(85vh - 56px)` assumed a 56px header -- it is ~70px -- so the
+                bottom of the form was pushed out of view. */}
+            <div className="p-6 md:p-8 relative overflow-y-auto min-h-0 flex-1">
               {activeTab === "signup" ? (
                 <form onSubmit={handleSignup} className="space-y-5" autoComplete="off">
                   <div className="text-center mb-8 animate-fadeInUp">
@@ -1265,4 +1279,7 @@ export default function AuthModal({ isOpen, onClose }) {
       </div>
     </div>
   )
+
+  // Mount into <body> so no ancestor's overflow/transform can clip the modal.
+  return createPortal(modal, document.body)
 }
