@@ -119,8 +119,9 @@ export default function AuthModal({ isOpen, onClose }) {
     }
     if (!formData.password) {
       newErrors.password = "Password is required"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
+    } else if (formData.password.length < 8) {
+      // Must match the server rule in backend/utils/auth-helpers.js
+      newErrors.password = "Password must be at least 8 characters"
     }
     if (!formData.gender) newErrors.gender = "Please select your gender"
     if (!formData.age) newErrors.age = "Age is required"
@@ -179,58 +180,44 @@ export default function AuthModal({ isOpen, onClose }) {
     return Object.keys(newErrors).length === 0
   }
 
+  // Signup + login both go through the API. There is no localStorage fallback any
+  // more: if the database is unreachable we say so instead of pretending it worked.
+  //
+  // The session itself lives in an httpOnly cookie set by the server. The copy we
+  // keep in localStorage is ONLY a UI cache so the navbar can render instantly --
+  // it is never trusted for permissions.
+  const cacheUserAndNotify = (user) => {
+    localStorage.setItem("trainsight_current_user", JSON.stringify(user))
+    localStorage.removeItem("currentCoach")
+    window.dispatchEvent(new Event("coachLoggedOut"))
+    window.dispatchEvent(new Event("userUpdated"))
+  }
+
   const handleSignup = async (e) => {
     e.preventDefault()
     if (!validateSignup()) return
 
     setIsSubmitting(true)
-    setErrors({}) // Clear previous errors
+    setErrors({})
 
     try {
-      // Register user via API
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       })
 
-      let data
-      try {
-        data = await response.json()
-      } catch (parseError) {
-        console.error("Failed to parse response:", parseError)
-        setErrors({ email: "Server error. Please try again later." })
-        setIsSubmitting(false)
-        return
-      }
+      const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        const errorMsg = data?.error || data?.details || "An error occurred. Please try again."
-        
-        // If database error, try localStorage fallback
-        if (errorMsg.includes('Database') || data?.useLocalStorage) {
-          return handleSignupLocalStorage()
-        }
-        
-        setErrors({ email: errorMsg })
+        const message = data?.error || "Something went wrong. Please try again."
+        // 409 = email/phone taken, 400 = validation. Both belong on the email field.
+        setErrors({ email: message })
         setIsSubmitting(false)
         return
       }
 
-      // Clear any errors on success
-      setErrors({})
-
-      // Save user to localStorage for frontend state
-      // If logging in/signing up as a user, clear any coach session so the navbar switches correctly
-      localStorage.removeItem("currentCoach")
-      window.dispatchEvent(new Event("coachLoggedOut"))
-
-      localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
-
-      // Dispatch event to update navbar
-      window.dispatchEvent(new Event("userUpdated"));
+      cacheUserAndNotify(data.user)
 
       setIsSubmitting(false)
       setShowSuccess(true)
@@ -243,79 +230,7 @@ export default function AuthModal({ isOpen, onClose }) {
       }, 3000)
     } catch (error) {
       console.error("Error during signup:", error)
-      // Try localStorage fallback on network errors
-      if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
-        return handleSignupLocalStorage()
-      }
-      setErrors({ email: error.message || "Network error. Please check your connection and try again." })
-      setIsSubmitting(false)
-    }
-  }
-
-  // LocalStorage fallback for registration
-  const handleSignupLocalStorage = () => {
-    try {
-      // Get existing users from localStorage
-      const existingUsers = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-      
-      // Check if user already exists
-      const existingUser = existingUsers.find(
-        (u) => u.email === formData.email || u.phone === formData.phone
-      )
-      
-      if (existingUser) {
-        setErrors({ email: "User with this email or phone already exists" })
-        setIsSubmitting(false)
-        return
-      }
-
-      // Create new user
-      const newUser = {
-        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password, // Store plain password for demo (not secure!)
-        gender: formData.gender || '',
-        age: formData.age || null,
-        workoutExperience: formData.workoutExperience || '',
-        sportsRating: formData.sportsRating || '',
-        selectedPlan: formData.selectedPlan || '',
-        profilePicture: formData.profilePicture || '',
-        bio: formData.bio || '',
-        followers: [],
-        followings: [],
-        favoriteCoaches: [],
-        likedVideos: [],
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-
-      // Save to localStorage
-      const updatedUsers = [...existingUsers, newUser]
-      localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
-      // If logging in/signing up as a user, clear any coach session so the navbar switches correctly
-      localStorage.removeItem("currentCoach")
-      window.dispatchEvent(new Event("coachLoggedOut"))
-
-      localStorage.setItem("trainsight_current_user", JSON.stringify(newUser))
-
-      // Dispatch event to update navbar
-      window.dispatchEvent(new Event("userUpdated"))
-
-      setIsSubmitting(false)
-      setShowSuccess(true)
-      setSuccessMessage(
-        `Welcome aboard, ${formData.fullName.split(" ")[0]}! Your fitness journey starts now. We're excited to help you achieve your goals!`,
-      )
-
-      setTimeout(() => {
-        onClose()
-      }, 3000)
-    } catch (error) {
-      console.error("Error during localStorage signup:", error)
-      setErrors({ email: "An error occurred. Please try again." })
+      setErrors({ email: "Network error. Please check your connection and try again." })
       setIsSubmitting(false)
     }
   }
@@ -325,121 +240,37 @@ export default function AuthModal({ isOpen, onClose }) {
     if (!validateLogin()) return
 
     setIsSubmitting(true)
-    setErrors({}) // Clear previous errors
+    setErrors({})
 
     try {
-      // Login via API
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginData),
       })
 
-      let data
-      try {
-        data = await response.json()
-      } catch (parseError) {
-        console.error("Failed to parse response:", parseError)
-        setErrors({ email: "Server error. Please try again later." })
-        setIsSubmitting(false)
-        return
-      }
+      const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        const errorMsg = data?.error || data?.details || "Invalid email or password"
-        
-        // If database error, try localStorage fallback
-        if (data?.error?.includes('Database') || data?.useLocalStorage) {
-          // Use localStorage for login
-          return handleLoginLocalStorage()
-        }
-        
-        setErrors({ email: errorMsg })
+        setErrors({ email: data?.error || "Invalid email or password" })
         setIsSubmitting(false)
         return
       }
 
-      // Clear any errors on success
-      setErrors({})
-
-      // Save user to localStorage for frontend state
-      // If logging in/signing up as a user, clear any coach session so the navbar switches correctly
-      localStorage.removeItem("currentCoach")
-      window.dispatchEvent(new Event("coachLoggedOut"))
-
-      localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
-
-      // Dispatch event to update navbar
-      window.dispatchEvent(new Event("userUpdated"));
+      cacheUserAndNotify(data.user)
 
       setIsSubmitting(false)
       setShowSuccess(true)
-      setSuccessMessage(`Welcome back, ${data.user.fullName}! Ready to crush your fitness goals today? Let's make it happen!`)
+      setSuccessMessage(
+        `Welcome back, ${data.user.fullName}! Ready to crush your fitness goals today? Let's make it happen!`,
+      )
 
       setTimeout(() => {
         onClose()
       }, 2500)
     } catch (error) {
       console.error("Error during login:", error)
-      // Try localStorage fallback on network errors
-      if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
-        return handleLoginLocalStorage()
-      }
-      setErrors({ email: error.message || "Network error. Please check your connection and try again." })
-      setIsSubmitting(false)
-    }
-  }
-
-  // LocalStorage fallback for login
-  const handleLoginLocalStorage = () => {
-    try {
-      // Get users from localStorage
-      const users = JSON.parse(localStorage.getItem("trainsight_users") || "[]")
-      
-      // Find user by email
-      const user = users.find((u) => u.email === loginData.email)
-      
-      if (!user) {
-        setErrors({ email: "Invalid email or password" })
-        setIsSubmitting(false)
-        return
-      }
-
-      // Check password (plain text comparison for demo - not secure!)
-      if (user.password !== loginData.password) {
-        setErrors({ email: "Invalid email or password" })
-        setIsSubmitting(false)
-        return
-      }
-
-      // Update last login
-      user.lastLogin = new Date().toISOString()
-      const updatedUsers = users.map((u) => (u.id === user.id ? user : u))
-      localStorage.setItem("trainsight_users", JSON.stringify(updatedUsers))
-
-      // Save current user (without password)
-      const { password, ...userWithoutPassword } = user
-      // If logging in/signing up as a user, clear any coach session so the navbar switches correctly
-      localStorage.removeItem("currentCoach")
-      window.dispatchEvent(new Event("coachLoggedOut"))
-
-      localStorage.setItem("trainsight_current_user", JSON.stringify(userWithoutPassword))
-
-      // Dispatch event to update navbar
-      window.dispatchEvent(new Event("userUpdated"))
-
-      setIsSubmitting(false)
-      setShowSuccess(true)
-      setSuccessMessage(`Welcome back, ${user.fullName}! Ready to crush your fitness goals today? Let's make it happen!`)
-
-      setTimeout(() => {
-        onClose()
-      }, 2500)
-    } catch (error) {
-      console.error("Error during localStorage login:", error)
-      setErrors({ email: "An error occurred. Please try again." })
+      setErrors({ email: "Network error. Please check your connection and try again." })
       setIsSubmitting(false)
     }
   }

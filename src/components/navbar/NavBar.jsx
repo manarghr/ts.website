@@ -86,6 +86,26 @@ export default function Navbar() {
       }
     }
 
+    // The localStorage copy is only a cache for instant first paint. The server is
+    // the authority: if the session cookie is gone or expired, drop the cached user.
+    const hydrateUserFromServer = async () => {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" })
+        if (!res.ok) return
+        const data = await res.json().catch(() => ({}))
+
+        if (data?.authenticated && data.user) {
+          setCurrentUser(data.user)
+          localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
+        } else {
+          setCurrentUser(null)
+          localStorage.removeItem("trainsight_current_user")
+        }
+      } catch (_) {
+        // offline: keep showing the cached user rather than falsely logging them out
+      }
+    }
+
     const handleLogout = () => {
       setCurrentUser(null)
       setShowDropdown(false)
@@ -106,11 +126,13 @@ export default function Navbar() {
     handleStorageChange()
     handleCoachStorageChange()
     hydrateCoachFromServer()
+    hydrateUserFromServer()
 
     // Sync across tabs
     window.addEventListener("focus", handleStorageChange)
     window.addEventListener("focus", handleCoachStorageChange)
     window.addEventListener("focus", hydrateCoachFromServer)
+    window.addEventListener("focus", hydrateUserFromServer)
 
     return () => {
       window.removeEventListener("userUpdated", handleStorageChange)
@@ -120,10 +142,15 @@ export default function Navbar() {
       window.removeEventListener("focus", handleStorageChange)
       window.removeEventListener("focus", handleCoachStorageChange)
       window.removeEventListener("focus", hydrateCoachFromServer)
+      window.removeEventListener("focus", hydrateUserFromServer)
     }
   }, [])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Destroy the session server-side too, not just the local cache.
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+    } catch (_) {}
     localStorage.removeItem("trainsight_current_user")
     setShowDropdown(false)
     window.dispatchEvent(new Event("userLoggedOut"))

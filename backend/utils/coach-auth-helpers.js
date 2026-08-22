@@ -1,15 +1,25 @@
-// Coach Authentication + Session Helpers (MongoDB)
+// Coach account helpers (MongoDB)
 // File: backend/utils/coach-auth-helpers.js
+//
+// Sessions now live in backend/utils/session.js (one shared `sessions` collection).
+// The old function names are kept as thin wrappers so existing coach routes keep
+// working unchanged.
 
 import crypto from "crypto";
 import { getCollection } from "@/lib/mongodb";
 import { createCoach, getCoachById } from "@/backend/utils/db-helpers";
+import {
+  ROLES,
+  createSession,
+  readSession,
+  destroySession,
+  getSessionCookieName,
+  getSessionTtlSeconds,
+} from "@/backend/utils/session";
 
-// Use bcryptjs (pure JS, no native build) for password hashing
 import bcrypt from "bcryptjs";
 
-const SESSION_COOKIE_NAME = "trainsight_coach_session";
-const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+const BCRYPT_ROUNDS = 10;
 
 function slugify(input) {
   return String(input || "")
@@ -31,107 +41,101 @@ function mapSpecializationToCategory(s) {
   return "Strength";
 }
 
-export function getCoachSessionCookieName() {
-  return SESSION_COOKIE_NAME;
-}
-
-export function getCoachSessionTtlSeconds() {
-  return SESSION_TTL_SECONDS;
-}
+// Kept for backwards compatibility -- both now point at the unified session cookie.
+export const getCoachSessionCookieName = getSessionCookieName;
+export const getCoachSessionTtlSeconds = getSessionTtlSeconds;
 
 export async function createCoachAccount(coachData) {
   const coachAccounts = await getCollection("coach_accounts");
 
   const email = String(coachData.email || "").trim().toLowerCase();
   if (!email) throw new Error("Email is required");
+  if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("Please enter a valid email address");
   if (!coachData.password) throw new Error("Password is required");
-  if (!coachData.name) throw new Error("Name is required");
+  if (String(coachData.password).length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+  if (!coachData.name || !String(coachData.name).trim()) throw new Error("Name is required");
 
   const existing = await coachAccounts.findOne({ email });
-  if (existing) throw new Error("Coach with this email already exists");
+  if (existing) throw new Error("A coach account with this email already exists");
 
   const base = slugify(coachData.name) || "coach";
-  const short = crypto.randomBytes(3).toString("hex");
-  const coachId = `${base}-${short}`;
+  const coachId = `${base}-${crypto.randomBytes(3).toString("hex")}`;
 
-  const passwordHash = await bcrypt.hash(coachData.password, 10);
+  const passwordHash = await bcrypt.hash(coachData.password, BCRYPT_ROUNDS);
   const category = coachData.category || mapSpecializationToCategory(coachData.specialization);
 
-  // Create the public coach profile document
+  // Public-facing profile document
   await createCoach({
     id: coachId,
-    name: coachData.name,
+    name: String(coachData.name).trim(),
     category,
     bio: coachData.bio || "",
     image_url: coachData.image_url || "",
   });
 
   const now = new Date();
-  const accountDoc = {
-    coach_id: coachId,
-    email,
-    password: passwordHash,
-    // store extra info for dashboard editing (optional)
-    phone: coachData.phone || "",
-    specialization: coachData.specialization || "",
-    experience: coachData.experience || "",
-    certification: coachData.certification || "",
-    status: coachData.status || "active",
-    created_at: now,
-    updated_at: now,
-  };
+  try {
+    await coachAccounts.insertOne({
+      coach_id: coachId,
+      email,
+      password: passwordHash,
+      phone: coachData.phone || "",
+      specialization: coachData.specialization || "",
+      experience: coachData.experience || "",
+      certification: coachData.certification || "",
+      status: coachData.status || "active",
+      created_at: now,
+      updated_at: now,
+    });
+  } catch (error) {
+    if (error?.code === 11000) throw new Error("A coach account with this email already exists");
+    throw error;
+  }
 
-  await coachAccounts.insertOne(accountDoc);
   return { coachId };
 }
 
 export async function authenticateCoach(email, password) {
   const coachAccounts = await getCollection("coach_accounts");
-  const normalizedEmail = String(email || "").trim().toLowerCase();
-  const account = await coachAccounts.findOne({ email: normalizedEmail });
+  const account = await coachAccounts.findOne({
+    email: String(email || "").trim().toLowerCase(),
+  });
+
   if (!account) throw new Error("Invalid email or password");
-  const ok = await bcrypt.compare(password, account.password);
+
+  const ok = await bcrypt.compare(String(password || ""), account.password);
   if (!ok) throw new Error("Invalid email or password");
+
   return { coachId: account.coach_id };
 }
 
 export async function createCoachSession(coachId) {
-  const sessions = await getCollection("coach_sessions");
-  const sessionId = crypto.randomUUID();
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + SESSION_TTL_SECONDS * 1000);
-  await sessions.insertOne({
-    session_id: sessionId,
-    coach_id: coachId,
-    created_at: now,
-    expires_at: expiresAt,
-  });
-  return { sessionId, expiresAt };
+  return createSession(coachId, ROLES.COACH);
 }
 
 export async function getCoachIdFromSession(sessionId) {
-  if (!sessionId) return null;
-  const sessions = await getCollection("coach_sessions");
-  const s = await sessions.findOne({ session_id: sessionId });
-  if (!s) return null;
-  if (s.expires_at && new Date(s.expires_at).getTime() < Date.now()) {
-    // expire
-    await sessions.deleteOne({ session_id: sessionId });
-    return null;
-  }
-  return s.coach_id || null;
+  const session = await readSession(sessionId);
+  if (!session || session.role !== ROLES.COACH) return null;
+  return session.principalId;
 }
 
 export async function deleteCoachSession(sessionId) {
-  if (!sessionId) return;
-  const sessions = await getCollection("coach_sessions");
-  await sessions.deleteOne({ session_id: sessionId });
+  return destroySession(sessionId);
 }
 
 export async function getCoachBySessionId(sessionId) {
   const coachId = await getCoachIdFromSession(sessionId);
   if (!coachId) return null;
-  const coach = await getCoachById(coachId);
-  return coach || null;
+  return (await getCoachById(coachId)) || null;
 }
 
+/** Account record (email, phone, specialization...) as opposed to the public profile. */
+export async function getCoachAccount(coachId) {
+  const coachAccounts = await getCollection("coach_accounts");
+  const account = await coachAccounts.findOne({ coach_id: coachId });
+  if (!account) return null;
+  const { password, _id, ...rest } = account;
+  return rest;
+}

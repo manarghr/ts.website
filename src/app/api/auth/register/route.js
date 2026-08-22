@@ -1,143 +1,56 @@
-// User Registration API Route
+// User registration
 // File: src/app/api/auth/register/route.js
 
-import { NextResponse } from 'next/server';
-
-// Try MongoDB first, fallback to localStorage-based auth
-let createUser;
-let useMongoDB = true;
-
-try {
-  const authHelpers = await import('@/backend/utils/auth-helpers');
-  createUser = authHelpers.createUser;
-} catch (error) {
-  console.warn('MongoDB not available, using localStorage fallback');
-  useMongoDB = false;
-}
+import { NextResponse } from "next/server";
+import { createUser } from "@/backend/utils/auth-helpers";
+import { ROLES, createSession, setSessionCookie } from "@/backend/utils/session";
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const {
-      fullName,
-      email,
-      phone,
-      password,
-      gender,
-      age,
-      workoutExperience,
-      sportsRating,
-      selectedPlan,
-      profilePicture,
-      bio,
-    } = body;
 
-    // Validate required fields
-    if (!fullName || !email || !phone || !password) {
-      return NextResponse.json(
-        { error: 'Full name, email, phone, and password are required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-
-    // Validate password length
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      );
-    }
-
-    // Create user
-    let user;
-    
-    if (useMongoDB && createUser) {
-      try {
-        user = await createUser({
-          fullName,
-          email,
-          phone,
-          password,
-          gender,
-          age,
-          workoutExperience,
-          sportsRating,
-          selectedPlan,
-          profilePicture,
-          bio,
-        });
-      } catch (dbError) {
-        // If MongoDB fails, fall back to localStorage approach
-        if (dbError.message.includes('Database connection') || dbError.message.includes('MongoDB')) {
-          useMongoDB = false;
-        } else {
-          throw dbError;
-        }
-      }
-    }
-
-    // Fallback: Create user data (client will handle localStorage)
-    if (!useMongoDB || !user) {
-      const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      user = {
-        id: userId,
-        fullName,
-        email,
-        phone,
-        gender: gender || '',
-        age: age || null,
-        workoutExperience: workoutExperience || '',
-        sportsRating: sportsRating || '',
-        selectedPlan: selectedPlan || '',
-        profilePicture: profilePicture || '',
-        bio: bio || '',
-        followers: [],
-        followings: [],
-        favoriteCoaches: [],
-        likedVideos: [],
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'User registered successfully',
-      user,
+    const user = await createUser({
+      fullName: body.fullName,
+      email: body.email,
+      phone: body.phone,
+      password: body.password,
+      gender: body.gender,
+      age: body.age,
+      weight: body.weight,
+      height: body.height,
+      workoutExperience: body.workoutExperience,
+      sportsRating: body.sportsRating,
+      selectedPlan: body.selectedPlan,
+      profilePicture: body.profilePicture,
+      bio: body.bio,
     });
+
+    // Registering signs you straight in.
+    const { sessionId } = await createSession(user.id, ROLES.USER);
+
+    const response = NextResponse.json({ success: true, user }, { status: 201 });
+    return setSessionCookie(response, sessionId);
   } catch (error) {
-    console.error('Registration error:', error);
-    
-    // Handle duplicate user error
-    if (error.message.includes('already exists')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 409 } // Conflict
-      );
+    console.error("POST /api/auth/register:", error);
+
+    const message = error.message || "Registration failed";
+
+    // Validation and duplicate errors are the user's fault -> 4xx.
+    if (message.includes("already exists")) {
+      return NextResponse.json({ error: message }, { status: 409 });
+    }
+    if (
+      message.includes("required") ||
+      message.includes("valid email") ||
+      message.includes("at least 8 characters")
+    ) {
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
-    // Handle database connection errors
-    if (error.message.includes('Database connection failed') || error.message.includes('MongoDB')) {
-      return NextResponse.json(
-        { error: 'Database connection error. Please check server configuration.', details: error.message },
-        { status: 503 } // Service Unavailable
-      );
-    }
-
+    // Anything else is us -> 503, and we do NOT leak the internal message.
     return NextResponse.json(
-      { error: error.message || 'Internal server error', details: error.message },
-      { status: 500 }
+      { error: "Could not reach the database. Please try again in a moment." },
+      { status: 503 }
     );
   }
 }
-

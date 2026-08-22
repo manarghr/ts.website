@@ -1,15 +1,14 @@
+// Coach login
+// File: src/app/api/coach/auth/login/route.js
+
 import { NextResponse } from "next/server";
-import {
-  authenticateCoach,
-  createCoachSession,
-  getCoachSessionCookieName,
-  getCoachSessionTtlSeconds,
-} from "@/backend/utils/coach-auth-helpers";
+import { authenticateCoach, createCoachSession } from "@/backend/utils/coach-auth-helpers";
+import { setSessionCookie } from "@/backend/utils/session";
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const { email, password } = await request.json();
+
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
@@ -17,18 +16,17 @@ export async function POST(request) {
     const { coachId } = await authenticateCoach(email, password);
     const { sessionId } = await createCoachSession(coachId);
 
-    const res = NextResponse.json({ success: true, coachId });
-    res.cookies.set(getCoachSessionCookieName(), sessionId, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: getCoachSessionTtlSeconds(),
-    });
-    return res;
+    const response = NextResponse.json({ success: true, coachId });
+    return setSessionCookie(response, sessionId);
   } catch (error) {
-    const msg = error.message || "Internal server error";
-    const status = msg.includes("Invalid email or password") ? 401 : 400;
-    return NextResponse.json({ error: msg }, { status });
+    if (error.message === "Invalid email or password") {
+      return NextResponse.json({ error: error.message }, { status: 401 });
+    }
+
+    console.error("POST /api/coach/auth/login:", error);
+    return NextResponse.json(
+      { error: "Could not reach the database. Please try again in a moment." },
+      { status: 503 }
+    );
   }
 }
-

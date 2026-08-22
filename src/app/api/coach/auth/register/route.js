@@ -1,43 +1,50 @@
+// Coach registration
+// File: src/app/api/coach/auth/register/route.js
+
 import { NextResponse } from "next/server";
-import {
-  createCoachAccount,
-  createCoachSession,
-  getCoachSessionCookieName,
-  getCoachSessionTtlSeconds,
-} from "@/backend/utils/coach-auth-helpers";
+import { createCoachAccount, createCoachSession } from "@/backend/utils/coach-auth-helpers";
+import { setSessionCookie } from "@/backend/utils/session";
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, email, password, phone, specialization, experience, certification, bio, category, image_url } = body;
 
     const { coachId } = await createCoachAccount({
-      name,
-      email,
-      password,
-      phone,
-      specialization,
-      experience,
-      certification,
-      bio,
-      category,
-      image_url,
+      name: body.name,
+      email: body.email,
+      password: body.password,
+      phone: body.phone,
+      specialization: body.specialization,
+      experience: body.experience,
+      certification: body.certification,
+      bio: body.bio,
+      category: body.category,
+      image_url: body.image_url,
     });
 
     const { sessionId } = await createCoachSession(coachId);
-    const res = NextResponse.json({ success: true, coachId });
-    res.cookies.set(getCoachSessionCookieName(), sessionId, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: getCoachSessionTtlSeconds(),
-    });
-    return res;
+
+    const response = NextResponse.json({ success: true, coachId }, { status: 201 });
+    return setSessionCookie(response, sessionId);
   } catch (error) {
+    console.error("POST /api/coach/auth/register:", error);
+
+    const message = error.message || "Registration failed";
+
+    if (message.includes("already exists")) {
+      return NextResponse.json({ error: message }, { status: 409 });
+    }
+    if (
+      message.includes("required") ||
+      message.includes("valid email") ||
+      message.includes("at least 8 characters")
+    ) {
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
-      { status: 400 }
+      { error: "Could not reach the database. Please try again in a moment." },
+      { status: 503 }
     );
   }
 }
-
