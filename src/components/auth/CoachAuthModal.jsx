@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, User, Phone, Award, Briefcase, FileText, Upload, Camera } from "lucide-react";
 import Image from "next/image";
@@ -171,10 +172,17 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     }
   };
 
-  if (!isOpen) return null;
+  // Rendered into <body> via a portal at the bottom of this file.
+  // Inside the page tree it sat within `<div className="relative z-10">` in page.js,
+  // which creates a stacking context -- so z-50 only competed with its siblings and
+  // the sections further down the page painted straight over the modal.
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-20 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-md animate-in fade-in duration-300">
+  if (!isOpen || !isMounted) return null;
+
+  const modal = (
+    <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 py-6 sm:py-8 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6BB371]/10 rounded-full blur-3xl animate-pulse"></div>
@@ -182,7 +190,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#354F52]/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
       </div>
       
-      <div className="relative bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300 scrollbar-hide border border-white/20 backdrop-blur-xl">
+      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto animate-in zoom-in-95 duration-300 scrollbar-hide border border-white/20 backdrop-blur-xl flex-shrink-0">
         {/* Sporty decorative elements */}
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371]"></div>
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#6BB371]/5 to-transparent rounded-bl-full"></div>
@@ -541,4 +549,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
       </div>
     </div>
   );
+
+  // Mount on <body> so no ancestor stacking context or overflow can hide it.
+  return createPortal(modal, document.body);
 }
