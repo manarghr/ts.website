@@ -131,8 +131,8 @@ export default function AIHome() {
             className="relative group"
           >
             {/* Decorative Elements */}
-            <div className="absolute -top-10 -right-10 w-72 h-72 bg-[#52796F]/10 rounded-full blur-[100px] group-hover:scale-150 transition-transform duration-1000"></div>
-            <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[#6BB371]/10 rounded-full blur-[100px] group-hover:scale-150 transition-transform duration-1000" style={{ transitionDelay: '0.2s' }}></div>
+            <div className="absolute -top-10 -right-10 w-72 h-72  group-hover:scale-150 transition-transform duration-1000" style={{ background: "radial-gradient(circle, rgba(82,121,111,0.1) 0%, transparent 70%)" }}></div>
+            <div className="absolute -bottom-10 -left-10 w-64 h-64  group-hover:scale-150 transition-transform duration-1000" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.1) 0%, transparent 70%)" }} style={{ transitionDelay: '0.2s' }}></div>
             
             {/* Image Container */}
             <div className="relative">
@@ -200,7 +200,7 @@ export default function AIHome() {
         >
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-pattern-dots opacity-10"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#6BB371]/10 rounded-full blur-[150px]"></div>
+          <div className="absolute top-0 right-0 w-96 h-96" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.1) 0%, transparent 70%)" }}></div>
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-[120px]"></div>
 
           <div className="relative z-10 text-center">

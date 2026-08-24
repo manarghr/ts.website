@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AuthModal from "@/components/auth/AuthModal";
 import CoachAuthModal from "@/components/auth/CoachAuthModal";
 import { FaPlay, FaArrowRight, FaUserTie } from "react-icons/fa";
@@ -9,10 +9,30 @@ export default function Head() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isCoachAuthModalOpen, setIsCoachAuthModalOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const videoRef = useRef(null);
+  const isAnyModalOpen = isAuthModalOpen || isCoachAuthModalOpen;
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
+
+  // Pause the hero video while a modal is open.
+  //
+  // The modal backdrop uses backdrop-blur, which re-blurs whatever is behind it on
+  // every painted frame. With the video playing that is 30-60 fresh frames a second
+  // being blurred for no benefit -- the video is completely hidden behind the modal
+  // anyway. Pausing it makes opening and closing the modal noticeably snappier.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isAnyModalOpen) {
+      video.pause();
+    } else {
+      // play() rejects if the browser blocks autoplay; nothing to do about it here.
+      video.play().catch(() => {});
+    }
+  }, [isAnyModalOpen]);
 
   return (
     <>
@@ -20,6 +40,7 @@ export default function Head() {
         {/* Background Video with Overlay */}
         <div className="absolute top-0 left-0 w-full h-full z-0">
           <video
+            ref={videoRef}
             className="w-full h-full object-cover"
             autoPlay
             loop

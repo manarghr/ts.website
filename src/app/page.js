@@ -40,8 +40,8 @@ export default function Home() {
         <section className="relative py-10 md:py-12 bg-white overflow-hidden z-10">
           {/* Subtle Background Elements */}
           <div className="absolute inset-0">
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#52796F]/3 rounded-full blur-[120px]"></div>
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#6BB371]/3 rounded-full blur-[100px]"></div>
+            <div className="absolute top-0 right-0 w-[500px] h-[500px]" style={{ background: "radial-gradient(circle, rgba(82,121,111,0.03) 0%, transparent 70%)" }}></div>
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px]" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.03) 0%, transparent 70%)" }}></div>
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
@@ -159,7 +159,7 @@ export default function Home() {
           
           {/* Clean Background */}
           <div className="absolute inset-0">
-            <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-[#6BB371]/10 rounded-full blur-[150px]"></div>
+            <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px]" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.1) 0%, transparent 70%)" }}></div>
             <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px]"></div>
           </div>
 

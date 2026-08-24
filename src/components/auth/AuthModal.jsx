@@ -347,19 +347,13 @@ export default function AuthModal({ isOpen, onClose }) {
   if (!isOpen || !isMounted) return null
 
   const modal = (
-    <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 py-6 sm:py-8 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
-      </div>
+    <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 py-6 sm:py-8 bg-black/80 animate-in fade-in duration-300 overflow-y-auto">
+      {/* Decorative blurred blobs removed: they were animate-pulse + blur-3xl,
+          repainting a large blur every frame behind an opaque overlay. */}
       
-      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col animate-in zoom-in-95 duration-300 border border-white/20 backdrop-blur-xl flex-shrink-0">
+      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col animate-in zoom-in-95 duration-300 border border-white/20 flex-shrink-0">
         {/* Sporty decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-transparent rounded-bl-full"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-500/5 to-transparent rounded-tr-full"></div>
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371] rounded-t-3xl z-20"></div>
         
         <button
           onClick={(e) => {
@@ -375,8 +369,54 @@ export default function AuthModal({ isOpen, onClose }) {
         </button>
 
         {!showSuccess && !showForgotPassword && (
-          <>
-            <div className="flex shrink-0 border-b bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] rounded-t-2xl overflow-hidden relative">
+          <div className="grid md:grid-cols-2 flex-1 min-h-0">
+            {/* Left: branding. Hidden below md, where the form needs the full width. */}
+            <div className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] p-10 text-white overflow-hidden hidden md:flex md:flex-col md:justify-center rounded-l-3xl">
+              <div
+                className="absolute top-0 right-0 w-64 h-64"
+                style={{ background: "radial-gradient(circle, rgba(107,179,113,0.2) 0%, transparent 70%)" }}
+              ></div>
+              <div
+                className="absolute bottom-0 left-0 w-48 h-48"
+                style={{ background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)" }}
+              ></div>
+
+              <div className="relative z-10">
+                <Dumbbell className="w-16 h-16 text-[#6BB371] mb-4" />
+                <h2 className="text-4xl font-bold mb-4">
+                  {activeTab === "login" ? "Welcome Back!" : "Start Training Smarter"}
+                </h2>
+                <p className="text-white/90 text-lg leading-relaxed mb-8">
+                  {activeTab === "login"
+                    ? "Log back in to pick up your programs, coaches and saved meals where you left off."
+                    : "Join TrainSight and get AI-powered form feedback, expert coaches and plans built around you."}
+                </p>
+
+                {activeTab === "signup" && (
+                  <div className="space-y-4">
+                    {[
+                      { Icon: Zap, title: "AI Form Analysis", desc: "Real-time feedback on every rep" },
+                      { Icon: Users, title: "Expert Coaches", desc: "Follow certified pros and their programs" },
+                      { Icon: Trophy, title: "Track Progress", desc: "See your improvement session by session" },
+                    ].map(({ Icon, title, desc }) => (
+                      <div key={title} className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#6BB371]/20 flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-5 h-5 text-[#6BB371]" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-1">{title}</h4>
+                          <p className="text-white/80 text-sm">{desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: tabs + scrolling form */}
+            <div className="flex flex-col min-h-0">
+            <div className="flex shrink-0 border-b bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] rounded-t-3xl md:rounded-tl-none overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-gradient"></div>
               {["signup", "login"].map((tab) => (
                 <button
@@ -428,14 +468,14 @@ export default function AuthModal({ isOpen, onClose }) {
                       Transform your body, transform your life
                     </p>
                     <div className="flex justify-center gap-2 mt-3">
-                      <div className="w-12 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                      <div className="w-8 h-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
-                      <div className="w-4 h-1 bg-gradient-to-r from-pink-600 to-blue-600 rounded-full"></div>
+                      <div className="w-12 h-1 bg-[#354F52] rounded-full"></div>
+                      <div className="w-8 h-1 bg-[#52796F] rounded-full"></div>
+                      <div className="w-4 h-1 bg-[#6BB371] rounded-full"></div>
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2 animate-fadeInUp">
+                  <div className="grid lg:grid-cols-2 gap-4">
+                    <div className="lg:col-span-2 animate-fadeInUp">
                       <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                         <User className="w-4 h-4 text-[#52796F]" />
                         Full Name *
@@ -515,7 +555,7 @@ export default function AuthModal({ isOpen, onClose }) {
                       )}
                     </div>
 
-                    <div className="md:col-span-2 animate-fadeInUp" style={{ animationDelay: '150ms' }}>
+                    <div className="lg:col-span-2 animate-fadeInUp" style={{ animationDelay: '150ms' }}>
                       <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                         <Lock className="w-4 h-4 text-[#52796F]" />
                         Password *
@@ -676,7 +716,7 @@ export default function AuthModal({ isOpen, onClose }) {
                       )}
                     </div>
 
-                    <div className="md:col-span-2 animate-fadeInUp" style={{ animationDelay: '400ms' }}>
+                    <div className="lg:col-span-2 animate-fadeInUp" style={{ animationDelay: '400ms' }}>
                       <label className="block text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
                         <Camera className="w-4 h-4 text-[#52796F]" />
                         Profile Picture
@@ -690,7 +730,7 @@ export default function AuthModal({ isOpen, onClose }) {
                                 alt="Profile preview"
                                 className="w-24 h-24 rounded-full object-cover border-4 border-[#52796F] shadow-lg transform transition-transform duration-300 group-hover:scale-110"
                               />
-                              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              <div className="absolute inset-0 rounded-full bg-[#52796F]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
                           ) : (
                             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#354F52] flex items-center justify-center border-4 border-[#52796F] shadow-lg transform transition-transform duration-300 group-hover:scale-110 animate-pulse-glow">
@@ -728,16 +768,16 @@ export default function AuthModal({ isOpen, onClose }) {
 
                           {!isUploadingPicture && !errors.profilePicture && (
                             <div className="mt-2 flex gap-1">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
-                              <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" style={{ animationDelay: '400ms' }}></div>
+                              <div className="w-2 h-2 bg-[#354F52] rounded-full"></div>
+                              <div className="w-2 h-2 bg-[#52796F] rounded-full"></div>
+                              <div className="w-2 h-2 bg-[#6BB371] rounded-full"></div>
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="md:col-span-2 animate-fadeInUp" style={{ animationDelay: '450ms' }}>
+                    <div className="lg:col-span-2 animate-fadeInUp" style={{ animationDelay: '450ms' }}>
                       <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                         <Edit className="w-4 h-4 text-[#52796F]" />
                         Bio (Optional)
@@ -763,97 +803,91 @@ export default function AuthModal({ isOpen, onClose }) {
                       <Dumbbell className="w-5 h-5 text-[#52796F] animate-pulse" />
                       Choose Your Plan *
                     </label>
-                    <div className="grid md:grid-cols-3 gap-4">
+                    {/* Stacked rows, not a 3-column grid. The form now sits in one
+                        half of the modal (~450px), where three vertical cards left
+                        about 130px each and wrapped the copy to one word per line. */}
+                    <div className="grid grid-cols-1 gap-3">
                       {[
-                        { 
-                          value: "free-trial", 
-                          title: "Free Trial", 
-                          subtitle: "7 days free", 
+                        {
+                          value: "free-trial",
+                          title: "Free Trial",
+                          subtitle: "7 days free",
                           icon: Gift,
-                          gradient: "from-green-400 to-emerald-500",
-                          description: "Perfect for beginners! Get 7 days of full access to explore our platform, workout plans, and community features."
+                          description: "Full access for 7 days to explore workout plans and community features.",
                         },
-                        { 
-                          value: "monthly", 
-                          title: "Monthly Plan", 
-                          subtitle: "$29/month", 
+                        {
+                          value: "monthly",
+                          title: "Monthly Plan",
+                          subtitle: "$29/month",
                           icon: Star,
-                          gradient: "from-blue-400 to-purple-500",
-                          description: "Unlimited access to all workout programs, nutrition plans, coach consultations, and premium features. Cancel anytime."
+                          description: "All workout programs, nutrition plans and coach consultations. Cancel anytime.",
                         },
-                        { 
-                          value: "annual", 
-                          title: "Annual Plan", 
-                          subtitle: "$199/year", 
+                        {
+                          value: "annual",
+                          title: "Annual Plan",
+                          subtitle: "$199/year",
                           icon: Trophy,
-                          gradient: "from-purple-400 to-pink-500",
-                          description: "Best value! Save 43% with annual membership. Includes everything in monthly plan plus priority support and exclusive content."
+                          description: "Save 43%. Everything in Monthly, plus priority support and exclusive content.",
                         },
-                      ].map((plan, index) => (
-                        <button
-                          key={plan.value}
-                          type="button"
-                          onClick={() => {
-                            setFormData((prev) => ({ 
-                              ...prev, 
-                              selectedPlan: plan.value,
-                              // Reset payment fields when changing plan
-                              paymentMethod: "",
-                              cardName: "",
-                              cardNumber: "",
-                              cardExpiry: "",
-                              cardCVV: "",
-                              baridimodNumber: ""
-                            }))
-                            if (errors.selectedPlan) {
-                              setErrors((prev) => {
-                                const newErrors = { ...prev }
-                                delete newErrors.selectedPlan
-                                return newErrors
-                              })
-                            }
-                          }}
-                          className={`relative p-6 rounded-2xl border-2 transition-all duration-500 hover:shadow-2xl overflow-hidden group ${
-                            formData.selectedPlan === plan.value
-                              ? `border-[#52796F] bg-gradient-to-br ${plan.gradient} text-white shadow-2xl scale-110 transform z-10`
-                              : "border-slate-200 hover:border-[#52796F]/50 hover:scale-105 bg-white/80 backdrop-blur-sm"
-                          }`}
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          {/* Animated background gradient for selected */}
-                          {formData.selectedPlan === plan.value && (
-                            <div className={`absolute inset-0 bg-gradient-to-br ${plan.gradient} opacity-90 animate-pulse-glow`}></div>
-                          )}
-                          
-                          {/* Shine effect */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                          
-                          <div className="relative z-10">
-                            <div className={`mb-4 transform transition-transform duration-300 ${formData.selectedPlan === plan.value ? 'scale-125 rotate-12' : 'group-hover:scale-110'}`}>
-                              {(() => {
-                                const IconComponent = plan.icon;
-                                return <IconComponent className={`w-12 h-12 ${formData.selectedPlan === plan.value ? 'text-white' : 'text-[#52796F]'}`} />;
-                              })()}
+                      ].map((plan) => {
+                        const selected = formData.selectedPlan === plan.value
+                        const IconComponent = plan.icon
+                        return (
+                          <button
+                            key={plan.value}
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                selectedPlan: plan.value,
+                                // Reset payment fields when changing plan
+                                paymentMethod: "",
+                                cardName: "",
+                                cardNumber: "",
+                                cardExpiry: "",
+                                cardCVV: "",
+                                baridimodNumber: "",
+                              }))
+                              if (errors.selectedPlan) {
+                                setErrors((prev) => {
+                                  const newErrors = { ...prev }
+                                  delete newErrors.selectedPlan
+                                  return newErrors
+                                })
+                              }
+                            }}
+                            className={`relative w-full text-left flex items-start gap-4 p-4 rounded-2xl border-2 transition-colors duration-200 ${
+                              selected
+                                ? "border-[#52796F] bg-[#52796F]/5 ring-2 ring-[#52796F]/20"
+                                : "border-slate-200 hover:border-[#52796F]/50 bg-white"
+                            }`}
+                          >
+                            <div
+                              className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                selected ? "bg-[#52796F]" : "bg-[#52796F]/10"
+                              }`}
+                            >
+                              <IconComponent
+                                className={`w-5 h-5 ${selected ? "text-white" : "text-[#52796F]"}`}
+                              />
                             </div>
-                            <div className={`font-extrabold text-xl mb-2 ${formData.selectedPlan === plan.value ? 'text-white' : 'text-slate-800'}`}>
-                              {plan.title}
-                            </div>
-                            <div className={`text-sm font-bold mb-3 ${formData.selectedPlan === plan.value ? 'text-white/90' : 'text-[#52796F]'}`}>
-                              {plan.subtitle}
-                            </div>
-                            <div className={`text-xs leading-relaxed ${formData.selectedPlan === plan.value ? 'text-white/90' : 'text-slate-600'}`}>
-                              {plan.description}
-                            </div>
-                            
-                            {/* Checkmark for selected */}
-                            {formData.selectedPlan === plan.value && (
-                              <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center animate-fadeInUp">
-                                <CheckCircle2 className="w-4 h-4 text-[#52796F]" />
+
+                            <div className="flex-1 min-w-0 pr-6">
+                              <div className="flex items-baseline justify-between gap-2 mb-1">
+                                <span className="font-bold text-base text-slate-800">{plan.title}</span>
+                                <span className="text-sm font-bold text-[#52796F] whitespace-nowrap">
+                                  {plan.subtitle}
+                                </span>
                               </div>
+                              <p className="text-xs leading-relaxed text-slate-600">{plan.description}</p>
+                            </div>
+
+                            {selected && (
+                              <CheckCircle2 className="w-5 h-5 text-[#52796F] absolute top-4 right-4" />
                             )}
-                          </div>
-                        </button>
-                      ))}
+                          </button>
+                        )
+                      })}
                     </div>
                     {errors.selectedPlan && (
                       <p className="text-red-500 text-sm mt-3 animate-fadeInUp flex items-center gap-2 justify-center">
@@ -864,11 +898,9 @@ export default function AuthModal({ isOpen, onClose }) {
 
                   {/* Payment Section for Paid Plans */}
                   {(formData.selectedPlan === "monthly" || formData.selectedPlan === "annual") && (
-                    <div className="mt-8 p-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl border-2 border-[#52796F]/30 shadow-xl animate-fadeInUp backdrop-blur-sm relative overflow-hidden">
+                    <div className="mt-8 p-6 bg-[#52796F]/5 rounded-2xl border-2 border-[#52796F]/30 animate-fadeInUp relative overflow-hidden">
                       {/* Decorative elements */}
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-transparent rounded-bl-full"></div>
-                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-400/20 to-transparent rounded-tr-full"></div>
-                      
+                                                                  
                       <div className="relative z-10">
                         <h3 className="text-xl font-extrabold bg-gradient-to-r from-[#354F52] to-[#52796F] bg-clip-text text-transparent mb-2 flex items-center gap-2">
                           <CreditCard className="w-5 h-5 text-[#52796F]" />
@@ -879,7 +911,7 @@ export default function AuthModal({ isOpen, onClose }) {
                       {/* Payment Method Selection */}
                       <div className="mb-6">
                         <label className="block text-sm font-bold text-slate-700 mb-4">Payment Method *</label>
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid lg:grid-cols-2 gap-4">
                           <button
                             type="button"
                             onClick={() => {
@@ -937,7 +969,7 @@ export default function AuthModal({ isOpen, onClose }) {
                             }}
                             className={`p-5 rounded-xl border-2 transition-all duration-300 relative overflow-hidden group ${
                               formData.paymentMethod === "visa"
-                                ? "border-[#52796F] bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg scale-105 transform"
+                                ? "border-[#52796F] bg-[#52796F]/5 ring-2 ring-[#52796F]/20"
                                 : "border-slate-200 hover:border-[#52796F]/50 hover:shadow-md hover:scale-102 bg-white/80"
                             }`}
                           >
@@ -1061,7 +1093,7 @@ export default function AuthModal({ isOpen, onClose }) {
                               </p>
                             )}
                           </div>
-                          <div className="grid md:grid-cols-2 gap-4">
+                          <div className="grid lg:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
                                 <Calendar className="w-4 h-4 text-[#52796F]" />
@@ -1179,9 +1211,9 @@ export default function AuthModal({ isOpen, onClose }) {
                     </h2>
                     <p className="text-slate-600 text-sm">Ready to crush your fitness goals?</p>
                     <div className="flex justify-center gap-2 mt-3">
-                      <div className="w-12 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                      <div className="w-8 h-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
-                      <div className="w-4 h-1 bg-gradient-to-r from-pink-600 to-blue-600 rounded-full"></div>
+                      <div className="w-12 h-1 bg-[#354F52] rounded-full"></div>
+                      <div className="w-8 h-1 bg-[#52796F] rounded-full"></div>
+                      <div className="w-4 h-1 bg-[#6BB371] rounded-full"></div>
                     </div>
                   </div>
 
@@ -1276,7 +1308,8 @@ export default function AuthModal({ isOpen, onClose }) {
                 </form>
               )}
             </div>
-          </>
+            </div>
+          </div>
         )}
 
         {showForgotPassword && !showSuccess && (

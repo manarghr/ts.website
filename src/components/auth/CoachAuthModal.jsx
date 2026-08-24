@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, User, Phone, Award, Briefcase, FileText, Upload, Camera } from "lucide-react";
 import Image from "next/image";
 
@@ -182,15 +181,11 @@ export default function CoachAuthModal({ isOpen, onClose }) {
   if (!isOpen || !isMounted) return null;
 
   const modal = (
-    <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 py-6 sm:py-8 bg-gradient-to-br from-black/70 via-black/60 to-black/70 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#6BB371]/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-[#52796F]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#354F52]/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-      </div>
+    <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 py-6 sm:py-8 bg-black/80 animate-in fade-in duration-300 overflow-y-auto">
+      {/* Decorative blurred blobs removed: they were animate-pulse + blur-3xl,
+          repainting a large blur every frame behind an opaque overlay. */}
       
-      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto animate-in zoom-in-95 duration-300 scrollbar-hide border border-white/20 backdrop-blur-xl flex-shrink-0">
+      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20 flex-shrink-0">
         {/* Sporty decorative elements */}
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371]"></div>
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#6BB371]/5 to-transparent rounded-bl-full"></div>
@@ -206,12 +201,12 @@ export default function CoachAuthModal({ isOpen, onClose }) {
           <X className="w-5 h-5" />
         </button>
 
-            <div className="grid md:grid-cols-2">
+            <div className="grid md:grid-cols-2 flex-1 min-h-0">
               {/* Left Side - Branding */}
-              <div className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] p-12 text-white overflow-hidden hidden md:flex md:flex-col md:justify-center">
+              <div className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] p-10 text-white overflow-hidden hidden md:flex md:flex-col md:justify-center rounded-l-3xl">
                 {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#6BB371]/20 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+                <div className="absolute top-0 right-0 w-64 h-64" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.2) 0%, transparent 70%)" }}></div>
+                <div className="absolute bottom-0 left-0 w-48 h-48" style={{ background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)" }}></div>
 
                 <div className="relative z-10 h-full flex flex-col justify-center">
                   <div className="mb-8">
@@ -261,7 +256,36 @@ export default function CoachAuthModal({ isOpen, onClose }) {
               </div>
 
               {/* Right Side - Form */}
-              <div className="p-12">
+              <div className="flex flex-col min-h-0">
+                {/* Same tab switcher as the user modal, so both flows behave alike.
+                    Replaces the small "Already a coach? Login Here" link that used to
+                    sit at the very bottom of a long form. */}
+                <div className="flex shrink-0 border-b bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] rounded-t-3xl md:rounded-tl-none overflow-hidden relative">
+                  {[
+                    { key: "apply", label: "Apply", Icon: Award },
+                    { key: "login", label: "Login", Icon: Lock },
+                  ].map(({ key, label, Icon }) => {
+                    const active = (key === "login") === isLogin;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setIsLogin(key === "login")}
+                        className={`flex-1 py-4 font-bold text-lg transition-all duration-300 relative ${
+                          active ? "text-white" : "text-white/60 hover:text-white/90"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 inline mr-2" />
+                        {label}
+                        {active && (
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-full"></div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="p-10 overflow-y-auto min-h-0 flex-1">
                 <div className="mb-8">
                   <h3 className="text-3xl font-bold text-[#354F52] mb-2">
                     {isLogin ? "Coach Login" : "Coach Application"}
@@ -534,15 +558,6 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                   </button>
                 </form>
 
-                <div className="mt-6 text-center">
-                  <button
-                    onClick={() => setIsLogin(!isLogin)}
-                    className="text-[#52796F] hover:text-[#354F52] font-medium transition-colors"
-                  >
-                    {isLogin
-                      ? "Don't have an account? Apply Now"
-                      : "Already a coach? Login Here"}
-                  </button>
                 </div>
               </div>
             </div>
