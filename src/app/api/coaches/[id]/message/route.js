@@ -1,40 +1,50 @@
-// Send Message to Coach API Route with MongoDB
+// Send a message to a coach
 // File: src/app/api/coaches/[id]/message/route.js
+//
+// The sender is the session user. Taking it from the body would let anyone send a
+// coach a message that lands in their inbox under someone else's name.
 
 import { NextResponse } from 'next/server';
-import { sendMessage } from '@/backend/utils/message-helpers';
+import { requireUser } from '@/backend/utils/session';
+import { sendMessage, MAX_MESSAGE_LENGTH } from '@/backend/utils/message-helpers';
+import { getCoachById } from '@/backend/utils/db-helpers';
 
+const UNAUTHORIZED = NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+// POST /api/coaches/[id]/message   { content }
 export async function POST(request, { params }) {
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const { userId, content } = body;
+    const userId = await requireUser(request);
+    if (!userId) return UNAUTHORIZED;
 
-    // Validate inputs
-    if (!userId || !content || !content.trim()) {
+    const { id } = await params;
+    const { content } = await request.json();
+
+    const trimmed = String(content || '').trim();
+    if (!trimmed) {
+      return NextResponse.json({ error: 'Message content is required' }, { status: 400 });
+    }
+    if (trimmed.length > MAX_MESSAGE_LENGTH) {
       return NextResponse.json(
-        { error: 'User ID and message content are required' },
+        { error: `Message must be ${MAX_MESSAGE_LENGTH} characters or fewer` },
         { status: 400 }
       );
     }
 
-    // Use helper function
-    const result = await sendMessage(userId, id, content);
+    // Without this a typo'd id writes a message addressed to nobody.
+    if (!(await getCoachById(id))) {
+      return NextResponse.json({ error: 'Coach not found' }, { status: 404 });
+    }
 
-    // Optionally: Send notification to coach
-    // You can integrate with email service or push notifications here
+    const result = await sendMessage(userId, id, trimmed);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Message sent successfully',
-      messageId: result.messageId
+      messageId: result.messageId,
     });
   } catch (error) {
-    console.error('Error sending message:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    console.error('POST /api/coaches/[id]/message:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

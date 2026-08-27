@@ -29,6 +29,8 @@ function MessageModalContent({ onSend, onClose }) {
     try {
       await onSend(message);
       setMessage("");
+    } catch (err) {
+      alert(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -74,6 +76,8 @@ function ReportModalContent({ onSubmit, onClose }) {
       await onSubmit(reason, description);
       setReason("");
       setDescription("");
+    } catch (err) {
+      alert(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -304,36 +308,38 @@ export default function CoachProfile({ coachId }) {
 
   const handleSendMessage = async (content) => {
     if (!content.trim()) return;
-    if (typeof window !== "undefined") {
-      const currentUser = localStorage.getItem("trainsight_current_user");
-      if (!currentUser) return alert("Please log in to send messages");
-      const user = JSON.parse(currentUser);
-      const res = await fetch(`/api/coaches/${coachId}/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, content }),
-      });
-      if (!res.ok) throw new Error("Failed to send message");
-      alert("Message sent!");
-      setShowMessageModal(false);
-    }
+    if (!currentUser) return alert("Please log in to send messages");
+
+    // No userId -- the server reads the sender from the session cookie.
+    const res = await fetch(`/api/coaches/${coachId}/message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Failed to send message");
+
+    alert("Message sent!");
+    setShowMessageModal(false);
   };
 
   const handleSubmitReport = async (reason, description) => {
     if (!reason) return;
-    if (typeof window !== "undefined") {
-      const currentUser = localStorage.getItem("trainsight_current_user");
-      if (!currentUser) return alert("Please log in to report");
-      const user = JSON.parse(currentUser);
-      const res = await fetch(`/api/coaches/${coachId}/report`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, reason, description }),
-      });
-      if (!res.ok) throw new Error("Failed to submit report");
-      alert("Report submitted. Thank you.");
-      setShowReportModal(false);
-    }
+    if (!currentUser) return alert("Please log in to report");
+
+    // No userId -- the server reads the reporter from the session cookie.
+    const res = await fetch(`/api/coaches/${coachId}/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason, description }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Failed to submit report");
+
+    alert("Report submitted. Thank you.");
+    setShowReportModal(false);
   };
 
   const handleSubmitReview = async (e) => {

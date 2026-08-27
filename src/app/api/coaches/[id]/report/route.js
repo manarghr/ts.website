@@ -1,40 +1,55 @@
-// Report Coach API Route with MongoDB
+// Report a coach
 // File: src/app/api/coaches/[id]/report/route.js
+//
+// The reporter is the session user. From the body, anyone could file reports in
+// another user's name -- and reports are what moderation decisions get made on.
 
 import { NextResponse } from 'next/server';
-import { submitReport } from '@/backend/utils/report-helpers';
+import { requireUser } from '@/backend/utils/session';
+import {
+  submitReport,
+  isValidReportReason,
+  REPORT_REASONS,
+} from '@/backend/utils/report-helpers';
+import { getCoachById } from '@/backend/utils/db-helpers';
 
+const UNAUTHORIZED = NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+// POST /api/coaches/[id]/report   { reason, description }
 export async function POST(request, { params }) {
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const { userId, reason, description } = body;
+    const userId = await requireUser(request);
+    if (!userId) return UNAUTHORIZED;
 
-    // Validate inputs
-    if (!userId || !reason) {
+    const { id } = await params;
+    const { reason, description } = await request.json();
+
+    if (!isValidReportReason(reason)) {
       return NextResponse.json(
-        { error: 'User ID and reason are required' },
+        { error: `Reason must be one of: ${REPORT_REASONS.join(', ')}` },
         { status: 400 }
       );
     }
 
-    // Use helper function
+    if (!(await getCoachById(id))) {
+      return NextResponse.json({ error: 'Coach not found' }, { status: 404 });
+    }
+
     const result = await submitReport(userId, id, reason, description);
 
-    // Optionally: Notify admins
-    // You can integrate with admin notification system here
-
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Report submitted successfully. Our team will review it.',
-      reportId: result.reportId
+      reportId: result.reportId,
     });
   } catch (error) {
-    console.error('Error submitting report:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    if (error.message === 'Already reported') {
+      return NextResponse.json(
+        { error: 'You already have a report open for this coach' },
+        { status: 409 }
+      );
+    }
+    console.error('POST /api/coaches/[id]/report:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
