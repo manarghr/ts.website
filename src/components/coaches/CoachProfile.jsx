@@ -362,28 +362,17 @@ export default function CoachProfile({ coachId }) {
     setSubmittingReview(true);
 
     try {
-      console.log("Submitting review with data:", {
-        userId: currentUser.id,
-        userName: currentUser.fullName || currentUser.name,
-        rating: reviewRating,
-        comment: reviewComment,
-      });
-
       const res = await fetch(`/api/coaches/${coachId}/review`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // No userId or userName -- the server reads both from the session cookie.
         body: JSON.stringify({
-          userId: currentUser.id,
-          userName: currentUser.fullName || currentUser.name || "Anonymous",
           rating: reviewRating,
           comment: reviewComment,
         }),
       });
 
-      console.log("Response status:", res.status);
-      
       const data = await res.json();
-      console.log("Response data:", data);
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to submit review");
@@ -416,20 +405,12 @@ export default function CoachProfile({ coachId }) {
     }
 
     try {
-      console.log("Deleting review for user:", currentUser.id);
-
+      // No body -- the server deletes the signed-in user's own review.
       const res = await fetch(`/api/coaches/${coachId}/review`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: currentUser.id,
-        }),
       });
 
-      console.log("Delete response status:", res.status);
-      
       const data = await res.json();
-      console.log("Delete response data:", data);
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to delete review");

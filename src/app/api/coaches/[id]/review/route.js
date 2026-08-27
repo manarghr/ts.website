@@ -1,51 +1,50 @@
+// Coach reviews
 // File: src/app/api/coaches/[id]/review/route.js
+//
+// The reviewer is always the session user -- never a userId sent in the body, which
+// would let anyone post a review under someone else's name or delete a review that
+// isn't theirs. The display name is looked up server-side for the same reason.
 
 import { NextResponse } from 'next/server';
-import { addCoachRating, getUserReviewForCoach } from '../../../../../../backend/utils/db-helpers';
+import { requireUser } from '@/backend/utils/session';
+import { getUserById } from '@/backend/utils/auth-helpers';
+import {
+  addCoachRating,
+  deleteCoachRating,
+  getUserReviewForCoach,
+} from '@/backend/utils/db-helpers';
 
+const UNAUTHORIZED = NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+const MIN_COMMENT_LENGTH = 10;
+
+// POST /api/coaches/[id]/review   { rating, comment }
 export async function POST(request, { params }) {
-  console.log('=== Review API Called ===');
-  
   try {
+    const userId = await requireUser(request);
+    if (!userId) return UNAUTHORIZED;
+
     const { id } = await params;
-    console.log('Coach ID:', id);
-    
-    const body = await request.json();
-    console.log('Request body:', body);
-    
-    const { userId, userName, rating, comment } = body;
+    const { rating, comment } = await request.json();
 
-    // Validation
-    if (!userId || !userName || !rating || !comment) {
-      console.error('Missing fields:', { userId, userName, rating, comment });
+    const numericRating = Number(rating);
+    if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
+      return NextResponse.json({ error: 'Rating must be a whole number from 1 to 5' }, { status: 400 });
+    }
+
+    const trimmedComment = String(comment || '').trim();
+    if (trimmedComment.length < MIN_COMMENT_LENGTH) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: `Comment must be at least ${MIN_COMMENT_LENGTH} characters` },
         { status: 400 }
       );
     }
 
-    if (rating < 1 || rating > 5) {
-      console.error('Invalid rating:', rating);
-      return NextResponse.json(
-        { error: 'Rating must be between 1 and 5' },
-        { status: 400 }
-      );
-    }
+    // The name shown next to the review comes from the account, not the request.
+    const user = await getUserById(userId);
+    if (!user) return UNAUTHORIZED;
 
-    if (comment.trim().length < 10) {
-      console.error('Comment too short:', comment.length);
-      return NextResponse.json(
-        { error: 'Comment must be at least 10 characters' },
-        { status: 400 }
-      );
-    }
-
-    console.log('Validation passed, adding rating...');
-    
-    // Add or update the rating
-    const result = await addCoachRating(id, userId, userName, rating, comment);
-    
-    console.log('Rating added successfully:', result);
+    const result = await addCoachRating(id, userId, user.fullName || 'Anonymous', numericRating, trimmedComment);
 
     return NextResponse.json({
       success: true,
@@ -54,92 +53,41 @@ export async function POST(request, { params }) {
       totalRatings: result.totalRatings,
     });
   } catch (error) {
-    console.error('=== Review API Error ===');
-    console.error('Error:', error);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
-    
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    console.error('POST /api/coaches/[id]/review:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// DELETE endpoint to remove a review
+// DELETE /api/coaches/[id]/review
+// Takes no body: you can only ever delete your own review.
 export async function DELETE(request, { params }) {
-  console.log('=== Review DELETE API Called ===');
-  
   try {
+    const userId = await requireUser(request);
+    if (!userId) return UNAUTHORIZED;
+
     const { id } = await params;
-    console.log('Coach ID:', id);
-    
-    const body = await request.json();
-    console.log('Request body:', body);
-    
-    const { userId } = body;
+    await deleteCoachRating(id, userId);
 
-    // Validation
-    if (!userId) {
-      console.error('Missing userId');
-      return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
-      );
-    }
-
-    console.log('Deleting review for user:', userId);
-    
-    // Import deleteCoachRating function
-    const { deleteCoachRating } = await import('../../../../../../backend/utils/db-helpers');
-    
-    // Delete the rating
-    const result = await deleteCoachRating(id, userId);
-    
-    console.log('Review deleted successfully:', result);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Review deleted successfully',
-    });
+    return NextResponse.json({ success: true, message: 'Review deleted successfully' });
   } catch (error) {
-    console.error('=== Review DELETE API Error ===');
-    console.error('Error:', error);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
-    
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    console.error('DELETE /api/coaches/[id]/review:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// Optional: GET endpoint to check if user already reviewed
+// GET /api/coaches/[id]/review -> has the signed-in user reviewed this coach?
+// Signed out is not an error here: the page just renders the "log in to review" state.
 export async function GET(request, { params }) {
   try {
+    const userId = await requireUser(request);
+    if (!userId) return NextResponse.json({ hasReviewed: false, review: null });
+
     const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const review = await getUserReviewForCoach(id, userId);
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId parameter required' },
-        { status: 400 }
-      );
-    }
-
-    const existingReview = await getUserReviewForCoach(id, userId);
-
-    return NextResponse.json({
-      hasReviewed: !!existingReview,
-      review: existingReview || null,
-    });
+    return NextResponse.json({ hasReviewed: !!review, review: review || null });
   } catch (error) {
-    console.error('Error checking review status:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
-      { status: 500 }
-    );
+    console.error('GET /api/coaches/[id]/review:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
