@@ -1,17 +1,21 @@
-import { NextResponse } from "next/server";
+// Start a pose-analysis session
+// File: src/app/api/ai/start-session/route.js
 
-export async function POST() {
+import { NextResponse } from "next/server";
+import { requireUser } from "@/backend/utils/session";
+
+export async function POST(request) {
   try {
+    if (!(await requireUser(request))) {
+      return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
+    }
+
     const baseUrl = process.env.AI_SERVER_URL || "http://127.0.0.1:8001";
     const res = await fetch(`${baseUrl}/start-session`, { method: "POST" });
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
+
+    return NextResponse.json(await res.json(), { status: res.status });
   } catch (e) {
-    return NextResponse.json(
-      { ok: false, error: "AI server not reachable", details: e?.message || String(e) },
-      { status: 502 }
-    );
+    console.error("POST /api/ai/start-session:", e);
+    return NextResponse.json({ ok: false, error: "AI server not reachable" }, { status: 502 });
   }
 }
-
-
