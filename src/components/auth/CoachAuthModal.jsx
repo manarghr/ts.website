@@ -117,7 +117,6 @@ export default function CoachAuthModal({ isOpen, onClose }) {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Login failed");
       } else {
-        const imageUrl = await uploadProfilePicture();
         const res = await fetch("/api/coach/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -131,11 +130,25 @@ export default function CoachAuthModal({ isOpen, onClose }) {
             certification: formData.certification,
             bio: formData.bio,
             category: toCategory(formData.specialization),
-            image_url: imageUrl,
           }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Signup failed");
+
+        // /api/upload/image needs a session, which only exists once register
+        // succeeds. A failure here leaves the account intact, just without a picture.
+        if (formData.profilePicture) {
+          try {
+            const imageUrl = await uploadProfilePicture();
+            await fetch("/api/coach/profile", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ image_url: imageUrl }),
+            });
+          } catch (uploadError) {
+            console.error("Profile picture upload failed:", uploadError);
+          }
+        }
       }
       alert(isLogin ? "Welcome back, Coach!" : "Coach account created!");
 

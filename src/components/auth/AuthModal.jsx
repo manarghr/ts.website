@@ -44,6 +44,9 @@ export default function AuthModal({ isOpen, onClose }) {
   // State for image preview
   const [profilePreview, setProfilePreview] = useState("")
   const [isUploadingPicture, setIsUploadingPicture] = useState(false)
+  // Held until the account exists -- /api/upload/image needs a session and during
+  // signup there isn't one until register succeeds.
+  const [profilePictureFile, setProfilePictureFile] = useState(null)
 
   // Effect 1: Manage body overflow
   useEffect(() => {
@@ -95,11 +98,10 @@ export default function AuthModal({ isOpen, onClose }) {
     }
   }
 
-  // The picked file is uploaded to /api/upload/image and only the returned URL is
-  // stored on the user. The base64 string is used for the on-screen preview ONLY --
-  // writing it to the database would put a ~2.7 MB blob in every user document and
-  // drag it along on every query.
-  const handleProfilePictureChange = async (e) => {
+  // Only the uploaded URL is stored on the user. The base64 string is the on-screen
+  // preview ONLY -- writing it to the database would put a ~2.7 MB blob in every user
+  // document and drag it along on every query.
+  const handleProfilePictureChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -120,32 +122,31 @@ export default function AuthModal({ isOpen, onClose }) {
       return next
     })
 
-    // Instant local preview while the upload runs.
     const reader = new FileReader()
     reader.onloadend = () => setProfilePreview(reader.result)
     reader.readAsDataURL(file)
 
-    setIsUploadingPicture(true)
-    try {
-      const body = new FormData()
-      body.append("file", file)
+    setProfilePictureFile(file)
+  }
 
-      const res = await fetch("/api/upload/image", { method: "POST", body })
-      const data = await res.json().catch(() => ({}))
+  /** Runs after register, so the request carries the session cookie it just set. */
+  const uploadProfilePicture = async () => {
+    const body = new FormData()
+    body.append("file", profilePictureFile)
 
-      if (!res.ok || !data?.success) {
-        throw new Error(data?.error || "Upload failed")
-      }
+    const res = await fetch("/api/upload/image", { method: "POST", body })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data?.success) throw new Error(data?.error || "Upload failed")
 
-      setFormData((prev) => ({ ...prev, profilePicture: data.imageUrl }))
-    } catch (error) {
-      console.error("Profile picture upload failed:", error)
-      setErrors((prev) => ({ ...prev, profilePicture: "Could not upload image. Please try again." }))
-      setProfilePreview("")
-      setFormData((prev) => ({ ...prev, profilePicture: "" }))
-    } finally {
-      setIsUploadingPicture(false)
-    }
+    const saved = await fetch("/api/auth/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profilePicture: data.imageUrl }),
+    })
+    const savedData = await saved.json().catch(() => ({}))
+    if (!saved.ok) throw new Error(savedData?.error || "Could not save profile picture")
+
+    return savedData.user
   }
 
   const validateSignup = () => {
@@ -258,7 +259,23 @@ export default function AuthModal({ isOpen, onClose }) {
         return
       }
 
-      cacheUserAndNotify(data.user)
+      let user = data.user
+
+      // The account exists now and register signed us in, so the upload route will
+      // accept the picture. A failure here is not fatal -- the account is created and
+      // they can add a picture from the profile page.
+      if (profilePictureFile) {
+        setIsUploadingPicture(true)
+        try {
+          user = (await uploadProfilePicture()) || user
+        } catch (uploadError) {
+          console.error("Profile picture upload failed:", uploadError)
+        } finally {
+          setIsUploadingPicture(false)
+        }
+      }
+
+      cacheUserAndNotify(user)
 
       setIsSubmitting(false)
       setShowSuccess(true)
