@@ -31,10 +31,13 @@ import {
   Cookie,
   Clock, 
   Check, 
-  Plus
+  Plus,
+  Scale,
+  Ruler
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { PLANS, getPlan } from "@/lib/plans"
 
 // Animated background component
 const AnimatedBackground = () => {
@@ -268,6 +271,9 @@ export default function ProfilePage({ userId }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [profileUser, setProfileUser] = useState(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  // Without this, the first render has profileUser === null and falls through to the
+  // "User not found" screen while the profile is still being fetched.
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [isEditingInfo, setIsEditingInfo] = useState(false);
@@ -280,7 +286,12 @@ export default function ProfilePage({ userId }) {
     gender: "",
     workoutExperience: "",
     sportsRating: "",
+    weight: "",
+    height: "",
   })
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false)
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const [savingPlan, setSavingPlan] = useState(false)
   const [showFollowModal, setShowFollowModal] = useState(null)
   const [privacySettings, setPrivacySettings] = useState({
     coaches: "public",
@@ -339,6 +350,8 @@ export default function ProfilePage({ userId }) {
         gender: userData.gender || "",
         workoutExperience: userData.workoutExperience || "",
         sportsRating: userData.sportsRating ?? "",
+        weight: userData.weight ?? "",
+        height: userData.height ?? "",
       })
       setPrivacySettings(
         userData.privacySettings || {
@@ -350,6 +363,10 @@ export default function ProfilePage({ userId }) {
       )
     } catch (error) {
       console.error("Failed to load profile:", error)
+    } finally {
+      // Only ever flips to false. Later refreshes (the "userUpdated" event) must not
+      // blank out a profile that is already on screen.
+      setLoading(false)
     }
   }, [userId])
 
@@ -397,6 +414,19 @@ export default function ProfilePage({ userId }) {
     }
   }
 
+  // No payment step yet, so switching is just a flag change. When checkout exists,
+  // the paid plans route through it first and only set this on success.
+  const handleChangePlan = async (value) => {
+    if (value === profileUser?.selectedPlan) {
+      setShowPlanModal(false)
+      return
+    }
+    setSavingPlan(true)
+    const saved = await saveProfile({ selectedPlan: value })
+    setSavingPlan(false)
+    if (saved) setShowPlanModal(false)
+  }
+
   const handleSaveBio = async () => {
     if (await saveProfile({ bio: editBio })) {
       setIsEditingBio(false)
@@ -432,6 +462,7 @@ export default function ProfilePage({ userId }) {
       return
     }
 
+    setIsUploadingPicture(true)
     try {
       const body = new FormData()
       body.append("file", file)
@@ -446,7 +477,11 @@ export default function ProfilePage({ userId }) {
       await saveProfile({ profilePicture: data.imageUrl })
     } catch (error) {
       console.error("Profile picture upload failed:", error)
-      alert("Could not upload image. Please try again.")
+      alert(error.message || "Could not upload image. Please try again.")
+    } finally {
+      setIsUploadingPicture(false)
+      // Let the same file be picked again after a failure.
+      e.target.value = ""
     }
   }
 
@@ -543,6 +578,17 @@ export default function ProfilePage({ userId }) {
     if (isOwnProfile) return true
     const settings = profileUser?.privacySettings || {}
     return settings[section] !== "private"
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-[#52796F]/20 border-t-[#52796F] animate-spin" />
+          <p className="text-slate-500 font-medium">Loading your profile...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!currentUser) {
@@ -738,7 +784,9 @@ export default function ProfilePage({ userId }) {
                     x: ['0%', '-100%'],
                   }}
                   transition={{
-                    duration: 150,
+                    // Seconds for one full pass of all 10 copies (~14,600px), so this is
+                    // roughly 30px/second. Lower = faster. 150 was about 95px/s.
+                    duration: 450,
                     repeat: Infinity,
                     repeatType: "loop",
                     ease: "linear",
@@ -797,14 +845,23 @@ export default function ProfilePage({ userId }) {
                     </div>
                   )}
                   {isOwnProfile && (
-                    <motion.button
-                      onClick={() => handleUnfavoriteCoach(coach)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-4 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all text-sm font-bold"
+                    <label
+                      title="Change profile picture"
+                      className="absolute bottom-1 right-1 w-11 h-11 rounded-full bg-[#52796F] hover:bg-[#354F52] text-white flex items-center justify-center cursor-pointer shadow-lg ring-4 ring-white transition-colors"
                     >
-                      Unfollow
-                    </motion.button>
+                      {isUploadingPicture ? (
+                        <span className="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                      ) : (
+                        <Camera className="w-5 h-5" />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfilePictureChange}
+                        disabled={isUploadingPicture}
+                        className="hidden"
+                      />
+                    </label>
                   )}
                 </motion.div>
                 
@@ -1269,6 +1326,8 @@ export default function ProfilePage({ userId }) {
                         { key: "email", label: "Email", type: "email", icon: Mail },
                         { key: "phone", label: "Phone", type: "tel", icon: Phone },
                         { key: "age", label: "Age", type: "number", icon: Calendar },
+                        { key: "weight", label: "Weight (kg)", type: "number", icon: Scale },
+                        { key: "height", label: "Height (cm)", type: "number", icon: Ruler },
                       ].map((field, index) => {
                         const IconComponent = field.icon;
                         return (
@@ -1391,6 +1450,18 @@ export default function ProfilePage({ userId }) {
                           value: profileUser?.age ? `${profileUser.age} years` : "Not specified",
                           icon: Calendar,
                         },
+                        {
+                          key: "weight",
+                          label: "Weight",
+                          value: profileUser?.weight ? `${profileUser.weight} kg` : "Not specified",
+                          icon: Scale,
+                        },
+                        {
+                          key: "height",
+                          label: "Height",
+                          value: profileUser?.height ? `${profileUser.height} cm` : "Not specified",
+                          icon: Ruler,
+                        },
                         { 
                           key: "workoutExperience", 
                           label: "Workout Experience", 
@@ -1486,11 +1557,25 @@ export default function ProfilePage({ userId }) {
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#52796F]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                         <div className="relative z-10">
-                          <div className="text-sm text-slate-600 mb-2 font-bold">Plan</div>
-                          <div className="font-extrabold text-slate-800 capitalize text-lg">
-                          {profileUser?.selectedPlan || "Not selected"}
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <div className="text-sm text-slate-600 mb-2 font-bold">Plan</div>
+                              <div className="font-extrabold text-slate-800 text-lg">
+                                {getPlan(profileUser?.selectedPlan)?.title || "Not selected"}
+                              </div>
+                            </div>
+                            {isOwnProfile && (
+                              <motion.button
+                                onClick={() => setShowPlanModal(true)}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="px-4 py-2 bg-[#52796F] text-white rounded-xl hover:bg-[#354F52] transition-colors text-sm font-bold whitespace-nowrap"
+                              >
+                                Change Plan
+                              </motion.button>
+                            )}
+                          </div>
                         </div>
-                      </div>
                       </motion.div>
                     </div>
                   )}
@@ -2096,6 +2181,66 @@ export default function ProfilePage({ userId }) {
               )}
             </div>
           </motion.div>
+
+          {showPlanModal && (
+            <motion.div
+              className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4"
+              onClick={() => !savingPlan && setShowPlanModal(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <motion.div
+                className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border-2 border-white/20"
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="h-2 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52]"></div>
+                <div className="bg-gradient-to-r from-[#354F52] to-[#52796F] p-6 flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white">Choose Your Plan</h3>
+                  <button
+                    onClick={() => setShowPlanModal(false)}
+                    disabled={savingPlan}
+                    className="text-white/80 hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                <div className="p-6 space-y-3">
+                  {PLANS.map((plan) => {
+                    const current = profileUser?.selectedPlan === plan.value
+                    return (
+                      <button
+                        key={plan.value}
+                        onClick={() => handleChangePlan(plan.value)}
+                        disabled={savingPlan || current}
+                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
+                          current
+                            ? "border-[#52796F] bg-[#52796F]/10 cursor-default"
+                            : "border-slate-200 hover:border-[#52796F] hover:bg-slate-50 disabled:opacity-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-slate-800">{plan.title}</span>
+                          <span className="text-sm font-bold text-[#52796F]">{plan.subtitle}</span>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed">{plan.description}</p>
+                        {current && (
+                          <span className="inline-flex items-center gap-1 mt-2 text-xs font-bold text-[#52796F]">
+                            <Check className="w-3 h-3" /> Current plan
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                  <p className="text-xs text-slate-400 text-center pt-2">
+                    Payment is not set up yet, so switching applies immediately.
+                  </p>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
 
           {showFollowModal && (
             <motion.div

@@ -3,6 +3,7 @@
 
 import crypto from "crypto";
 import { getCollection } from "@/lib/mongodb";
+import { isValidPlan } from "@/lib/plans";
 
 // bcryptjs is pure JS -- no native build step, so it works on Windows and on Vercel.
 import bcrypt from "bcryptjs";
@@ -169,6 +170,14 @@ export async function updateUser(userId, updateData) {
     if (field === "privacySettings") {
       const clean = sanitizePrivacySettings(updateData[field]);
       if (clean) patch[field] = clean;
+      continue;
+    }
+
+    // Whitelisted, but the VALUE still has to be one we offer -- otherwise a request
+    // could store any string and the profile badge would render it.
+    if (field === "selectedPlan") {
+      if (!isValidPlan(updateData[field])) throw new Error("Invalid plan");
+      patch[field] = updateData[field];
       continue;
     }
 

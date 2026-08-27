@@ -21,7 +21,7 @@ export async function PUT(request) {
 
     return NextResponse.json({ success: true, user });
   } catch (error) {
-    if (error.message === "No valid fields to update") {
+    if (error.message === "No valid fields to update" || error.message === "Invalid plan") {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     if (error.message === "User not found") {
