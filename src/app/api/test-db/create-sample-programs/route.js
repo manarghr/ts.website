@@ -4,6 +4,7 @@
 
 import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
+import { requireAdmin } from '@/backend/utils/session';
 
 const generateSamplePrograms = () => {
   const programs = [];
@@ -730,6 +731,12 @@ function blockedInProduction() {
 export async function POST(request) {
   const blocked = blockedInProduction();
   if (blocked) return blocked;
+
+  // Seeding writes straight into the real database. Dev mode points at the same
+  // Atlas cluster as production, so "not production" is not on its own a guard.
+  if (!(await requireAdmin(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const programsCollection = await getCollection('training_programs');
