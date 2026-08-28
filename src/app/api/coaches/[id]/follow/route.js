@@ -8,6 +8,8 @@
 import { NextResponse } from 'next/server';
 import { checkFollowStatus, toggleFollow } from '../../../../../../backend/utils/db-helpers';
 import { requireUser } from '@/backend/utils/session';
+import { getUserById } from '@/backend/utils/auth-helpers';
+import { notify, NOTIFICATION_TYPES } from '@/backend/utils/notification-helpers';
 
 // POST - follow or unfollow
 export async function POST(request, { params }) {
@@ -32,6 +34,18 @@ export async function POST(request, { params }) {
     }
 
     const result = await toggleFollow(userId, id, action);
+
+    // Only on the way in. Being told someone unfollowed you helps nobody.
+    if (action === 'follow') {
+      const follower = await getUserById(userId);
+      await notify({
+        recipientId: id,
+        recipientRole: 'coach',
+        type: NOTIFICATION_TYPES.FOLLOW,
+        title: `${follower?.fullName || 'Someone'} started following you`,
+        link: `/coaches/${id}`,
+      });
+    }
 
     return NextResponse.json({
       success: true,

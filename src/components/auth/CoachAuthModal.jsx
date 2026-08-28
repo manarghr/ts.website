@@ -20,6 +20,9 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     certificateFile: null,
     profilePicture: null
   });
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successInfo, setSuccessInfo] = useState({ title: "", body: "" });
+  const [errorMessage, setErrorMessage] = useState("");
   const [certificatePreview, setCertificatePreview] = useState(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState(null);
   const isProfilePictureLoading = !isLogin && formData.profilePicture && !profilePicturePreview;
@@ -102,6 +105,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting || isProfilePictureLoading) return;
+    setErrorMessage("");
     setIsSubmitting(true);
 
     try {
@@ -150,7 +154,18 @@ export default function CoachAuthModal({ isOpen, onClose }) {
           }
         }
       }
-      alert(isLogin ? "Welcome back, Coach!" : "Coach account created!");
+      setSuccessInfo(
+        isLogin
+          ? {
+              title: "Welcome back, Coach!",
+              body: "You are signed in. Head to your dashboard to manage your programs, videos and announcements.",
+            }
+          : {
+              title: "Welcome to TrainSight!",
+              body: "Your coach account is ready. Set up your profile and publish your first program from the dashboard.",
+            }
+      );
+      setShowSuccess(true);
 
       // Coaches and users cannot be logged in at the same time
       try {
@@ -176,9 +191,8 @@ export default function CoachAuthModal({ isOpen, onClose }) {
       });
       setCertificatePreview(null);
       setProfilePicturePreview(null);
-      onClose();
     } catch (err) {
-      alert(err?.message || "Something went wrong. Please try again.");
+      setErrorMessage(err?.message || "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -193,6 +207,14 @@ export default function CoachAuthModal({ isOpen, onClose }) {
 
   if (!isOpen || !isMounted) return null;
 
+  // The component stays mounted when closed (it just returns null), so the success
+  // screen has to be cleared or it would still be showing on the next open.
+  const handleClose = () => {
+    setShowSuccess(false);
+    setErrorMessage("");
+    onClose();
+  };
+
   const modal = (
     <div className="fixed inset-0 z-[9999] flex items-start sm:items-center justify-center p-4 py-6 sm:py-8 bg-black/80 animate-in fade-in duration-300 overflow-y-auto">
       {/* Decorative blurred blobs removed: they were animate-pulse + blur-3xl,
@@ -206,13 +228,42 @@ export default function CoachAuthModal({ isOpen, onClose }) {
         
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-all duration-300 z-50 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:shadow-xl hover:scale-110 hover:rotate-90"
           aria-label="Close modal"
           type="button"
         >
           <X className="w-5 h-5" />
         </button>
+
+        {showSuccess && (
+          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white rounded-3xl px-8 py-10 text-center animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-gradient-to-r from-[#354F52] to-[#52796F] rounded-full flex items-center justify-center mb-5 shadow-lg">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-3xl font-bold text-[#354F52] mb-3">{successInfo.title}</h3>
+            <p className="text-slate-600 text-lg leading-relaxed max-w-md mb-8">{successInfo.body}</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* A plain link, not a router push: a full page load re-reads the new
+                  session cookie everywhere instead of reusing the signed-out state. */}
+              <a
+                href="/coach/dashboard"
+                className="px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#354F52] to-[#52796F] text-white font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              >
+                Go to my dashboard
+              </a>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-7 py-3.5 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+              >
+                Stay here
+              </button>
+            </div>
+          </div>
+        )}
 
             <div className="grid md:grid-cols-2 flex-1 min-h-0">
               {/* Left Side - Branding */}
@@ -311,6 +362,12 @@ export default function CoachAuthModal({ isOpen, onClose }) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+                  {errorMessage && (
+                    <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+                      <span aria-hidden="true">&#9888;</span>
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
                   {!isLogin && (
                     <>
                       <div>

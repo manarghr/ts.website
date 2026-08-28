@@ -81,7 +81,17 @@ const INDEXES = [
   ["meals", { created_at: -1 }, {}],
   ["nutrition_plans", { created_at: -1 }, {}],
 
+  // --- money ---
+  // The coach earnings page reads by coach + date, so that is the index.
+  ["purchases", { coach_id: 1, created_at: -1 }, {}],
+  // "have I already bought this?" on every item page.
+  ["purchases", { user_id: 1, item_type: 1, item_id: 1 }, {}],
+  ["purchases", { user_id: 1, created_at: -1 }, {}],
+  ["payouts", { coach_id: 1, created_at: -1 }, {}],
+
   // --- inboxes ---
+  ["notifications", { recipient_id: 1, recipient_role: 1, created_at: -1 }, {}],
+  ["notifications", { recipient_id: 1, recipient_role: 1, read: 1 }, {}],
   ["messages", { receiver_id: 1, created_at: -1 }, {}],
   ["reports", { reported_coach_id: 1, created_at: -1 }, {}],
 ];

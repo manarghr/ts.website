@@ -8,6 +8,8 @@ import { NextResponse } from 'next/server';
 import { requireUser } from '@/backend/utils/session';
 import { sendMessage, MAX_MESSAGE_LENGTH } from '@/backend/utils/message-helpers';
 import { getCoachById } from '@/backend/utils/db-helpers';
+import { getUserById } from '@/backend/utils/auth-helpers';
+import { notify, NOTIFICATION_TYPES } from '@/backend/utils/notification-helpers';
 
 const UNAUTHORIZED = NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
@@ -37,6 +39,16 @@ export async function POST(request, { params }) {
     }
 
     const result = await sendMessage(userId, id, trimmed);
+
+    const sender = await getUserById(userId);
+    await notify({
+      recipientId: id,
+      recipientRole: 'coach',
+      type: NOTIFICATION_TYPES.MESSAGE,
+      title: `New message from ${sender?.fullName || 'a member'}`,
+      body: trimmed.slice(0, 140),
+      link: '/coach/dashboard',
+    });
 
     return NextResponse.json({
       success: true,

@@ -136,30 +136,6 @@ const defaultImages = [
   "https://images.unsplash.com/photo-1518611012115-8f740f1e1072?w=400",
 ];
 
-// Mock fallback data (used if API fails)
-const mockCoaches = {
-  sami: {
-    id: "sami",
-    name: "Sami",
-    category: "Strength",
-    image: defaultImages[0],
-    bio: "Expert in strength and conditioning with over 10 years of experience.",
-    rating: 4.8,
-    totalRatings: 127,
-    followers: 1250,
-    following: 340,
-    certifications: [
-      { name: "NASM Certified Personal Trainer", year: "2015" },
-      { name: "NSCA Strength and Conditioning Specialist", year: "2017" },
-    ],
-    videos: [
-      { id: 1, title: "Deadlift Form Tutorial", thumbnail: picture1, views: 12500, likes: 890, duration: "8:30" },
-    ],
-    announcements: [{ id: 1, title: "New Strength Program", date: "2024-01-15", content: "Join my 12-week program." }],
-    comments: [{ id: 1, user: "John Doe", rating: 5, text: "Great coach!", date: "2024-01-10" }],
-  },
-};
-
 export default function CoachProfile({ coachId }) {
   const router = useRouter();
   const [coach, setCoach] = useState(null);
@@ -231,10 +207,10 @@ export default function CoachProfile({ coachId }) {
         following_count: data.following_count ?? 0,
       });
     } catch (err) {
+      // Deliberately no fallback data. Showing an invented coach with invented
+      // reviews when the database is unreachable is worse than showing nothing.
       console.error(err);
       setError(err.message);
-      const fallback = mockCoaches[coachId] || mockCoaches["sami"];
-      if (fallback) setCoach(fallback);
     } finally {
       setLoading(false);
     }
@@ -447,7 +423,10 @@ export default function CoachProfile({ coachId }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white via-[#C8CDC5]/10 to-white">
         <div className="text-center">
-          <div className="text-4xl font-bold text-[#354F52] mb-4">Coach not found</div>
+          <div className="text-4xl font-bold text-[#354F52] mb-4">
+            {error ? "Could not load this coach" : "Coach not found"}
+          </div>
+          {error && <p className="text-gray-500 mb-6 max-w-md mx-auto">{error}</p>}
           <button
             onClick={() => router.back()}
             className="px-6 py-3 bg-[#354F52] text-white rounded-lg hover:bg-[#52796F] transition-colors"

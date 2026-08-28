@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
 import Image from "next/image";
-import { Activity, Camera, Dumbbell, ExternalLink, Flame, Sparkles, Trophy, Plus, Trash2, X } from "lucide-react";
+import { Activity, Camera, Dumbbell, ExternalLink, Flame, Sparkles, Trophy, Plus, Trash2, X, User, Megaphone, FileText, Video, MessageSquare, Mail, Wallet, TrendingUp, ShoppingBag, Bell, Star, UserPlus } from "lucide-react";
 
 function fmtErr(e) {
   if (!e) return "Unknown error";
@@ -80,6 +80,20 @@ export default function CoachDashboardPage() {
 
   // videos
   const [videos, setVideos] = useState([]);
+
+  // messages (inbox)
+  const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // wallet
+  const [wallet, setWallet] = useState(null);
+  const [walletLoading, setWalletLoading] = useState(false);
+
+  // notifications
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [videoLoading, setVideoLoading] = useState(false);
   const [videoSaving, setVideoSaving] = useState(false);
   const [videoTitle, setVideoTitle] = useState("");
@@ -264,6 +278,97 @@ export default function CoachDashboardPage() {
     }
   };
 
+  const loadNotifications = async () => {
+    setNotifLoading(true);
+    try {
+      const res = await fetch("/api/coach/notifications", { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setNotifications(Array.isArray(data.notifications) ? data.notifications : []);
+      setUnreadNotifs(data.unreadCount || 0);
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  const markNotificationsSeen = async () => {
+    if (unreadNotifs === 0) return;
+    setUnreadNotifs(0);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await fetch("/api/coach/notifications", { method: "PATCH" });
+    } catch (e) {
+      console.error("Could not mark notifications read:", e);
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    if (!confirm("Clear all notifications?")) return;
+    const previous = notifications;
+    setNotifications([]);
+    setUnreadNotifs(0);
+    try {
+      const res = await fetch("/api/coach/notifications", { method: "DELETE" });
+      if (!res.ok) throw new Error("Could not clear notifications");
+    } catch (e) {
+      setNotifications(previous);
+      setErr(fmtErr(e));
+    }
+  };
+
+  const loadWallet = async () => {
+    setWalletLoading(true);
+    try {
+      const res = await fetch("/api/coach/earnings", { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setWallet(data.wallet || null);
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  const loadMessages = async () => {
+    setMessagesLoading(true);
+    try {
+      const res = await fetch("/api/coach/messages", { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setMessages(Array.isArray(data.messages) ? data.messages : []);
+      setUnreadCount(data.unreadCount || 0);
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+
+  // Opening the inbox is what marks it read -- the badge should clear because the
+  // coach looked, not because the page happened to load.
+  const markInboxRead = async () => {
+    if (unreadCount === 0) return;
+    setUnreadCount(0);
+    setMessages((prev) => prev.map((m) => ({ ...m, read: true })));
+    try {
+      await fetch("/api/coach/messages", { method: "PATCH" });
+    } catch (e) {
+      console.error("Could not mark messages read:", e);
+    }
+  };
+
   const loadVideos = async () => {
     setVideoLoading(true);
     try {
@@ -287,11 +392,14 @@ export default function CoachDashboardPage() {
 
   useEffect(() => {
     if (!coachId) return;
-    if (tab === "announcements") loadAnnouncements();
-    if (tab === "programs") loadPrograms();
-    if (tab === "blogs") loadBlogs();
-    if (tab === "videos") loadVideos();
-  }, [tab, coachId]);
+    loadAnnouncements();
+    loadPrograms();
+    loadBlogs();
+    loadVideos();
+    loadMessages();
+    loadWallet();
+    loadNotifications();
+  }, [coachId]);
 
   const logout = async () => {
     try {
@@ -770,7 +878,7 @@ export default function CoachDashboardPage() {
             />
           </div>
         </div>
-        <div className="max-w-6xl mx-auto px-4 md:px-10 pt-12">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 pt-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#354F52]/10 text-[#354F52] text-xs font-semibold">
@@ -797,34 +905,27 @@ export default function CoachDashboardPage() {
           </div>
 
           {coachId && (
-            <div className="mb-8">
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371] text-white shadow-2xl">
-                <div className="absolute inset-0 opacity-15 bg-[radial-gradient(circle_at_20%_20%,#fff,transparent_25%),radial-gradient(circle_at_80%_0%,#fff,transparent_20%)]" />
-                <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/40 shadow-lg bg-white/10">
-                      {avatarUrl && avatarUrl !== "/placeholder.svg" ? (
-                        <Image
-                          src={avatarUrl}
-                          alt={displayName || "Coach"}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/80 font-black text-xl">
-                          {(displayName || "C").charAt(0)}
-                        </div>
-                      )}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+              {[
+                { label: "Programs", count: programs.length, icon: Dumbbell, tone: "text-[#52796F] bg-[#52796F]/10" },
+                { label: "Videos", count: videos.length, icon: Video, tone: "text-orange-600 bg-orange-500/10" },
+                { label: "Blogs", count: blogs.length, icon: FileText, tone: "text-sky-600 bg-sky-500/10" },
+                { label: "Announcements", count: announcements.length, icon: Megaphone, tone: "text-[#6BB371] bg-[#6BB371]/10" },
+              ].map((stat) => {
+                const StatIcon = stat.icon;
+                return (
+                  <div
+                    key={stat.label}
+                    className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-[#d9e2dc] p-6 hover:shadow-xl transition-shadow"
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${stat.tone}`}>
+                      <StatIcon className="w-6 h-6" />
                     </div>
-                    <div>
-                      <div className="text-sm uppercase tracking-wide text-white/70 font-semibold">Coach</div>
-                      <div className="text-2xl font-bold">{displayName || "Coach"}</div>
-                      <div className="text-sm text-white/80">{displayCategory || "Fitness"}</div>
-                    </div>
+                    <div className="text-4xl font-black text-[#354F52] leading-none mb-2">{stat.count}</div>
+                    <div className="text-sm font-semibold text-gray-500">{stat.label}</div>
                   </div>
-                </div>
-              </div>
+                );
+              })}
             </div>
           )}
 
@@ -847,48 +948,62 @@ export default function CoachDashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid md:grid-cols-[240px_1fr] gap-6">
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-[#d9e2dc] p-4 h-fit">
-                <button
-                  onClick={() => setTab("profile")}
-                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors ${
-                    tab === "profile" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
-                  }`}
-                >
-                  Profile
-                </button>
-                <button
-                  onClick={() => setTab("announcements")}
-                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors mt-2 ${
-                    tab === "announcements" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
-                  }`}
-                >
-                  Announcements
-                </button>
-                <button
-                  onClick={() => setTab("programs")}
-                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors mt-2 ${
-                    tab === "programs" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
-                  }`}
-                >
-                  Programs
-                </button>
-                <button
-                  onClick={() => setTab("blogs")}
-                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors mt-2 ${
-                    tab === "blogs" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
-                  }`}
-                >
-                  Blogs
-                </button>
-                <button
-                  onClick={() => setTab("videos")}
-                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-colors mt-2 ${
-                    tab === "videos" ? "bg-[#354F52] text-white" : "hover:bg-gray-50 text-[#354F52]"
-                  }`}
-                >
-                  Videos
-                </button>
+            <div className="grid lg:grid-cols-[300px_1fr] gap-6 lg:gap-8 items-start">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-[#d9e2dc] p-5 lg:sticky lg:top-6">
+                <div className="flex flex-col items-center text-center pb-5 mb-5 border-b border-[#d9e2dc]">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-[#52796F]/20 shadow-md bg-[#52796F]/10 mb-3">
+                    {avatarUrl && avatarUrl !== "/placeholder.svg" ? (
+                      <Image src={avatarUrl} alt={displayName || "Coach"} fill className="object-cover" unoptimized />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#354F52] font-black text-2xl">
+                        {(displayName || "C").charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="font-bold text-lg text-[#354F52] leading-tight">{displayName || "Coach"}</div>
+                  <div className="text-sm text-gray-500">{displayCategory || "Fitness"}</div>
+                </div>
+
+                <nav className="space-y-1.5">
+                  {[
+                    { key: "profile", label: "Profile", icon: User, count: null },
+                    { key: "messages", label: "Messages", icon: MessageSquare, count: unreadCount },
+                    { key: "wallet", label: "Wallet", icon: Wallet, count: null },
+                    { key: "notifications", label: "Notifications", icon: Bell, count: unreadNotifs },
+                    { key: "announcements", label: "Announcements", icon: Megaphone, count: announcements.length },
+                    { key: "programs", label: "Programs", icon: Dumbbell, count: programs.length },
+                    { key: "blogs", label: "Blogs", icon: FileText, count: blogs.length },
+                    { key: "videos", label: "Videos", icon: Video, count: videos.length },
+                  ].map((item) => {
+                    const ItemIcon = item.icon;
+                    const active = tab === item.key;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => {
+                          setTab(item.key);
+                          if (item.key === "messages") markInboxRead();
+                          if (item.key === "notifications") markNotificationsSeen();
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-colors ${
+                          active ? "bg-[#354F52] text-white shadow-md" : "hover:bg-[#354F52]/5 text-[#354F52]"
+                        }`}
+                      >
+                        <ItemIcon className="w-5 h-5 shrink-0" />
+                        <span className="flex-1 text-left">{item.label}</span>
+                        {item.count > 0 && (
+                          <span
+                            className={`min-w-[26px] px-2 py-0.5 rounded-full text-xs font-bold ${
+                              active ? "bg-white/20 text-white" : "bg-[#354F52]/10 text-[#354F52]"
+                            }`}
+                          >
+                            {item.count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
 
                 {err && (
                   <div className="mt-4 text-sm bg-red-50/70 border border-red-200 rounded-xl p-3 text-red-700">
@@ -897,7 +1012,7 @@ export default function CoachDashboardPage() {
                 )}
               </div>
 
-              <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-[#d9e2dc] p-6 md:p-8">
+              <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-[#d9e2dc] p-6 md:p-8 lg:p-10">
                 {tab === "profile" && (
                   <div>
                     <div className="mb-6 rounded-3xl overflow-hidden border border-white/60 shadow-xl">
@@ -1079,6 +1194,307 @@ export default function CoachDashboardPage() {
                         <div className="text-sm text-gray-600">You have unsaved changes.</div>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {tab === "notifications" && (
+                  <div>
+                    <div className="flex items-center justify-between mb-6 gap-4">
+                      <div>
+                        <h2 className="text-2xl md:text-3xl font-black text-[#354F52]">Notifications</h2>
+                        <p className="text-gray-500 mt-1">Messages, sales, reviews and new followers.</p>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={loadNotifications}
+                          className="px-4 py-2 rounded-xl border-2 border-[#d9e2dc] text-[#354F52] font-semibold hover:bg-gray-50 transition-colors"
+                        >
+                          Refresh
+                        </button>
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={clearAllNotifications}
+                            className="px-4 py-2 rounded-xl border-2 border-red-200 text-red-600 font-semibold hover:bg-red-50 transition-colors"
+                          >
+                            Clear all
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {notifLoading && notifications.length === 0 ? (
+                      <div className="text-gray-600">Loading…</div>
+                    ) : notifications.length === 0 ? (
+                      <div className="text-center py-16 px-6 bg-gray-50/70 rounded-2xl border border-dashed border-[#d9e2dc]">
+                        <Bell className="w-14 h-14 text-[#52796F]/40 mx-auto mb-4" />
+                        <div className="text-lg font-bold text-[#354F52] mb-1">Nothing yet</div>
+                        <p className="text-gray-500 max-w-md mx-auto">
+                          You will hear about new messages, sales, reviews and followers here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {notifications.map((n) => {
+                          const look =
+                            {
+                              message: { icon: MessageSquare, tone: "text-[#52796F] bg-[#52796F]/10" },
+                              sale: { icon: ShoppingBag, tone: "text-[#6BB371] bg-[#6BB371]/10" },
+                              review: { icon: Star, tone: "text-amber-600 bg-amber-500/10" },
+                              follow: { icon: UserPlus, tone: "text-sky-600 bg-sky-500/10" },
+                            }[n.type] || { icon: Bell, tone: "text-gray-500 bg-gray-100" };
+                          const NotifIcon = look.icon;
+
+                          return (
+                            <div
+                              key={n.id}
+                              className={`flex gap-4 p-5 rounded-2xl border transition-colors ${
+                                n.read ? "bg-white border-[#d9e2dc]" : "bg-[#6BB371]/5 border-[#6BB371]/40"
+                              }`}
+                            >
+                              <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${look.tone}`}>
+                                <NotifIcon className="w-5 h-5" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-start gap-2 flex-wrap">
+                                  <span className="font-bold text-[#354F52]">{n.title}</span>
+                                  {!n.read && (
+                                    <span className="px-2 py-0.5 rounded-full bg-[#6BB371] text-white text-[11px] font-bold">
+                                      New
+                                    </span>
+                                  )}
+                                  <span className="text-xs text-gray-400 ml-auto whitespace-nowrap">
+                                    {n.created_at ? new Date(n.created_at).toLocaleString() : ""}
+                                  </span>
+                                </div>
+                                {n.body && (
+                                  <p className="text-gray-600 mt-1 break-words">{n.body}</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {tab === "wallet" && (
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h2 className="text-2xl md:text-3xl font-black text-[#354F52]">Wallet</h2>
+                        <p className="text-gray-500 mt-1">What you have earned from your programs and content.</p>
+                      </div>
+                      <button
+                        onClick={loadWallet}
+                        className="px-4 py-2 rounded-xl border-2 border-[#d9e2dc] text-[#354F52] font-semibold hover:bg-gray-50 transition-colors"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    {walletLoading && !wallet ? (
+                      <div className="text-gray-600">Loading…</div>
+                    ) : (
+                      <>
+                        <div className="rounded-3xl bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#6BB371] text-white p-8 shadow-xl mb-6">
+                          <div className="text-sm uppercase tracking-wide text-white/70 font-semibold mb-2">
+                            Available balance
+                          </div>
+                          <div className="text-5xl font-black mb-1">
+                            ${(wallet?.availableBalance || 0).toFixed(2)}
+                          </div>
+                          <div className="text-white/80 text-sm">
+                            Paid out so far: ${(wallet?.totalPaidOut || 0).toFixed(2)}
+                          </div>
+                        </div>
+
+                        <div className="grid sm:grid-cols-3 gap-4 mb-8">
+                          {[
+                            {
+                              label: "This month",
+                              value: `${(wallet?.thisMonthEarned || 0).toFixed(2)}`,
+                              sub: `${wallet?.thisMonthSales || 0} sales`,
+                              icon: TrendingUp,
+                              tone: "text-[#6BB371] bg-[#6BB371]/10",
+                            },
+                            {
+                              label: "Lifetime earnings",
+                              value: `${(wallet?.lifetimeEarned || 0).toFixed(2)}`,
+                              sub: "after platform fee",
+                              icon: Wallet,
+                              tone: "text-[#52796F] bg-[#52796F]/10",
+                            },
+                            {
+                              label: "Total sales",
+                              value: String(wallet?.totalSales || 0),
+                              sub: "all time",
+                              icon: ShoppingBag,
+                              tone: "text-orange-600 bg-orange-500/10",
+                            },
+                          ].map((card) => {
+                            const CardIcon = card.icon;
+                            return (
+                              <div
+                                key={card.label}
+                                className="bg-white rounded-2xl border border-[#d9e2dc] p-6 shadow-sm"
+                              >
+                                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${card.tone}`}>
+                                  <CardIcon className="w-5 h-5" />
+                                </div>
+                                <div className="text-3xl font-black text-[#354F52] leading-none mb-1">
+                                  {card.value}
+                                </div>
+                                <div className="text-sm font-semibold text-gray-600">{card.label}</div>
+                                <div className="text-xs text-gray-400 mt-1">{card.sub}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <h3 className="text-xl font-bold text-[#354F52] mb-4">Recent sales</h3>
+
+                        {!wallet?.recent?.length ? (
+                          <div className="text-center py-14 px-6 bg-gray-50/70 rounded-2xl border border-dashed border-[#d9e2dc]">
+                            <ShoppingBag className="w-14 h-14 text-[#52796F]/40 mx-auto mb-4" />
+                            <div className="text-lg font-bold text-[#354F52] mb-1">No sales yet</div>
+                            <p className="text-gray-500 max-w-md mx-auto">
+                              Give your programs a price and they will show up here once someone buys one.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto rounded-2xl border border-[#d9e2dc]">
+                            <table className="w-full text-sm">
+                              <thead className="bg-gray-50 text-gray-600">
+                                <tr>
+                                  <th className="text-left font-semibold px-5 py-3">Item</th>
+                                  <th className="text-left font-semibold px-5 py-3">Date</th>
+                                  <th className="text-right font-semibold px-5 py-3">Buyer paid</th>
+                                  <th className="text-right font-semibold px-5 py-3">Fee</th>
+                                  <th className="text-right font-semibold px-5 py-3">You earned</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {wallet.recent.map((sale, i) => (
+                                  <tr key={i} className="border-t border-[#d9e2dc]">
+                                    <td className="px-5 py-3">
+                                      <div className="font-semibold text-[#354F52]">{sale.item_title}</div>
+                                      <div className="text-xs text-gray-400 capitalize">
+                                        {String(sale.item_type || "").replace("_", " ")}
+                                      </div>
+                                    </td>
+                                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">
+                                      {sale.created_at ? new Date(sale.created_at).toLocaleDateString() : ""}
+                                    </td>
+                                    <td className="px-5 py-3 text-right text-gray-700">
+                                      ${(sale.amount_paid || 0).toFixed(2)}
+                                    </td>
+                                    <td className="px-5 py-3 text-right text-gray-400">
+                                      -${(sale.platform_fee || 0).toFixed(2)}
+                                    </td>
+                                    <td className="px-5 py-3 text-right font-bold text-[#6BB371] whitespace-nowrap">
+                                      ${(sale.coach_earning || 0).toFixed(2)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        <p className="text-xs text-gray-400 mt-6">
+                          Payouts are not automated yet -- this is the record of what you are owed.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {tab === "messages" && (
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h2 className="text-2xl md:text-3xl font-black text-[#354F52]">Messages</h2>
+                        <p className="text-gray-500 mt-1">
+                          People who reached out from your public profile.
+                        </p>
+                      </div>
+                      <button
+                        onClick={loadMessages}
+                        className="px-4 py-2 rounded-xl border-2 border-[#d9e2dc] text-[#354F52] font-semibold hover:bg-gray-50 transition-colors"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    {messagesLoading ? (
+                      <div className="text-gray-600">Loading…</div>
+                    ) : messages.length === 0 ? (
+                      <div className="text-center py-16 px-6 bg-gray-50/70 rounded-2xl border border-dashed border-[#d9e2dc]">
+                        <Mail className="w-14 h-14 text-[#52796F]/40 mx-auto mb-4" />
+                        <div className="text-lg font-bold text-[#354F52] mb-1">No messages yet</div>
+                        <p className="text-gray-500 max-w-md mx-auto">
+                          When someone messages you from your public profile, it lands here.
+                        </p>
+                        {coachId && (
+                          <Link
+                            href={`/coaches/${coachId}`}
+                            className="inline-flex mt-5 px-5 py-2.5 rounded-xl bg-[#354F52] text-white font-semibold hover:bg-[#52796F] transition-colors"
+                          >
+                            View your public profile
+                          </Link>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {messages.map((m) => (
+                          <div
+                            key={m.id}
+                            className={`flex gap-4 p-5 rounded-2xl border transition-colors ${
+                              m.read
+                                ? "bg-white border-[#d9e2dc]"
+                                : "bg-[#6BB371]/5 border-[#6BB371]/40"
+                            }`}
+                          >
+                            <div className="relative w-12 h-12 shrink-0 rounded-full overflow-hidden bg-[#52796F]/10 border border-[#d9e2dc]">
+                              {m.sender?.profilePicture ? (
+                                <Image
+                                  src={m.sender.profilePicture}
+                                  alt={m.sender.fullName || "User"}
+                                  fill
+                                  className="object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[#354F52] font-bold">
+                                  {(m.sender?.fullName || "?").charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="font-bold text-[#354F52]">
+                                  {m.sender?.fullName || "Unknown"}
+                                </span>
+                                {!m.read && (
+                                  <span className="px-2 py-0.5 rounded-full bg-[#6BB371] text-white text-[11px] font-bold">
+                                    New
+                                  </span>
+                                )}
+                                <span className="text-xs text-gray-400 ml-auto">
+                                  {m.createdAt ? new Date(m.createdAt).toLocaleString() : ""}
+                                </span>
+                              </div>
+                              <p className="text-gray-700 whitespace-pre-wrap break-words">{m.content}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-400 mt-6">
+                      Replying is not built yet -- this is the receiving half.
+                    </p>
                   </div>
                 )}
 

@@ -13,6 +13,7 @@ import {
   deleteCoachRating,
   getUserReviewForCoach,
 } from '@/backend/utils/db-helpers';
+import { notify, NOTIFICATION_TYPES } from '@/backend/utils/notification-helpers';
 
 const UNAUTHORIZED = NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
@@ -45,6 +46,15 @@ export async function POST(request, { params }) {
     if (!user) return UNAUTHORIZED;
 
     const result = await addCoachRating(id, userId, user.fullName || 'Anonymous', numericRating, trimmedComment);
+
+    await notify({
+      recipientId: id,
+      recipientRole: 'coach',
+      type: NOTIFICATION_TYPES.REVIEW,
+      title: `${user.fullName || 'Someone'} left you a ${numericRating}-star review`,
+      body: trimmedComment.slice(0, 140),
+      link: `/coaches/${id}`,
+    });
 
     return NextResponse.json({
       success: true,

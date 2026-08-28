@@ -20,6 +20,10 @@ export default function ProgramDetail({ programId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [enrolling, setEnrolling] = useState(false);
+  const [owned, setOwned] = useState(false);
+  // The server quotes the price, including the subscriber discount. Working it out
+  // here as well would eventually disagree with what actually gets charged.
+  const [quote, setQuote] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
@@ -85,50 +89,67 @@ export default function ProgramDetail({ programId }) {
     }
   }, [programId]);
 
+  // Ask the server whether this is already owned and what it would cost. Only the
+  // server knows the buyer's plan, so only the server can quote the real price.
+  useEffect(() => {
+    if (!programId || !isLoggedIn) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/purchases?itemType=program&itemId=${programId}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        setOwned(Boolean(data.owned));
+        setQuote(data.quote || null);
+      } catch (err) {
+        console.error("Could not check purchase status:", err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [programId, isLoggedIn]);
+
   const handleEnroll = async () => {
+    if (!isLoggedIn || !currentUser) {
+      const proceed = confirm('You need to be logged in to enroll in this program. Would you like to login now?');
+      if (proceed) router.push('/?auth=login');
+      return;
+    }
+
+    if (owned) {
+      router.push('/profile');
+      return;
+    }
+
+    setEnrolling(true);
     try {
-      // Check if user is logged in
-      if (!isLoggedIn || !currentUser) {
-        const proceed = confirm('You need to be logged in to enroll in this program. Would you like to login now?');
-        if (proceed) {
-          router.push('/?auth=login');
-        }
+      // No payment provider yet: this records the sale and grants access. When one
+      // is added it goes in front of this call and nothing downstream changes.
+      const res = await fetch('/api/purchases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemType: 'program', itemId: program.id }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.status === 409) {
+        setOwned(true);
         return;
       }
+      if (!res.ok) throw new Error(data.error || 'Could not complete enrollment');
 
-      setEnrolling(true);
-
-      // Check if program is paid
-      if (program.price > 0) {
-        // For paid programs, you would typically redirect to payment
-        const proceed = confirm(
-          `This program costs $${program.discount && program.discount_percentage 
-            ? (program.price * (1 - program.discount_percentage / 100)).toFixed(2)
-            : program.price.toFixed(2)}. Would you like to proceed to payment?`
-        );
-        
-        if (proceed) {
-          // TODO: Implement payment flow
-          // For now, just show a message
-          alert('Payment integration will be implemented soon. Your enrollment will be processed after payment.');
-          // In the future: router.push(`/checkout?program=${program.id}`);
-        }
-      } else {
-        // Free program or subscription-based
-        // TODO: Implement enrollment API call
-        // const response = await fetch('/api/programs/enroll', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ programId: program.id, userId: currentUser.id })
-        // });
-        
-        alert(`Successfully enrolled in "${program.name}"! You can now access this program from your dashboard.`);
-        // Optionally redirect to dashboard or program content
-        // router.push('/dashboard');
-      }
+      setOwned(true);
+      alert(`You now have access to "${program.name}".`);
     } catch (err) {
       console.error('Error enrolling:', err);
-      alert('Error enrolling in program. Please try again.');
+      alert(err.message || 'Error enrolling in program. Please try again.');
     } finally {
       setEnrolling(false);
     }
@@ -386,7 +407,7 @@ export default function ProgramDetail({ programId }) {
                   <div className="mb-6">
                     <div className="flex items-baseline gap-2 mb-2">
                       <div className="text-4xl font-bold">
-                        ${finalPrice.toFixed(2)}
+                        ${(quote ? quote.amountPaid : finalPrice).toFixed(2)}
                       </div>
                       {program.discount && program.discount_percentage && (
                         <div className="text-lg text-white/70 line-through">
@@ -394,11 +415,18 @@ export default function ProgramDetail({ programId }) {
                         </div>
                       )}
                     </div>
-                    {program.discount && program.discount_percentage && (
-                      <div className="inline-block px-3 py-1 bg-[#6BB371] rounded-full text-sm font-semibold mb-2">
-                        {program.discount_percentage}% OFF
-                      </div>
-                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {program.discount && program.discount_percentage ? (
+                        <span className="inline-block px-3 py-1 bg-[#6BB371] rounded-full text-sm font-semibold">
+                          {program.discount_percentage}% OFF
+                        </span>
+                      ) : null}
+                      {quote?.subscriberDiscount > 0 && (
+                        <span className="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-semibold">
+                          Member price
+                        </span>
+                      )}
+                    </div>
                     <div className="text-sm text-white/80 mt-2">One-time payment</div>
                   </div>
                 ) : (
@@ -442,8 +470,28 @@ export default function ProgramDetail({ programId }) {
                   disabled={enrolling}
                   className="w-full py-4 px-6 bg-white text-[#354F52] font-bold rounded-lg hover:bg-[#C8CDC5] transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mb-3"
                 >
-                  {enrolling ? 'Processing...' : isLoggedIn ? 'Enroll Now' : 'Login to Enroll'}
+                  {enrolling
+                    ? 'Processing...'
+                    : !isLoggedIn
+                      ? 'Login to Enroll'
+                      : owned
+                        ? 'You own this - go to my profile'
+                        : program.price > 0
+                          ? `Buy for ${(quote ? quote.amountPaid : finalPrice).toFixed(2)}`
+                          : 'Enroll for free'}
                 </button>
+
+                {owned && (
+                  <p className="text-xs text-white/90 text-center mb-2 flex items-center justify-center gap-1">
+                    <FaCheckCircle className="text-[#6BB371]" /> Purchased
+                  </p>
+                )}
+
+                {!owned && quote?.subscriberDiscount > 0 && (
+                  <p className="text-xs text-white/80 text-center mb-2">
+                    Includes your member discount of ${quote.subscriberDiscount.toFixed(2)}
+                  </p>
+                )}
                 
                 {!isLoggedIn && (
                   <p className="text-xs text-white/80 text-center mb-2">
@@ -451,9 +499,9 @@ export default function ProgramDetail({ programId }) {
                   </p>
                 )}
                 
-                {program.price === 0 && isLoggedIn && (
+                {program.price === 0 && isLoggedIn && !owned && (
                   <p className="text-xs text-white/80 text-center">
-                    This program is included with your subscription
+                    Free with your account
                   </p>
                 )}
               </div>
