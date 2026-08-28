@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* The fixed header height. The header sets it and every layout pads by it --
+   when these two drift apart the page slides underneath the navbar. */
+:root {
+  --nav-h: 80px;
+}
+
 /* Font Variables - These are set by Next.js font loader via CSS variables */
 
 /* Typography Styles - Headings use Montserrat */

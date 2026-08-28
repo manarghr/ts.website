@@ -214,7 +214,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 w-full h-[60px] flex justify-between items-center px-4 sm:px-6 bg-[#354F52] text-white shadow-md z-50">
+    <header className="fixed top-0 left-0 w-full h-[var(--nav-h)] flex justify-between items-center px-4 sm:px-6 bg-[#354F52] text-white shadow-md z-50">
       <div className="flex items-center gap-4 sm:gap-20 flex-1">
         {/* Mobile Menu Button */}
         <button
@@ -225,12 +225,12 @@ export default function Navbar() {
           {mobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
         </button>
 
-        <Link href="/" className="flex items-center gap-2 sm:gap-3 font-bold text-lg sm:text-xl tracking-wide hover:text-[#C1B8AE] transition-colors group">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 font-bold text-xl sm:text-2xl tracking-wide hover:text-[#C1B8AE] transition-colors group">
           <Image
             src={logo}
             alt="TrainSight Logo"
-            width={40}
-            height={40}
+            width={48}
+            height={48}
             className="group-hover:scale-110 transition-transform duration-300"
           />
           <span className="hidden sm:inline">TrainSight</span>
@@ -242,7 +242,7 @@ export default function Navbar() {
             <li key={i}>
               <Link
                 href={link.href}
-                className={`text-white hover:text-[#C1B8AE] transition-colors duration-300 relative pb-1 ${
+                className={`text-white hover:text-[#C1B8AE] transition-colors duration-300 relative pb-1 text-[17px] font-semibold ${
                   isActive(link.href) ? "text-[#6BB371]" : ""
                 }`}
               >
@@ -267,7 +267,7 @@ export default function Navbar() {
           >
             <Link
               href="/services"
-              className={`text-white hover:text-[#C1B8AE] transition-colors duration-300 relative pb-1 ${
+              className={`text-white hover:text-[#C1B8AE] transition-colors duration-300 relative pb-1 text-[17px] font-semibold ${
                 pathname.startsWith("/services") ? "text-[#6BB371]" : ""
               }`}
             >
@@ -450,6 +450,16 @@ export default function Navbar() {
 
       {/* Desktop Profile */}
       <div className="hidden lg:flex justify-between items-center gap-4 xl:gap-10">
+        {/* isMounted-gated like everything else here: the server does not know who is
+            signed in, so rendering the name before hydration would mismatch. */}
+        {isMounted && (currentCoach || currentUser) && (
+          <span className="hidden xl:block text-white/85 font-semibold whitespace-nowrap">
+            Hey,{" "}
+            <span className="text-[#6BB371]">
+              {(currentCoach?.name || currentUser?.fullName || "there").trim().split(" ")[0]}
+            </span>
+          </span>
+        )}
         <div className="relative profile-dropdown-container">
           <button
             onClick={(e) => {
@@ -470,13 +480,13 @@ export default function Navbar() {
               <Image
                 src={currentCoach?.image_url || currentUser?.profilePicture || "/placeholder.svg"}
                 alt={currentCoach?.name || currentUser?.fullName || "Profile"}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-full object-cover border-2 border-white hover:border-[#C1B8AE] transition-all hover:scale-110"
+                width={48}
+                height={48}
+                className="w-12 h-12 rounded-full object-cover border-2 border-white hover:border-[#C1B8AE] transition-all hover:scale-110"
                 unoptimized
               />
             ) : (
-              <FaUser className="w-6 h-6 text-white" />
+              <FaUser className="w-7 h-7 text-white" />
             )}
           </button>
 
