@@ -341,11 +341,36 @@ export default function ProfilePage({ userId }) {
         })
       )
 
+      // What you bought is what you are enrolled in. This tab used to read
+      // userData.enrolledWorkouts, which nothing ever wrote -- so a program you
+      // paid for showed up nowhere.
+      let enrolledWorkouts = []
+      try {
+        const res = await fetch("/api/purchases", { cache: "no-store" })
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}))
+          enrolledWorkouts = (data?.purchases || [])
+            .filter((purchase) => purchase.item_type === "program")
+            .map((purchase) => ({
+              id: purchase.item_id,
+              name: purchase.item?.name || purchase.item_title,
+              description: purchase.item?.description,
+              duration: purchase.item?.duration,
+              difficulty: purchase.item?.level,
+              purchasedAt: purchase.created_at,
+              amountPaid: purchase.amount_paid,
+            }))
+        }
+      } catch (error) {
+        console.error("Could not load purchases:", error)
+      }
+
       const hydrated = {
         ...userData,
         favoriteCoaches: coaches,
         likedVideos: videos,
         favoriteMeals: meals,
+        enrolledWorkouts,
       }
 
       setProfileUser(hydrated)
@@ -1862,9 +1887,24 @@ export default function ProfilePage({ userId }) {
                                 <Calendar className="w-8 h-8 text-white" />
                               </motion.div>
                               <div className="flex-1">
-                                <div className="font-extrabold text-slate-800 text-xl mb-2">
-                                  {workout.name || "Workout Program"}
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                  <div className="font-extrabold text-slate-800 text-xl">
+                                    {workout.name || "Workout Program"}
+                                  </div>
+                                  {workout.id && (
+                                    <Link
+                                      href={`/programs/${workout.id}`}
+                                      className="shrink-0 px-3 py-1.5 rounded-lg bg-[#52796F] text-white text-xs font-bold hover:bg-[#354F52] transition-colors"
+                                    >
+                                      Open
+                                    </Link>
+                                  )}
                                 </div>
+                                {workout.purchasedAt && (
+                                  <div className="text-xs text-slate-400 mb-2">
+                                    Bought {new Date(workout.purchasedAt).toLocaleDateString()}
+                                  </div>
+                                )}
                                 <div className="text-sm text-slate-600 mb-4 font-medium">
                                   {workout.description || "Build strength and endurance"}
                                 </div>
@@ -1913,6 +1953,14 @@ export default function ProfilePage({ userId }) {
                           <Calendar className="w-20 h-20 text-slate-300 mx-auto mb-4" />
                         </motion.div>
                         <p className="text-slate-600 text-xl font-semibold mb-2">No enrolled workouts yet</p>
+                        {isOwnProfile && (
+                          <Link
+                            href="/services/programs"
+                            className="inline-flex mt-4 px-5 py-2.5 rounded-xl bg-[#52796F] text-white font-semibold hover:bg-[#354F52] transition-colors"
+                          >
+                            Browse programs
+                          </Link>
+                        )}
                         {isOwnProfile && (
                           <p className="text-slate-400 text-sm">Start a workout program to see it here!</p>
                         )}

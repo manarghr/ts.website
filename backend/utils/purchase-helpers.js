@@ -111,12 +111,33 @@ export async function createPurchase({ userId, itemType, itemId }) {
 
 export async function listPurchasesForUser(userId, limit = 100) {
   const purchases = await getCollection("purchases");
-  return purchases
+  const rows = await purchases
     .find({ user_id: userId, status: "paid" })
     .sort({ created_at: -1 })
     .limit(limit)
     .project({ _id: 0 })
     .toArray();
+
+  // The purchase row keeps the title as it was at the time of sale, which is right
+  // for a receipt but useless for "show me the program". Attach the live document
+  // so the profile can render duration, level and description -- one extra query
+  // for the whole list, not one per row.
+  const programIds = rows.filter((r) => r.item_type === "program").map((r) => r.item_id);
+
+  if (programIds.length > 0) {
+    const programs = await getCollection("training_programs");
+    const docs = await programs
+      .find({ id: { : programIds } })
+      .project({ _id: 0 })
+      .toArray();
+    const byId = new Map(docs.map((doc) => [doc.id, doc]));
+
+    for (const row of rows) {
+      if (row.item_type === "program") row.item = byId.get(row.item_id) || null;
+    }
+  }
+
+  return rows;
 }
 
 /**
