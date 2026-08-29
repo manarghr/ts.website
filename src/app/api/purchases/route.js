@@ -13,10 +13,10 @@ import {
   findPurchasableItem,
 } from "@/backend/utils/purchase-helpers";
 import { priceBreakdown } from "@/lib/pricing";
+import { isPaidPlan } from "@/lib/plans";
 import { getUserById } from "@/backend/utils/auth-helpers";
 
 const UNAUTHORIZED = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-const PAID_PLANS = ["monthly", "annual"];
 
 // GET /api/purchases                          -> everything you have bought
 // GET /api/purchases?itemType=program&itemId=x -> do you own this, and what would it cost
@@ -44,7 +44,7 @@ export async function GET(request) {
       ? priceBreakdown({
           basePrice: item.basePrice,
           coachDiscountPercent: item.coachDiscountPercent,
-          isSubscriber: PAID_PLANS.includes(user?.selectedPlan),
+          isSubscriber: isPaidPlan(user?.selectedPlan),
         })
       : null;
 

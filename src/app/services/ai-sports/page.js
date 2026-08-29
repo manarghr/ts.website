@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import PoseOverlay from "@/components/AI/PoseOverlay";
+import { isPaidPlan } from "@/lib/plans";
 import { 
   Camera,
   Video,
@@ -37,6 +38,8 @@ export default function AISportsPage() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [currentUser, setCurrentUser] = useState(null);
+  // Premium comes from the plan on the account, checked against one shared list.
+  const hasPremium = isPaidPlan(currentUser?.selectedPlan);
   const [repCount, setRepCount] = useState(0);
   const [formScore, setFormScore] = useState(0);
   const [workoutTime, setWorkoutTime] = useState(0);
@@ -815,14 +818,26 @@ export default function AISportsPage() {
     ? playlists 
     : playlists.filter(p => p.category === selectedCategory);
 
+  // Ask the server who is signed in. This used to read localStorage["currentUser"],
+  // a key nothing ever writes -- so it was always null and every premium playlist
+  // stayed locked, including for people paying for one.
   useEffect(() => {
-    // Check if user is logged in and has premium subscription
-    if (typeof window !== "undefined") {
-      const user = localStorage.getItem("currentUser");
-      if (user) {
-        setCurrentUser(JSON.parse(user));
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data?.authenticated && data.user) setCurrentUser(data.user);
+      } catch (error) {
+        console.error("Could not load the signed-in user:", error);
       }
-    }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const startCamera = async () => {
@@ -1011,7 +1026,7 @@ export default function AISportsPage() {
   };
 
   const handlePlaylistClick = (playlist) => {
-    if (!playlist.isFree && (!currentUser || !currentUser.isPremium)) {
+    if (!playlist.isFree && !hasPremium) {
       alert("This playlist requires a premium subscription. Please upgrade to access.");
       return;
     }
@@ -1670,7 +1685,7 @@ export default function AISportsPage() {
                       src={playlist.thumbnail}
                       alt={playlist.title}
                       className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${
-                        !playlist.isFree && (!currentUser || !currentUser.isPremium) ? 'blur-sm' : ''
+                        !playlist.isFree && !hasPremium ? 'blur-sm' : ''
                       }`}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -1691,7 +1706,7 @@ export default function AISportsPage() {
                     {/* Play Button Overlay */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
                       <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
-                        {playlist.isFree || (currentUser && currentUser.isPremium) ? (
+                        {playlist.isFree || hasPremium ? (
                           <Play className="w-8 h-8 text-white" fill="white" />
                         ) : (
                           <Lock className="w-8 h-8 text-white" />
@@ -1724,7 +1739,7 @@ export default function AISportsPage() {
                     </p>
 
                     {/* Locked State for Premium */}
-                    {!playlist.isFree && (!currentUser || !currentUser.isPremium) && (
+                    {!playlist.isFree && !hasPremium && (
                       <div className="flex items-center gap-2 text-amber-600 text-sm font-semibold">
                         <Lock className="w-4 h-4" />
                         <span>Upgrade to Premium</span>

@@ -8,6 +8,7 @@
 
 import { getCollection } from "@/lib/mongodb";
 import { priceBreakdown, isPurchasableType } from "@/lib/pricing";
+import { isPaidPlan } from "@/lib/plans";
 import { getUserById } from "@/backend/utils/auth-helpers";
 import { notify, NOTIFICATION_TYPES } from "@/backend/utils/notification-helpers";
 
@@ -18,9 +19,6 @@ const ITEM_SOURCES = {
   nutrition_plan: { collection: "nutrition_plans", titleField: "title" },
   // live_session and one_on_one land here once scheduling exists.
 };
-
-/** Plans that count as "subscriber" for the buyer discount. */
-const PAID_PLANS = ["monthly", "annual"];
 
 export async function findPurchasableItem(itemType, itemId) {
   const source = ITEM_SOURCES[itemType];
@@ -73,7 +71,7 @@ export async function createPurchase({ userId, itemType, itemId }) {
   const breakdown = priceBreakdown({
     basePrice: item.basePrice,
     coachDiscountPercent: item.coachDiscountPercent,
-    isSubscriber: PAID_PLANS.includes(user.selectedPlan),
+    isSubscriber: isPaidPlan(user.selectedPlan),
   });
 
   const purchases = await getCollection("purchases");

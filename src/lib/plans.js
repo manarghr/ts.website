@@ -30,6 +30,13 @@ export const PLANS = [
 
 export const PLAN_VALUES = PLANS.map((plan) => plan.value);
 
+/** The plans that actually pay. Used for the member discount and premium content. */
+export const PAID_PLANS = ["monthly", "annual"];
+
+export function isPaidPlan(value) {
+  return PAID_PLANS.includes(value);
+}
+
 export function isValidPlan(value) {
   return PLAN_VALUES.includes(value);
 }
