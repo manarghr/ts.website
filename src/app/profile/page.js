@@ -215,12 +215,20 @@ export default function ProfilePage({ userId }) {
   };
 
   // Handle logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Delete the session row server-side first. Clearing localStorage alone left the
+    // cookie valid for its full 30 days -- on a shared computer the next person
+    // opening /profile was still signed in as you.
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (error) {
+      console.error("Logout request failed:", error);
+    }
     localStorage.removeItem("trainsight_current_user");
-    // Clear profile picture from navbar by dispatching event
     window.dispatchEvent(new Event("userLoggedOut"));
-    // Force page reload to clear any cached images
-    window.location.href = "/profile";
+    // Full load rather than a router push: it clears cached images and re-reads
+    // the now-missing session everywhere.
+    window.location.href = "/";
   };
 
 
