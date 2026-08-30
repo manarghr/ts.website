@@ -64,7 +64,11 @@ const INDEXES = [
 
   // one review per user per coach, enforced by the database
   ["coach_ratings", { coach_id: 1, user_id: 1 }, { unique: true }],
-  ["follows", { user_id: 1, coach_id: 1 }, { unique: true }],
+  // toggleFollow writes follower_id/following_id. The old index named user_id and
+  // coach_id -- fields no follow document has ever had -- so every row looked like
+  // (null, null) to a UNIQUE index: the second follow on the platform would fail.
+  ["follows", { follower_id: 1, following_id: 1 }, { unique: true }],
+  ["follows", { follower_id: 1, created_at: -1 }, {}],
 
   // saved coaches / liked videos / saved meals.
   // The unique index is what stops a double-click creating two identical saves.
@@ -96,6 +100,12 @@ const INDEXES = [
   ["reports", { reported_coach_id: 1, created_at: -1 }, {}],
 ];
 
+// Indexes that were wrong and must go. Adding a correct index does not remove a
+// bad one, and a unique index on the wrong fields actively rejects valid writes.
+const OBSOLETE_INDEXES = [
+  ["follows", "user_id_1_coach_id_1"],
+];
+
 const client = new MongoClient(uri, { serverSelectionTimeoutMS: 10000 });
 
 try {
@@ -103,6 +113,18 @@ try {
   await client.connect();
   const db = client.db(dbName);
   console.log("  Connected.\n");
+
+  for (const [collection, indexName] of OBSOLETE_INDEXES) {
+    try {
+      await db.collection(collection).dropIndex(indexName);
+      console.log(`  drop  ${collection} ${indexName}`);
+    } catch (error) {
+      // 27 = IndexNotFound, which is the normal case on a fresh database.
+      if (error.code !== 27 && error.codeName !== "IndexNotFound") {
+        console.log(`  warn  could not drop ${collection} ${indexName}: ${error.message}`);
+      }
+    }
+  }
 
   let created = 0;
   let skipped = 0;

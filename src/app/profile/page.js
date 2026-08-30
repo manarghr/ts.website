@@ -365,12 +365,32 @@ export default function ProfilePage({ userId }) {
         console.error("Could not load purchases:", error)
       }
 
+      // Who you follow. The Following card read userData.followings, which nothing
+      // ever wrote, so it always said 0 no matter how many coaches you followed.
+      let followings = []
+      try {
+        const res = await fetch("/api/follows", { cache: "no-store" })
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}))
+          // The follow modal renders fullName/profilePicture; coaches use name/image_url.
+          followings = (data?.coaches || []).map((coach) => ({
+            id: coach.id,
+            fullName: coach.name,
+            profilePicture: coach.image_url,
+            subtitle: coach.category,
+          }))
+        }
+      } catch (error) {
+        console.error("Could not load followed coaches:", error)
+      }
+
       const hydrated = {
         ...userData,
         favoriteCoaches: coaches,
         likedVideos: videos,
         favoriteMeals: meals,
         enrolledWorkouts,
+        followings,
       }
 
       setProfileUser(hydrated)

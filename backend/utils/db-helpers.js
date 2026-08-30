@@ -346,6 +346,28 @@ export async function checkFollowStatus(userId, coachId) {
 /**
  * Toggle follow status
  */
+/**
+ * The coaches this user follows, as coach documents. Two queries for the whole
+ * list rather than one per follow row.
+ */
+export async function listFollowedCoaches(userId) {
+  const followsCollection = await getCollection('follows');
+  const coachesCollection = await getCollection('coaches');
+
+  const rows = await followsCollection
+    .find({ follower_id: userId })
+    .sort({ created_at: -1 })
+    .limit(200)
+    .toArray();
+
+  if (rows.length === 0) return [];
+
+  return coachesCollection
+    .find({ id: { : rows.map((row) => row.following_id) } })
+    .project({ _id: 0, id: 1, name: 1, image_url: 1, category: 1 })
+    .toArray();
+}
+
 export async function toggleFollow(userId, coachId, action) {
   const followsCollection = await getCollection('follows');
   const coachesCollection = await getCollection('coaches');
