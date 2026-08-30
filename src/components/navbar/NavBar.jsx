@@ -351,7 +351,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-[60px] left-0 w-80 max-w-[85vw] h-[calc(100vh-60px)] bg-[#354F52] shadow-2xl z-50 overflow-y-auto lg:hidden"
+              className="fixed top-[var(--nav-h)] left-0 w-80 max-w-[85vw] h-[calc(100vh-var(--nav-h))] bg-[#354F52] shadow-2xl z-50 overflow-y-auto lg:hidden"
             >
               <div className="p-6 space-y-4">
                 {/* Mobile Links */}

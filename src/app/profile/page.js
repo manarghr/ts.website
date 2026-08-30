@@ -216,6 +216,47 @@ export default function ProfilePage({ userId }) {
   };
 
   // Handle logout
+  const loadMyBlogs = useCallback(async () => {
+    setBlogsLoading(true)
+    try {
+      const res = await fetch("/api/blogs/mine", { cache: "no-store" })
+      if (!res.ok) return
+      const data = await res.json().catch(() => ({}))
+      setMyBlogs(data?.blogs || [])
+    } catch (error) {
+      console.error("Could not load your blogs:", error)
+    } finally {
+      setBlogsLoading(false)
+    }
+  }, [])
+
+  const loadConversations = useCallback(async () => {
+    try {
+      const res = await fetch("/api/messages", { cache: "no-store" })
+      if (!res.ok) return
+      const data = await res.json().catch(() => ({}))
+      setConversations(data?.conversations || [])
+    } catch (error) {
+      console.error("Could not load conversations:", error)
+    }
+  }, [])
+
+  const openConversation = async (contact) => {
+    setOpenThread(contact)
+    setThreadLoading(true)
+    try {
+      const res = await fetch(`/api/messages?coachId=${contact.id}`, { cache: "no-store" })
+      const data = await res.json().catch(() => ({}))
+      setThreadMessages(data?.messages || [])
+      // The GET marked it read server-side; mirror that in the list.
+      loadConversations()
+    } catch (error) {
+      console.error("Could not load the conversation:", error)
+    } finally {
+      setThreadLoading(false)
+    }
+  }
+
   const handleLogout = async () => {
     if (loggingOut) return;
     setLoggingOut(true);
@@ -266,7 +307,12 @@ export default function ProfilePage({ userId }) {
       if (!data.success) throw new Error(data.error || 'Failed to submit blog');
 
       alert("Blog submitted successfully! It will be reviewed by an admin.");
-      
+
+      // Land them on My Blogs so the new post is visible with its pending status,
+      // rather than leaving them wondering where it went.
+      loadMyBlogs();
+      setActiveTab("blogs");
+
       // Reset form
       setBlogSubmissionForm({
         title: "",
@@ -307,6 +353,14 @@ export default function ProfilePage({ userId }) {
   })
   const [isUploadingPicture, setIsUploadingPicture] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+
+  // conversations with coaches
+  const [myBlogs, setMyBlogs] = useState([])
+  const [blogsLoading, setBlogsLoading] = useState(false)
+  const [conversations, setConversations] = useState([])
+  const [openThread, setOpenThread] = useState(null)
+  const [threadMessages, setThreadMessages] = useState([])
+  const [threadLoading, setThreadLoading] = useState(false)
   const router = useRouter()
   const [showPlanModal, setShowPlanModal] = useState(false)
   const [savingPlan, setSavingPlan] = useState(false)
@@ -438,6 +492,11 @@ export default function ProfilePage({ userId }) {
     window.addEventListener("userUpdated", loadProfile)
     return () => window.removeEventListener("userUpdated", loadProfile)
   }, [loadProfile])
+
+  useEffect(() => {
+    loadConversations()
+    loadMyBlogs()
+  }, [loadConversations, loadMyBlogs])
 
   /**
    * Single path for every profile write: send the changed fields to the server,
@@ -826,96 +885,41 @@ export default function ProfilePage({ userId }) {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <AnimatedBackground />
-      <div className="min-h-screen py-12 px-4 md:px-8 relative z-10">
-        <div className="max-w-6xl mx-auto space-y-8">
-         
-          {/* Profile Header */}
-          <motion.div 
-            className="bg-white/95 backdrop-blur-xl shadow-2xl rounded-3xl relative z-10 overflow-hidden border border-white/30"
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {/* Decorative top bar */}
-            <div className="h-3 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52]"></div>
-            <div className="h-48 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] relative overflow-hidden">
-              {/* Animated motivational text loop - centered in green frame */}
-              <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-                <motion.div
-                  className="flex gap-16 whitespace-nowrap"
-                  initial={{ x: '0%' }}
-                  animate={{
-                    x: ['0%', '-100%'],
-                  }}
-                  transition={{
-                    // Seconds for one full pass of all 10 copies (~14,600px), so this is
-                    // roughly 30px/second. Lower = faster. 150 was about 95px/s.
-                    duration: 450,
-                    repeat: Infinity,
-                    repeatType: "loop",
-                    ease: "linear",
-                  }}
-                  style={{ willChange: 'transform' }}
-                >
-                  {[...Array(10)].map((_, i) => (
-                    <span key={i} className="text-white/15 text-3xl md:text-4xl font-black tracking-wider">
-                      YOU CAN DO IT • TRAIN HARD • STAY STRONG • NEVER GIVE UP • PUSH YOUR LIMITS • BE STRONG •
-                    </span>
-                  ))}
-                </motion.div>
-              </div>
-              {/* Animated overlay */}
-              <motion.div 
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                animate={{
-                  x: ['-100%', '200%'],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              />
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-56 h-56 bg-white/5 rounded-full blur-3xl"></div>
-              {/* Subtle accent colors */}
-              <div className="absolute top-4 right-8 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-4 left-8 w-40 h-40 bg-teal-400/10 rounded-full blur-2xl"></div>
-            </div>
-            <div className="px-8 pb-10 -mt-20">
-              <div className="flex flex-col md:flex-row items-start md:items-end gap-8 mt-4">
-                <motion.div 
-                  className="relative group"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-                >
+      <div className="min-h-screen pt-8 pb-16 px-4 md:px-8 relative z-10">
+        <div className="max-w-[1500px] mx-auto">
+          <div className="grid lg:grid-cols-[340px_1fr] gap-6 lg:gap-8 items-start">
+
+            {/* Sidebar: who you are, then where you can go. */}
+            {/* Not sticky. Sticky pinned it below the viewport top while the panel
+                kept scrolling, so the two never looked level. In normal flow they
+                start on the same line and stay that way. */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+              <div className="flex flex-col items-center text-center pb-5 mb-5 border-b border-slate-200">
+                <div className="relative mb-3">
                   {profileUser?.profilePicture ? (
-                    <div className="relative">
                     <Image
-                      src={profileUser.profilePicture || "/placeholder.svg"}
+                      src={profileUser.profilePicture}
                       alt={profileUser.fullName || "Profile"}
-                      width={128}
-                      height={128}
-                        className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-2xl ring-4 ring-[#52796F]/30 transform transition-transform duration-300 group-hover:scale-110"
+                      width={88}
+                      height={88}
+                      className="w-22 h-22 rounded-full object-cover border-4 border-white shadow-lg ring-2 ring-[#52796F]/25"
+                      style={{ width: 88, height: 88 }}
                       unoptimized
                     />
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#52796F]/20 to-[#354F52]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </div>
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#354F52] flex items-center justify-center border-4 border-white shadow-2xl ring-4 ring-[#52796F]/30 transform transition-transform duration-300 group-hover:scale-110 animate-pulse-glow">
-                      <User className="w-16 h-16 text-white" />
+                    <div className="w-[88px] h-[88px] rounded-full bg-gradient-to-br from-[#354F52] to-[#52796F] flex items-center justify-center border-4 border-white shadow-lg">
+                      <User className="w-10 h-10 text-white" />
                     </div>
                   )}
                   {isOwnProfile && (
                     <label
                       title="Change profile picture"
-                      className="absolute bottom-1 right-1 w-11 h-11 rounded-full bg-[#52796F] hover:bg-[#354F52] text-white flex items-center justify-center cursor-pointer shadow-lg ring-4 ring-white transition-colors"
+                      className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#52796F] hover:bg-[#354F52] text-white flex items-center justify-center cursor-pointer shadow-lg ring-4 ring-white transition-colors"
                     >
                       {isUploadingPicture ? (
-                        <span className="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                        <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                       ) : (
-                        <Camera className="w-5 h-5" />
+                        <Camera className="w-4 h-4" />
                       )}
                       <input
                         type="file"
@@ -926,403 +930,248 @@ export default function ProfilePage({ userId }) {
                       />
                     </label>
                   )}
-                </motion.div>
-                
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4, duration: 0.5 }}
-                    >
-                      <h1 className="text-5xl font-extrabold text-white mb-6 drop-shadow-lg relative z-10">
-                        {profileUser?.fullName}
-                      </h1>
-                      {profileUser?.selectedPlan && (
-                        <motion.span
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.5, type: "spring" }}
-                          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg relative z-10 ${
-                            profileUser.selectedPlan === "annual"
-                              ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-2 border-emerald-400/30"
-                              : profileUser.selectedPlan === "monthly"
-                                ? "bg-gradient-to-r from-[#52796F] to-[#354F52] text-white border-2 border-[#52796F]/30"
-                                : "bg-gradient-to-r from-slate-200 to-slate-300 text-slate-700 border-2 border-slate-300/50"
-                          }`}
-                          style={{ marginTop: '1.5rem' }}
-                        >
-                          {profileUser.selectedPlan === "annual" ? (
-                            <>
-                              <Star className="w-4 h-4" />
-                              Annual Member
-                            </>
-                          ) : profileUser.selectedPlan === "monthly" ? (
-                            <>
-                              <Dumbbell className="w-4 h-4" />
-                              Monthly Member
-                            </>
-                          ) : (
-                            <>
-                              <Star className="w-4 h-4" />
-                              Free Trial
-                            </>
-                          )}
-                        </motion.span>
-                      )}
-                    </motion.div>
-                  </div>
+                </div>
 
-                  {profileUser?.bio ? (
-                    <motion.div 
-                      className="mb-4 mt-8"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                    >
-                      {isEditingBio && isOwnProfile ? (
-                        <div className="animate-fadeInUp">
-                          <textarea
-                            value={editBio}
-                            onChange={(e) => setEditBio(e.target.value)}
-                            rows="3"
-                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none resize-none transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md"
-                            placeholder="Tell us about yourself..."
-                          />
-                          <div className="flex gap-3 mt-3">
-                            <motion.button
-                              onClick={handleSaveBio}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="px-5 py-2.5 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl hover:shadow-xl transition-all flex items-center gap-2 font-bold shadow-lg"
-                            >
-                              <Save className="w-4 h-4" />
-                              Save
-                            </motion.button>
-                            <motion.button
-                              onClick={() => {
-                                setEditBio(profileUser.bio || "")
-                                setIsEditingBio(false)
-                              }}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="px-5 py-2.5 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-all flex items-center gap-2 font-semibold shadow-sm"
-                            >
-                              <X className="w-4 h-4" />
-                              Cancel
-                            </motion.button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-start gap-3 p-5 bg-gradient-to-br from-white via-slate-50/50 to-white rounded-xl border-2 border-slate-200/50 hover:shadow-lg transition-all group relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#52796F]/5 via-transparent to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                          <p className="text-slate-700 flex-1 leading-relaxed font-medium relative z-10">{profileUser.bio}</p>
-                          {isOwnProfile && (
-                            <motion.button
-                              onClick={() => setIsEditingBio(true)}
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              className="text-[#52796F] hover:text-emerald-600 transition-colors p-2 hover:bg-[#52796F]/10 rounded-lg shadow-sm relative z-10"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </motion.button>
-                          )}
-                        </div>
-                      )}
-                    </motion.div>
-                  ) : (
-                    <motion.div 
-                      className="mb-4 mt-8"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                    >
-                      {isEditingBio && isOwnProfile ? (
-                        <div className="animate-fadeInUp">
-                          <textarea
-                            value={editBio}
-                            onChange={(e) => setEditBio(e.target.value)}
-                            rows="3"
-                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none resize-none transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md"
-                            placeholder="Tell us about yourself..."
-                          />
-                          <div className="flex gap-3 mt-3">
-                            <motion.button
-                              onClick={handleSaveBio}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="px-5 py-2.5 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl hover:shadow-xl transition-all flex items-center gap-2 font-bold shadow-lg"
-                            >
-                              <Save className="w-4 h-4" />
-                              Save
-                            </motion.button>
-                            <motion.button
-                              onClick={() => {
-                                setEditBio("")
-                                setIsEditingBio(false)
-                              }}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="px-5 py-2.5 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-all flex items-center gap-2 font-semibold shadow-sm"
-                            >
-                              <X className="w-4 h-4" />
-                              Cancel
-                            </motion.button>
-                          </div>
-                        </div>
-                      ) : isOwnProfile ? (
-                        <motion.button
-                          onClick={() => setIsEditingBio(true)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="text-[#52796F] hover:text-[#354F52] transition-colors text-sm flex items-center gap-2 font-semibold hover:bg-slate-100 px-4 py-2.5 rounded-xl border-2 border-dashed border-[#52796F]/30 hover:border-[#52796F]/50"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                          Add a bio
-                        </motion.button>
-                      ) : null}
-                    </motion.div>
-                  )}
+                <div className="font-bold text-lg text-slate-900 leading-tight">
+                  {profileUser?.fullName}
+                </div>
+                <div className="text-sm text-slate-500 mt-1">
+                  {[
+                    profileUser?.age ? `${profileUser.age}` : null,
+                    profileUser?.workoutExperience === "first-time"
+                      ? "Just starting"
+                      : profileUser?.workoutExperience === "regular"
+                        ? "Trains regularly"
+                        : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "Member"}
+                </div>
+              </div>
 
-                  <motion.div 
-                    className="flex flex-wrap gap-3 text-sm mt-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.7 }}
-                  >
-                    {isOwnProfile ? (
-                      <>
-                        <motion.div 
-                          className="flex items-center gap-2 bg-gradient-to-br from-white to-blue-50/30 px-5 py-3 rounded-xl border-2 border-blue-200/50 shadow-lg hover:shadow-xl transition-all group relative overflow-hidden"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                          <Mail className="w-4 h-4 text-blue-600 relative z-10" />
-                          <span className="text-slate-700 font-semibold relative z-10">{profileUser?.email}</span>
-                        </motion.div>
-                        {profileUser?.phone && (
-                          <motion.div 
-                            className="flex items-center gap-2 bg-gradient-to-br from-white to-emerald-50/30 px-5 py-3 rounded-xl border-2 border-emerald-200/50 shadow-lg hover:shadow-xl transition-all group relative overflow-hidden"
-                            whileHover={{ scale: 1.05 }}
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <Phone className="w-4 h-4 text-emerald-600 relative z-10" />
-                            <span className="text-slate-700 font-semibold relative z-10">{profileUser.phone}</span>
-                          </motion.div>
-                        )}
-                      </>
-                    ) : null}
-                    {profileUser?.age && (
-                      <motion.div 
-                        className="flex items-center gap-2 bg-gradient-to-br from-white to-teal-50/30 px-5 py-3 rounded-xl border-2 border-teal-200/50 shadow-lg hover:shadow-xl transition-all group relative overflow-hidden"
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <Calendar className="w-4 h-4 text-teal-600 relative z-10" />
-                        <span className="text-slate-700 font-semibold relative z-10">{profileUser.age} years old</span>
-                      </motion.div>
-                    )}
-                    {profileUser?.gender && (
-                      <motion.div 
-                        className="flex items-center gap-2 bg-gradient-to-br from-white to-purple-50/30 px-5 py-3 rounded-xl border-2 border-purple-200/50 shadow-lg hover:shadow-xl transition-all group relative overflow-hidden"
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <User className="w-4 h-4 text-purple-600 relative z-10" />
-                        <span className="capitalize text-slate-700 font-semibold relative z-10">{profileUser.gender}</span>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                </div>
-                
-                {/* Logout Button */}
-                {isOwnProfile && (
-                  <motion.button
-                    onClick={handleLogout}
-                    disabled={loggingOut}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 }}
-                    whileHover={{ scale: loggingOut ? 1 : 1.05 }}
-                    whileTap={{ scale: loggingOut ? 1 : 0.95 }}
-                    className="flex items-center gap-2 px-5 py-2.5 text-white bg-gradient-to-r from-[#354F52] to-[#52796F] rounded-xl hover:shadow-xl transition-all font-semibold shadow-lg absolute right-6 bottom-6 disabled:opacity-70 disabled:cursor-wait"
-                  >
-                    {loggingOut ? (
-                      <span className="w-[18px] h-[18px] rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                    ) : (
-                      <LogOut size={18} />
-                    )}
-                    {loggingOut ? "Signing out..." : "Logout"}
-                  </motion.button>
-                )}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <motion.button
-              onClick={() => setShowFollowModal("followers")}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all border-2 border-blue-200/50 group cursor-pointer w-full relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-[#52796F]/5 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="flex flex-col items-center relative z-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-teal-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl">
-                  <Users className="w-8 h-8 text-white" />
-                </div>
-                <div className="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent mb-2">
-                  {profileUser?.followers?.length || 0}
-              </div>
-                <div className="text-sm text-slate-600 font-bold uppercase tracking-wide">Followers</div>
-              </div>
-            </motion.button>
-            <motion.button
-              onClick={() => setShowFollowModal("following")}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-white rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all border-2 border-emerald-200/50 group cursor-pointer w-full relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-[#52796F]/5 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="flex flex-col items-center relative z-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl">
-                  <Users className="w-8 h-8 text-white" />
-                </div>
-                <div className="text-5xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-                  {profileUser?.followings?.length || 0}
-              </div>
-                <div className="text-sm text-slate-600 font-bold uppercase tracking-wide">Following</div>
-                </div>
-            </motion.button>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all border-2 border-amber-200/50 group relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-[#52796F]/5 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="flex flex-col items-center relative z-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl">
-                  <Dumbbell className="w-8 h-8 text-white" />
-                </div>
-                <div className="text-5xl font-extrabold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-2">
-                  {isContentVisible("coaches") ? profileUser?.favoriteCoaches?.length || 0 : (
-                    <Lock className="w-10 h-10 text-slate-400 mx-auto" />
-                  )}
-              </div>
-                <div className="text-sm text-slate-600 font-bold uppercase tracking-wide">Coaches</div>
-            </div>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all border-2 border-rose-200/50 group relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 via-[#52796F]/5 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="flex flex-col items-center relative z-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-xl">
-                  <Heart className="w-8 h-8 text-white fill-white" />
-                </div>
-                <div className="text-5xl font-extrabold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  {isContentVisible("videos") ? profileUser?.likedVideos?.length || 0 : (
-                    <Lock className="w-10 h-10 text-slate-400 mx-auto" />
-                  )}
-                </div>
-                <div className="text-sm text-slate-600 font-bold uppercase tracking-wide">Videos</div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Submit Blog Button */}
-          {isOwnProfile && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="bg-gradient-to-r from-[#52796F] to-[#354F52] rounded-2xl p-6 shadow-2xl border border-white/30"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <Edit2 className="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-1">Share Your Story</h3>
-                    <p className="text-white/80 text-sm">Write a blog post about your fitness journey</p>
-                  </div>
-                </div>
-                <motion.button
-                  onClick={() => setShowBlogSubmissionForm(true)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-white text-[#354F52] rounded-xl font-bold hover:shadow-xl transition-all flex items-center gap-2"
+              {/* The one number worth surfacing before the nav, the way a wallet
+                  balance sits at the top of a dashboard. */}
+              {isOwnProfile && (
+                <button
+                  onClick={() => setShowPlanModal(true)}
+                  className="w-full text-left rounded-lg bg-slate-900 text-white px-4 py-3.5 mb-5 hover:bg-slate-800 transition-colors group"
                 >
-                  <Edit2 className="w-5 h-5" />
-                  Submit Blog
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
+                  <div className="text-xs uppercase tracking-wider text-white/55 font-semibold mb-1.5">
+                    Current plan
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xl font-bold leading-tight">
+                      {getPlan(profileUser?.selectedPlan)?.title || "No plan"}
+                    </span>
+                    <span className="text-xs text-white/40 group-hover:text-white/70 transition-colors">
+                      Change
+                    </span>
+                  </div>
+                </button>
+              )}
 
-          {/* Tabs Content */}
-          <motion.div 
-            className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <div className="border-b border-slate-200/50 bg-gradient-to-r from-slate-50/80 to-white/80">
-              <div className="flex gap-2 px-4 overflow-x-auto scrollbar-hide">
+              <nav className="space-y-1.5">
                 {[
-                  { id: "overview", label: "Overview", icon: User },
-                  { id: "coaches", label: "Followed Coaches", icon: Dumbbell },
-                  { id: "videos", label: "Liked Videos", icon: Video },
-                  { id: "workouts", label: "Enrolled Workouts", icon: Calendar },
-                  { id: "meals", label: "Favorite Meals", icon: UtensilsCrossed },
-                ].map((tab, index) => (
-                  <motion.button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7 + index * 0.1 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`px-6 py-4 font-bold transition-all duration-300 rounded-t-xl whitespace-nowrap relative ${
-                      activeTab === tab.id
-                        ? "bg-gradient-to-r from-[#52796F] to-[#354F52] text-white shadow-xl transform scale-105"
-                        : "text-slate-600 hover:text-[#52796F] hover:bg-white/80"
-                    }`}
-                  >
-                    {activeTab === tab.id && (
-                      <motion.div
-                        className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded-t-full"
-                        layoutId="activeTab"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
-                    )}
-                    <div className="flex items-center gap-2 relative z-10">
-                      <tab.icon className="w-5 h-5" />
-                      <span className="hidden sm:inline">{tab.label}</span>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
+                  { id: "overview", label: "Overview", icon: User, count: null },
+                  { id: "coaches", label: "Saved Coaches", icon: Dumbbell, count: profileUser?.favoriteCoaches?.length || 0 },
+                  { id: "videos", label: "Liked Videos", icon: Video, count: profileUser?.likedVideos?.length || 0 },
+                  { id: "workouts", label: "My Programs", icon: Calendar, count: profileUser?.enrolledWorkouts?.length || 0 },
+                  { id: "meals", label: "Favorite Meals", icon: UtensilsCrossed, count: profileUser?.favoriteMeals?.length || 0 },
+                  { id: "blogs", label: "My Blogs", icon: Edit2, count: myBlogs.length },
+                  {
+                    id: "messages",
+                    label: "Messages",
+                    icon: MessageSquare,
+                    count: conversations.reduce((total, c) => total + (c.unread || 0), 0),
+                  },
+                ].map((item) => {
+                  const ItemIcon = item.icon
+                  const active = activeTab === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-lg text-base transition-colors ${
+                        active
+                          ? "bg-[#354F52] text-white font-semibold"
+                          : "text-slate-600 hover:bg-slate-100 font-medium"
+                      }`}
+                    >
+                      <ItemIcon className={`w-5 h-5 shrink-0 ${active ? "" : "text-slate-400"}`} />
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {item.count > 0 && (
+                        <span
+                          className={`text-sm font-semibold tabular-nums ${active ? "text-white/75" : "text-slate-400"}`}
+                        >
+                          {item.count}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </nav>
+
+              {isOwnProfile && (
+                <button
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="w-full mt-4 pt-4 border-t border-slate-200 flex items-center gap-3.5 px-3.5 py-3 text-base font-medium text-slate-500 hover:text-red-600 transition-colors disabled:opacity-60 disabled:cursor-wait"
+                >
+                  {loggingOut ? (
+                    <span className="w-[18px] h-[18px] rounded-full border-2 border-red-300 border-t-red-500 animate-spin" />
+                  ) : (
+                    <LogOut size={18} className="text-slate-400" />
+                  )}
+                  {loggingOut ? "Signing out..." : "Log out"}
+                </button>
+              )}
             </div>
 
-            <div className="p-6">
+            {/* One section at a time. */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="p-6 md:p-8">
               {activeTab === "overview" && (
-                <div className="space-y-6">
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="text-[30px] font-bold text-slate-900 tracking-tight">
+                      Welcome back, {(profileUser?.fullName || "").split(" ")[0]}
+                    </h2>
+                    <p className="text-slate-500 mt-1.5 text-base">
+                      Here&apos;s what&apos;s happening with your training.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                      { id: "workouts", label: "My programs", value: profileUser?.enrolledWorkouts?.length || 0, icon: Calendar, tone: "text-[#52796F] bg-[#52796F]/10" },
+                      { id: "coaches", label: "Coaches followed", value: profileUser?.followings?.length || 0, icon: Users, tone: "text-emerald-600 bg-emerald-500/10" },
+                      { id: "videos", label: "Liked videos", value: profileUser?.likedVideos?.length || 0, icon: Video, tone: "text-pink-600 bg-pink-500/10" },
+                      { id: "messages", label: "Unread messages", value: conversations.reduce((t, c) => t + (c.unread || 0), 0), icon: MessageSquare, tone: "text-amber-600 bg-amber-500/10" },
+                    ].map((stat, index) => {
+                      const StatIcon = stat.icon
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => setActiveTab(stat.id)}
+                          className="text-left bg-white rounded-xl border border-slate-200 p-5 hover:border-slate-300 hover:bg-slate-50/50 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-3.5">
+                            <span className="text-sm font-medium text-slate-500">{stat.label}</span>
+                            <StatIcon className="w-[18px] h-[18px] text-slate-300 shrink-0" />
+                          </div>
+                          <div className="text-[34px] font-bold text-slate-900 leading-none tabular-nums">
+                            {stat.value}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* The one thing to do next. A program you already own beats any
+                      generic prompt, so that wins when there is one. */}
+                  {profileUser?.enrolledWorkouts?.length > 0 ? (
+                    <div className="rounded-lg bg-[#354F52] text-white p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 text-white/60 text-[13px] mb-2">
+                            <Dumbbell className="w-4 h-4" />
+                            Continue training
+                          </div>
+                          <h3 className="text-2xl font-bold truncate">
+                            {profileUser.enrolledWorkouts[0].name}
+                          </h3>
+                          <p className="text-white/70 text-sm mt-1">
+                            {profileUser.enrolledWorkouts[0].duration || "Your program"}
+                            {profileUser.enrolledWorkouts[0].difficulty
+                              ? ` · ${profileUser.enrolledWorkouts[0].difficulty}`
+                              : ""}
+                          </p>
+                        </div>
+                        <Link
+                          href={`/programs/${profileUser.enrolledWorkouts[0].id}`}
+                          className="px-6 py-3 rounded-lg bg-white text-[#354F52] font-bold text-base hover:bg-slate-100 transition-colors shrink-0 text-center"
+                        >
+                          Open program
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg bg-[#354F52] text-white p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                        <div>
+                          <h3 className="text-2xl font-bold mb-1.5">Start your first program</h3>
+                          <p className="text-white/70 text-sm">
+                            Browse programs built by TrainSight coaches and pick one that fits your goals.
+                          </p>
+                        </div>
+                        <Link
+                          href="/services/programs"
+                          className="px-6 py-3 rounded-lg bg-white text-[#354F52] font-bold text-base hover:bg-slate-100 transition-colors shrink-0 text-center"
+                        >
+                          Browse programs
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Coaches you follow, as cards -- the "Recommended for you" row. */}
+                  {profileUser?.followings?.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-bold text-slate-900">Your coaches</h3>
+                        <Link href="/coaches" className="text-sm text-[#52796F] hover:text-[#354F52] font-medium">
+                          Find more
+                        </Link>
+                      </div>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {profileUser.followings.slice(0, 4).map((coach) => (
+                          <Link
+                            key={coach.id}
+                            href={`/coaches/${coach.id}`}
+                            className="group bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-slate-300 transition-colors"
+                          >
+                            <div className="relative h-32 bg-gradient-to-br from-[#354F52]/10 to-[#52796F]/10">
+                              {coach.profilePicture ? (
+                                <Image
+                                  src={coach.profilePicture}
+                                  alt={coach.fullName || "Coach"}
+                                  fill
+                                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[#354F52] font-black text-3xl">
+                                  {(coach.fullName || "?").charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="p-4">
+                              <div className="font-semibold text-slate-900 truncate">{coach.fullName}</div>
+                              <div className="text-sm text-slate-500 truncate">
+                                {coach.subtitle || "Coach"}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {isOwnProfile && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-lg border border-slate-200 bg-slate-50">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900 mb-1">Share your story</h3>
+                        <p className="text-slate-500 text-sm">Write a blog post about your fitness journey</p>
+                      </div>
+                      <button
+                        onClick={() => setShowBlogSubmissionForm(true)}
+                        className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors shrink-0"
+                      >
+                        Write a post
+                      </button>
+                    </div>
+                  )}
+
                   <motion.div 
                     className="flex items-center justify-between mb-6"
                     initial={{ opacity: 0 }}
@@ -2021,6 +1870,202 @@ export default function ProfilePage({ userId }) {
                     </div>
               )}
 
+              {activeTab === "blogs" && (
+                <div>
+                  <div className="flex items-center justify-between mb-6 gap-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-800">My Blogs</h3>
+                      <p className="text-slate-500 mt-1">
+                        Posts you submitted, and where each one stands.
+                      </p>
+                    </div>
+                    {isOwnProfile && (
+                      <button
+                        onClick={() => setShowBlogSubmissionForm(true)}
+                        className="px-5 py-2.5 rounded-xl bg-[#354F52] text-white font-bold hover:bg-[#52796F] transition-colors shrink-0"
+                      >
+                        Write one
+                      </button>
+                    )}
+                  </div>
+
+                  {blogsLoading && myBlogs.length === 0 ? (
+                    <p className="text-slate-500">Loading…</p>
+                  ) : myBlogs.length === 0 ? (
+                    <div className="text-center py-16 px-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                      <Edit2 className="w-14 h-14 text-slate-300 mx-auto mb-4" />
+                      <p className="text-slate-600 text-xl font-semibold mb-2">No blogs yet</p>
+                      <p className="text-slate-400">
+                        Share what has worked for you. An admin reviews each post before it goes live.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {myBlogs.map((blog, index) => (
+                        <div
+                          key={blog.id || index}
+                          className="flex items-start gap-4 p-5 rounded-2xl bg-white border border-slate-200 hover:shadow-md transition-shadow"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="font-bold text-slate-800">{blog.title || "Untitled"}</span>
+                              <span
+                                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                                  blog.status === "published"
+                                    ? "bg-[#6BB371] text-white"
+                                    : "bg-amber-100 text-amber-700"
+                                }`}
+                              >
+                                {blog.status === "published" ? "Published" : "Awaiting review"}
+                              </span>
+                            </div>
+                            {blog.excerpt && (
+                              <p className="text-sm text-slate-500 line-clamp-2">{blog.excerpt}</p>
+                            )}
+                            <div className="text-xs text-slate-400 mt-2">
+                              {blog.created_at ? new Date(blog.created_at).toLocaleDateString() : ""}
+                              {blog.category ? ` · ${blog.category}` : ""}
+                            </div>
+                          </div>
+                          {blog.status === "published" && blog.id && (
+                            <Link
+                              href={`/blog/${blog.id}`}
+                              className="shrink-0 px-4 py-2 rounded-lg bg-[#52796F] text-white text-sm font-bold hover:bg-[#354F52] transition-colors"
+                            >
+                              Read
+                            </Link>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "messages" && (
+                <div>
+                  <div className="flex items-center justify-between mb-6 gap-4">
+                    <h3 className="text-2xl font-bold text-slate-800">
+                      {openThread ? openThread.name : "Messages"}
+                    </h3>
+                    {openThread ? (
+                      <button
+                        onClick={() => {
+                          setOpenThread(null)
+                          setThreadMessages([])
+                        }}
+                        className="px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors shrink-0"
+                      >
+                        All conversations
+                      </button>
+                    ) : (
+                      <button
+                        onClick={loadConversations}
+                        className="px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors shrink-0"
+                      >
+                        Refresh
+                      </button>
+                    )}
+                  </div>
+
+                  {openThread ? (
+                    threadLoading ? (
+                      <p className="text-slate-500">Loading…</p>
+                    ) : (
+                      <>
+                        <div className="space-y-3 mb-6">
+                          {threadMessages.map((message) => (
+                            <div
+                              key={message.id}
+                              className={`max-w-[85%] p-4 rounded-2xl ${
+                                message.fromMe
+                                  ? "ml-auto bg-[#52796F] text-white rounded-br-md"
+                                  : "bg-slate-100 text-slate-800 rounded-bl-md"
+                              }`}
+                            >
+                              <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                              <div
+                                className={`text-[11px] mt-1 ${
+                                  message.fromMe ? "text-white/70" : "text-slate-400"
+                                }`}
+                              >
+                                {message.createdAt
+                                  ? new Date(message.createdAt).toLocaleString()
+                                  : ""}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <Link
+                          href={`/coaches/${openThread.id}`}
+                          className="inline-flex px-5 py-2.5 rounded-xl bg-[#52796F] text-white font-semibold hover:bg-[#354F52] transition-colors"
+                        >
+                          Send another message
+                        </Link>
+                      </>
+                    )
+                  ) : conversations.length === 0 ? (
+                    <div className="text-center py-16 px-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                      <MessageSquare className="w-14 h-14 text-slate-300 mx-auto mb-4" />
+                      <p className="text-slate-600 text-xl font-semibold mb-2">No messages yet</p>
+                      <p className="text-slate-400 mb-4">
+                        Open a coach&apos;s profile and use the Message button to start a conversation.
+                      </p>
+                      <Link
+                        href="/coaches"
+                        className="inline-flex px-5 py-2.5 rounded-xl bg-[#52796F] text-white font-semibold hover:bg-[#354F52] transition-colors"
+                      >
+                        Find a coach
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {conversations.map((conversation) => (
+                        <button
+                          key={conversation.otherId}
+                          onClick={() => openConversation(conversation.contact)}
+                          className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white border-2 border-slate-100 hover:border-[#52796F]/40 hover:shadow-md transition-all text-left"
+                        >
+                          <div className="relative w-12 h-12 shrink-0 rounded-full overflow-hidden bg-[#52796F]/10">
+                            {conversation.contact?.picture ? (
+                              <Image
+                                src={conversation.contact.picture}
+                                alt={conversation.contact.name || "Coach"}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[#354F52] font-bold">
+                                {(conversation.contact?.name || "?").charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-800 truncate">
+                                {conversation.contact?.name || "Coach"}
+                              </span>
+                              {conversation.unread > 0 && (
+                                <span className="px-2 py-0.5 rounded-full bg-[#6BB371] text-white text-[11px] font-bold shrink-0">
+                                  {conversation.unread} new
+                                </span>
+                              )}
+                              <span className="text-xs text-slate-400 ml-auto shrink-0">
+                                {conversation.lastAt
+                                  ? new Date(conversation.lastAt).toLocaleDateString()
+                                  : ""}
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-500 truncate">{conversation.lastMessage}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {activeTab === "meals" && (
                 <div>
                   <div className="flex items-center justify-between mb-6">
@@ -2271,7 +2316,8 @@ export default function ProfilePage({ userId }) {
                 </div>
               )}
             </div>
-          </motion.div>
+            </div>
+          </div>
 
           {showPlanModal && (
             <motion.div

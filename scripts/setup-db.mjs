@@ -69,6 +69,9 @@ const INDEXES = [
   // (null, null) to a UNIQUE index: the second follow on the platform would fail.
   ["follows", { follower_id: 1, following_id: 1 }, { unique: true }],
   ["follows", { follower_id: 1, created_at: -1 }, {}],
+  // "who follows this coach" cannot use the compound index above: following_id is
+  // not its leading field.
+  ["follows", { following_id: 1, created_at: -1 }, {}],
 
   // saved coaches / liked videos / saved meals.
   // The unique index is what stops a double-click creating two identical saves.
@@ -82,6 +85,9 @@ const INDEXES = [
   ["announcements", { coach_id: 1, created_at: -1 }, {}],
   ["blog", { created_at: -1 }, {}],
   ["pending_blogs", { created_at: -1 }, {}],
+  // "my blogs" looks these up by author.
+  ["blog", { submittedBy: 1, created_at: -1 }, {}],
+  ["pending_blogs", { submittedBy: 1, created_at: -1 }, {}],
   ["meals", { created_at: -1 }, {}],
   ["nutrition_plans", { created_at: -1 }, {}],
 

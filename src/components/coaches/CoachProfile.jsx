@@ -19,18 +19,19 @@ import {
 } from "react-icons/fa";
 
 // --- Modal components ---
-function MessageModalContent({ onSend, onClose }) {
+function MessageModalContent({ onSend, onClose, onNotify }) {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!message.trim()) return alert("Please enter a message");
+    if (!message.trim()) return onNotify("Please enter a message.", "error");
     setSubmitting(true);
     try {
       await onSend(message);
       setMessage("");
     } catch (err) {
-      alert(err.message);
+      // Thrown on purpose by the parent so the text survives a failure.
+      onNotify(err.message || "Could not send your message.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -64,20 +65,20 @@ function MessageModalContent({ onSend, onClose }) {
   );
 }
 
-function ReportModalContent({ onSubmit, onClose }) {
+function ReportModalContent({ onSubmit, onClose, onNotify }) {
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!reason) return alert("Please select a reason");
+    if (!reason) return onNotify("Please select a reason.", "error");
     setSubmitting(true);
     try {
       await onSubmit(reason, description);
       setReason("");
       setDescription("");
     } catch (err) {
-      alert(err.message);
+      onNotify(err.message || "Could not submit your report.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -147,6 +148,7 @@ export default function CoachProfile({ coachId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  const [toast, setToast] = useState(null);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -157,6 +159,15 @@ export default function CoachProfile({ coachId }) {
     Cardio: <FaRunning />,
     Yoga: <FaLeaf />,
   };
+
+  const notify = (text, tone = "success") => setToast({ text, tone });
+
+  // Clears itself. Errors linger a little longer -- they are worth reading twice.
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), toast.tone === "error" ? 6000 : 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     // Check if user is logged in
@@ -246,7 +257,7 @@ export default function CoachProfile({ coachId }) {
       });
 
       if (res.status === 401) {
-        alert("Please log in to follow coaches");
+        notify("Please log in to follow coaches.", "error");
         return;
       }
       if (!res.ok) throw new Error("Failed to update follow status");
@@ -278,13 +289,13 @@ export default function CoachProfile({ coachId }) {
       window.dispatchEvent(new Event("userUpdated"));
     } catch (err) {
       console.error(err);
-      alert("Failed to update follow status");
+      notify("Could not update follow status. Please try again.", "error");
     }
   };
 
   const handleSendMessage = async (content) => {
     if (!content.trim()) return;
-    if (!currentUser) return alert("Please log in to send messages");
+    if (!currentUser) return notify("Please log in to send messages.", "error");
 
     // No userId -- the server reads the sender from the session cookie.
     const res = await fetch(`/api/coaches/${coachId}/message`, {
@@ -296,13 +307,13 @@ export default function CoachProfile({ coachId }) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || "Failed to send message");
 
-    alert("Message sent!");
+    notify("Message sent.");
     setShowMessageModal(false);
   };
 
   const handleSubmitReport = async (reason, description) => {
     if (!reason) return;
-    if (!currentUser) return alert("Please log in to report");
+    if (!currentUser) return notify("Please log in to report.", "error");
 
     // No userId -- the server reads the reporter from the session cookie.
     const res = await fetch(`/api/coaches/${coachId}/report`, {
@@ -314,7 +325,7 @@ export default function CoachProfile({ coachId }) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || "Failed to submit report");
 
-    alert("Report submitted. Thank you.");
+    notify("Report submitted. Thank you.");
     setShowReportModal(false);
   };
 
@@ -322,22 +333,22 @@ export default function CoachProfile({ coachId }) {
     e.preventDefault();
     
     if (!currentUser) {
-      alert("Please log in to leave a review");
+      notify("Please log in to leave a review.", "error");
       return;
     }
 
     if (reviewRating === 0) {
-      alert("Please select a rating");
+      notify("Please select a rating.", "error");
       return;
     }
 
     if (!reviewComment.trim()) {
-      alert("Please write a comment");
+      notify("Please write a comment.", "error");
       return;
     }
 
     if (reviewComment.trim().length < 10) {
-      alert("Review must be at least 10 characters long");
+      notify("Your review must be at least 10 characters.", "error");
       return;
     }
 
@@ -367,10 +378,10 @@ export default function CoachProfile({ coachId }) {
       setReviewRating(0);
       setReviewComment("");
       
-      alert("Review submitted successfully!");
+      notify("Review submitted.");
     } catch (err) {
       console.error("Review submission error:", err);
-      alert(`Failed to submit review: ${err.message}`);
+      notify(err.message || "Could not submit your review.", "error");
     } finally {
       setSubmittingReview(false);
     }
@@ -378,7 +389,7 @@ export default function CoachProfile({ coachId }) {
 
   const handleDeleteReview = async () => {
     if (!currentUser) {
-      alert("Please log in to delete your review");
+      notify("Please log in to delete your review.", "error");
       return;
     }
 
@@ -401,10 +412,10 @@ export default function CoachProfile({ coachId }) {
       // Refresh coach data to get updated reviews and rating
       await fetchCoachData();
       
-      alert("Review deleted successfully!");
+      notify("Review deleted.");
     } catch (err) {
       console.error("Review deletion error:", err);
-      alert(`Failed to delete review: ${err.message}`);
+      notify(err.message || "Could not delete your review.", "error");
     }
   };
 
@@ -440,6 +451,28 @@ export default function CoachProfile({ coachId }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-[#C8CDC5]/10 to-white">
+      {/* Replaces window.alert(): a browser dialog steals focus, blocks the page and
+          looks nothing like the site. This slides in and leaves on its own. */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[100] animate-in slide-in-from-bottom-4 fade-in duration-300">
+          <div
+            className={`flex items-start gap-3 max-w-sm px-5 py-4 rounded-2xl shadow-2xl text-white ${
+              toast.tone === "error" ? "bg-red-600" : "bg-[#354F52]"
+            }`}
+          >
+            <span className="mt-0.5 shrink-0">{toast.tone === "error" ? "⚠" : "✓"}</span>
+            <p className="font-semibold leading-snug">{toast.text}</p>
+            <button
+              onClick={() => setToast(null)}
+              className="ml-2 shrink-0 text-white/60 hover:text-white transition-colors"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header with Back Button */}
       <div className="bg-[#354F52] text-white py-4">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -536,7 +569,7 @@ export default function CoachProfile({ coachId }) {
       </section>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200 sticky top-[60px] z-40">
+      <div className="bg-white border-b border-gray-200 sticky top-[var(--nav-h)] z-40">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex gap-8 overflow-x-auto">
             {["overview", "videos", "announcements", "reviews"].map((tab) => (
@@ -827,7 +860,11 @@ export default function CoachProfile({ coachId }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
             <h3 className="text-2xl font-bold text-[#354F52] mb-4">Send Message</h3>
-            <MessageModalContent onSend={handleSendMessage} onClose={() => setShowMessageModal(false)} />
+            <MessageModalContent
+              onSend={handleSendMessage}
+              onClose={() => setShowMessageModal(false)}
+              onNotify={notify}
+            />
           </div>
         </div>
       )}
@@ -837,7 +874,11 @@ export default function CoachProfile({ coachId }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
             <h3 className="text-2xl font-bold text-[#354F52] mb-4">Report Coach</h3>
-            <ReportModalContent onSubmit={handleSubmitReport} onClose={() => setShowReportModal(false)} />
+            <ReportModalContent
+              onSubmit={handleSubmitReport}
+              onClose={() => setShowReportModal(false)}
+              onNotify={notify}
+            />
           </div>
         </div>
       )}
@@ -869,7 +910,7 @@ export default function CoachProfile({ coachId }) {
                 className="absolute inset-0 w-full h-full"
                 onError={(e) => {
                   console.error("Video playback error:", e);
-                  alert("Failed to load video. Please check the video URL.");
+                  notify("Could not load that video.", "error");
                 }}
               >
                 Your browser does not support the video tag.

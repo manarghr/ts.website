@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
 import Image from "next/image";
-import { Activity, Camera, Dumbbell, ExternalLink, Flame, Sparkles, Trophy, Plus, Trash2, X, User, Megaphone, FileText, Video, MessageSquare, Mail, Wallet, TrendingUp, ShoppingBag, Bell, Star, UserPlus } from "lucide-react";
+import { Activity, Camera, Dumbbell, ExternalLink, Flame, Sparkles, Trophy, Plus, Trash2, X, User, Megaphone, FileText, Video, MessageSquare, Mail, Wallet, TrendingUp, ShoppingBag, Bell, Star, UserPlus, LayoutGrid } from "lucide-react";
 
 function fmtErr(e) {
   if (!e) return "Unknown error";
@@ -18,7 +18,8 @@ export default function CoachDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [coachId, setCoachId] = useState(null);
   const [coach, setCoach] = useState(null);
-  const [tab, setTab] = useState("profile"); // profile | announcements | programs | blogs | videos
+  // overview | profile | followers | messages | wallet | notifications | announcements | programs | blogs | videos
+  const [tab, setTab] = useState("overview");
   const [err, setErr] = useState("");
 
   // profile form
@@ -81,14 +82,25 @@ export default function CoachDashboardPage() {
   // videos
   const [videos, setVideos] = useState([]);
 
-  // messages (inbox)
-  const [messages, setMessages] = useState([]);
+  // messages (inbox, grouped into conversations)
+  const [conversations, setConversations] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [openThread, setOpenThread] = useState(null);
+  const [threadMessages, setThreadMessages] = useState([]);
+  const [threadLoading, setThreadLoading] = useState(false);
 
   // wallet
   const [wallet, setWallet] = useState(null);
   const [walletLoading, setWalletLoading] = useState(false);
+
+  // replying to a member from the open conversation
+  const [replyText, setReplyText] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
+
+  // followers
+  const [followers, setFollowers] = useState([]);
+  const [followersLoading, setFollowersLoading] = useState(false);
 
   // notifications
   const [notifications, setNotifications] = useState([]);
@@ -278,6 +290,52 @@ export default function CoachDashboardPage() {
     }
   };
 
+  const sendReply = async () => {
+    const text = replyText.trim();
+    if (!text || !openThread) return;
+
+    setSendingReply(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/coach/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: openThread.id, content: text }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not send the reply");
+
+      // Show it straight away rather than waiting on a refetch.
+      setThreadMessages((prev) => [
+        ...prev,
+        { id: data.messageId, content: text, fromMe: true, read: false, createdAt: new Date().toISOString() },
+      ]);
+      setReplyText("");
+      loadMessages();
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
+  const loadFollowers = async () => {
+    setFollowersLoading(true);
+    try {
+      const res = await fetch("/api/coach/followers", { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setFollowers(Array.isArray(data.followers) ? data.followers : []);
+    } catch (e) {
+      setErr(fmtErr(e));
+    } finally {
+      setFollowersLoading(false);
+    }
+  };
+
   const loadNotifications = async () => {
     setNotifLoading(true);
     try {
@@ -347,7 +405,7 @@ export default function CoachDashboardPage() {
         throw new Error(data.error || `HTTP ${res.status}`);
       }
       const data = await res.json();
-      setMessages(Array.isArray(data.messages) ? data.messages : []);
+      setConversations(Array.isArray(data.conversations) ? data.conversations : []);
       setUnreadCount(data.unreadCount || 0);
     } catch (e) {
       setErr(fmtErr(e));
@@ -356,16 +414,25 @@ export default function CoachDashboardPage() {
     }
   };
 
-  // Opening the inbox is what marks it read -- the badge should clear because the
-  // coach looked, not because the page happened to load.
-  const markInboxRead = async () => {
-    if (unreadCount === 0) return;
-    setUnreadCount(0);
-    setMessages((prev) => prev.map((m) => ({ ...m, read: true })));
+  // Opening one conversation is what marks that conversation read -- not opening
+  // the tab, which would clear the badge for people you never actually read.
+  const openConversation = async (contact) => {
+    setOpenThread(contact);
+    setThreadLoading(true);
+    setReplyText("");
     try {
-      await fetch("/api/coach/messages", { method: "PATCH" });
+      const res = await fetch(`/api/coach/messages?userId=${contact.id}`, { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not open the conversation");
+      setThreadMessages(Array.isArray(data.messages) ? data.messages : []);
+      setUnreadCount(data.unreadCount || 0);
+      setConversations((prev) =>
+        prev.map((c) => (c.otherId === contact.id ? { ...c, unread: 0 } : c))
+      );
     } catch (e) {
-      console.error("Could not mark messages read:", e);
+      setErr(fmtErr(e));
+    } finally {
+      setThreadLoading(false);
     }
   };
 
@@ -399,6 +466,7 @@ export default function CoachDashboardPage() {
     loadMessages();
     loadWallet();
     loadNotifications();
+    loadFollowers();
   }, [coachId]);
 
   const logout = async () => {
@@ -879,56 +947,6 @@ export default function CoachDashboardPage() {
           </div>
         </div>
         <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 pt-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#354F52]/10 text-[#354F52] text-xs font-semibold">
-                Coach Control Center
-              </div>
-              <h1 className="text-3xl md:text-4xl font-black text-[#354F52]">
-                Coach Profile{displayName ? <span className="text-[#52796F]"> · {displayName}</span> : null}
-              </h1>
-              <div className="text-sm text-gray-600">
-                {coachId ? (
-                  <span>
-                    Coach ID: <span className="font-semibold text-[#354F52]">{coachId}</span>{" "}
-                    <Link className="text-[#52796F] underline ml-2" href={`/coaches/${coachId}`}>
-                      View public profile
-                    </Link>
-                  </span>
-                ) : (
-                  <span>Log in as a coach to manage your profile.</span>
-                )}
-              </div>
-            </div>
-           
-           
-          </div>
-
-          {coachId && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-              {[
-                { label: "Programs", count: programs.length, icon: Dumbbell, tone: "text-[#52796F] bg-[#52796F]/10" },
-                { label: "Videos", count: videos.length, icon: Video, tone: "text-orange-600 bg-orange-500/10" },
-                { label: "Blogs", count: blogs.length, icon: FileText, tone: "text-sky-600 bg-sky-500/10" },
-                { label: "Announcements", count: announcements.length, icon: Megaphone, tone: "text-[#6BB371] bg-[#6BB371]/10" },
-              ].map((stat) => {
-                const StatIcon = stat.icon;
-                return (
-                  <div
-                    key={stat.label}
-                    className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-[#d9e2dc] p-6 hover:shadow-xl transition-shadow"
-                  >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${stat.tone}`}>
-                      <StatIcon className="w-6 h-6" />
-                    </div>
-                    <div className="text-4xl font-black text-[#354F52] leading-none mb-2">{stat.count}</div>
-                    <div className="text-sm font-semibold text-gray-500">{stat.label}</div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
           {loading ? (
             <div className="bg-white rounded-2xl shadow-lg border border-[#C8CDC5]/40 p-8">
               <div className="text-gray-600">Loading…</div>
@@ -948,8 +966,10 @@ export default function CoachDashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid lg:grid-cols-[300px_1fr] gap-6 lg:gap-8 items-start">
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-[#d9e2dc] p-5 lg:sticky lg:top-6">
+            <div className="grid lg:grid-cols-[340px_1fr] gap-6 lg:gap-8 items-start">
+              {/* Deliberately not sticky: pinned to the viewport it drifts out of
+                  line with the panel beside it as soon as the page scrolls. */}
+              <div className="bg-white rounded-xl border border-[#d9e2dc] shadow-sm p-5">
                 <div className="flex flex-col items-center text-center pb-5 mb-5 border-b border-[#d9e2dc]">
                   <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-[#52796F]/20 shadow-md bg-[#52796F]/10 mb-3">
                     {avatarUrl && avatarUrl !== "/placeholder.svg" ? (
@@ -960,13 +980,17 @@ export default function CoachDashboardPage() {
                       </div>
                     )}
                   </div>
-                  <div className="font-bold text-lg text-[#354F52] leading-tight">{displayName || "Coach"}</div>
-                  <div className="text-sm text-gray-500">{displayCategory || "Fitness"}</div>
+                  <div className="font-bold text-lg text-slate-900 leading-tight">
+                    {displayName || "Coach"}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">{displayCategory || "Fitness"}</div>
                 </div>
 
                 <nav className="space-y-1.5">
                   {[
+                    { key: "overview", label: "Overview", icon: LayoutGrid, count: null },
                     { key: "profile", label: "Profile", icon: User, count: null },
+                    { key: "followers", label: "Followers", icon: UserPlus, count: followers.length },
                     { key: "messages", label: "Messages", icon: MessageSquare, count: unreadCount },
                     { key: "wallet", label: "Wallet", icon: Wallet, count: null },
                     { key: "notifications", label: "Notifications", icon: Bell, count: unreadNotifs },
@@ -982,21 +1006,24 @@ export default function CoachDashboardPage() {
                         key={item.key}
                         onClick={() => {
                           setTab(item.key);
-                          if (item.key === "messages") markInboxRead();
+                          // Messages are marked read per conversation, not by opening
+                          // the tab -- the badge should mean "unread", not "unvisited".
+                          if (item.key === "messages") {
+                            setOpenThread(null);
+                            setThreadMessages([]);
+                          }
                           if (item.key === "notifications") markNotificationsSeen();
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-colors ${
-                          active ? "bg-[#354F52] text-white shadow-md" : "hover:bg-[#354F52]/5 text-[#354F52]"
+                        className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-lg text-base transition-colors ${
+                          active
+                            ? "bg-[#354F52] text-white font-semibold"
+                            : "hover:bg-slate-100 text-slate-600 font-medium"
                         }`}
                       >
-                        <ItemIcon className="w-5 h-5 shrink-0" />
+                        <ItemIcon className={`w-5 h-5 shrink-0 ${active ? "" : "text-slate-400"}`} />
                         <span className="flex-1 text-left">{item.label}</span>
                         {item.count > 0 && (
-                          <span
-                            className={`min-w-[26px] px-2 py-0.5 rounded-full text-xs font-bold ${
-                              active ? "bg-white/20 text-white" : "bg-[#354F52]/10 text-[#354F52]"
-                            }`}
-                          >
+                          <span className={`text-sm font-semibold tabular-nums ${active ? "text-white/75" : "text-slate-400"}`}>
                             {item.count}
                           </span>
                         )}
@@ -1012,7 +1039,7 @@ export default function CoachDashboardPage() {
                 )}
               </div>
 
-              <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-[#d9e2dc] p-6 md:p-8 lg:p-10">
+              <div className="bg-white rounded-xl border border-[#d9e2dc] shadow-sm p-6 md:p-8">
                 {tab === "profile" && (
                   <div>
                     <div className="mb-6 rounded-3xl overflow-hidden border border-white/60 shadow-xl">
@@ -1197,11 +1224,87 @@ export default function CoachDashboardPage() {
                   </div>
                 )}
 
+                {tab === "followers" && (
+                  <div>
+                    <div className="flex items-center justify-between mb-6 gap-4">
+                      <div>
+                        <h2 className="text-[30px] font-bold text-slate-900 tracking-tight">Followers</h2>
+                        <p className="text-gray-500 mt-1">
+                          {followers.length === 0
+                            ? "People who follow you will appear here."
+                            : `${followers.length} ${followers.length === 1 ? "person follows" : "people follow"} you.`}
+                        </p>
+                      </div>
+                      <button
+                        onClick={loadFollowers}
+                        className="px-4 py-2 rounded-xl border-2 border-[#d9e2dc] text-[#354F52] font-semibold hover:bg-gray-50 transition-colors shrink-0"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    {followersLoading && followers.length === 0 ? (
+                      <div className="text-gray-600">Loading…</div>
+                    ) : followers.length === 0 ? (
+                      <div className="text-center py-16 px-6 bg-gray-50/70 rounded-2xl border border-dashed border-[#d9e2dc]">
+                        <UserPlus className="w-14 h-14 text-[#52796F]/40 mx-auto mb-4" />
+                        <div className="text-lg font-bold text-[#354F52] mb-1">No followers yet</div>
+                        <p className="text-gray-500 max-w-md mx-auto">
+                          Publish programs and videos so people find you and follow along.
+                        </p>
+                        {coachId && (
+                          <Link
+                            href={`/coaches/${coachId}`}
+                            className="inline-flex mt-5 px-5 py-2.5 rounded-xl bg-[#354F52] text-white font-semibold hover:bg-[#52796F] transition-colors"
+                          >
+                            View your public profile
+                          </Link>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        {followers.map((person) => (
+                          <div
+                            key={person.id}
+                            className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-[#d9e2dc] hover:shadow-md transition-shadow"
+                          >
+                            <div className="relative w-12 h-12 shrink-0 rounded-full overflow-hidden bg-[#52796F]/10 border border-[#d9e2dc]">
+                              {person.profilePicture ? (
+                                <Image
+                                  src={person.profilePicture}
+                                  alt={person.fullName || "Follower"}
+                                  fill
+                                  className="object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[#354F52] font-bold">
+                                  {(person.fullName || "?").charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-[#354F52] truncate">
+                                {person.fullName || "Unknown"}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {person.followedAt
+                                  ? `Following since ${new Date(person.followedAt).toLocaleDateString()}`
+                                  : "Following you"}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {tab === "notifications" && (
                   <div>
                     <div className="flex items-center justify-between mb-6 gap-4">
                       <div>
-                        <h2 className="text-2xl md:text-3xl font-black text-[#354F52]">Notifications</h2>
+                        <h2 className="text-[30px] font-bold text-slate-900 tracking-tight">Notifications</h2>
                         <p className="text-gray-500 mt-1">Messages, sales, reviews and new followers.</p>
                       </div>
                       <div className="flex gap-2 shrink-0">
@@ -1282,7 +1385,7 @@ export default function CoachDashboardPage() {
                   <div>
                     <div className="flex items-center justify-between mb-6">
                       <div>
-                        <h2 className="text-2xl md:text-3xl font-black text-[#354F52]">Wallet</h2>
+                        <h2 className="text-[30px] font-bold text-slate-900 tracking-tight">Wallet</h2>
                         <p className="text-gray-500 mt-1">What you have earned from your programs and content.</p>
                       </div>
                       <button
@@ -1297,15 +1400,15 @@ export default function CoachDashboardPage() {
                       <div className="text-gray-600">Loading…</div>
                     ) : (
                       <>
-                        <div className="rounded-3xl bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#6BB371] text-white p-8 shadow-xl mb-6">
-                          <div className="text-sm uppercase tracking-wide text-white/70 font-semibold mb-2">
+                        <div className="rounded-lg bg-slate-900 text-white p-7 mb-6">
+                          <div className="text-xs uppercase tracking-wider text-white/55 font-semibold mb-2.5">
                             Available balance
                           </div>
-                          <div className="text-5xl font-black mb-1">
+                          <div className="text-[44px] font-bold leading-none mb-2 tabular-nums">
                             ${(wallet?.availableBalance || 0).toFixed(2)}
                           </div>
-                          <div className="text-white/80 text-sm">
-                            Paid out so far: ${(wallet?.totalPaidOut || 0).toFixed(2)}
+                          <div className="text-white/50 text-[13px]">
+                            Paid out so far ${(wallet?.totalPaidOut || 0).toFixed(2)}
                           </div>
                         </div>
 
@@ -1337,16 +1440,16 @@ export default function CoachDashboardPage() {
                             return (
                               <div
                                 key={card.label}
-                                className="bg-white rounded-2xl border border-[#d9e2dc] p-6 shadow-sm"
+                                className="bg-white rounded-lg border border-[#d9e2dc] p-4"
                               >
-                                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${card.tone}`}>
-                                  <CardIcon className="w-5 h-5" />
+                                <div className="flex items-start justify-between gap-2 mb-3">
+                                  <span className="text-sm font-medium text-slate-500">{card.label}</span>
+                                  <CardIcon className="w-[18px] h-[18px] text-slate-300 shrink-0" />
                                 </div>
-                                <div className="text-3xl font-black text-[#354F52] leading-none mb-1">
+                                <div className="text-[32px] font-bold text-slate-900 leading-none mb-1 tabular-nums">
                                   {card.value}
                                 </div>
-                                <div className="text-sm font-semibold text-gray-600">{card.label}</div>
-                                <div className="text-xs text-gray-400 mt-1">{card.sub}</div>
+                                <div className="text-xs text-slate-400">{card.sub}</div>
                               </div>
                             );
                           })}
@@ -1410,26 +1513,170 @@ export default function CoachDashboardPage() {
                   </div>
                 )}
 
+                {tab === "overview" && (
+                  <div>
+                    <h2 className="text-[30px] font-bold text-slate-900 tracking-tight">
+                      Welcome back{displayName ? `, ${displayName}` : ""}
+                    </h2>
+                    <p className="text-gray-500 mt-1 mb-7 text-[15px]">
+                      Here is what is happening with your coaching.
+                    </p>
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                      {[
+                        { key: "programs", label: "Programs", count: programs.length, icon: Dumbbell, tone: "text-[#52796F] bg-[#52796F]/10" },
+                        { key: "videos", label: "Videos", count: videos.length, icon: Video, tone: "text-orange-600 bg-orange-500/10" },
+                        { key: "blogs", label: "Blogs", count: blogs.length, icon: FileText, tone: "text-sky-600 bg-sky-500/10" },
+                        { key: "followers", label: "Followers", count: followers.length, icon: UserPlus, tone: "text-[#6BB371] bg-[#6BB371]/10" },
+                      ].map((stat) => {
+                        const StatIcon = stat.icon;
+                        return (
+                          <button
+                            key={stat.label}
+                            onClick={() => setTab(stat.key)}
+                            className="text-left bg-white rounded-xl border border-[#d9e2dc] p-5 hover:border-slate-300 hover:bg-slate-50/50 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2 mb-3.5">
+                              <span className="text-sm font-medium text-slate-500">{stat.label}</span>
+                              <StatIcon className="w-[18px] h-[18px] text-slate-300 shrink-0" />
+                            </div>
+                            <div className="text-[34px] font-bold text-slate-900 leading-none tabular-nums">
+                              {stat.count}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setTab("wallet")}
+                        className="text-left rounded-lg bg-slate-900 text-white p-5 hover:bg-slate-800 transition-colors"
+                      >
+                        <div className="text-xs uppercase tracking-wider text-white/55 font-semibold mb-2.5">
+                          Available balance
+                        </div>
+                        <div className="text-[36px] font-bold leading-none mb-2 tabular-nums">
+                          ${(wallet?.availableBalance || 0).toFixed(2)}
+                        </div>
+                        <div className="text-white/50 text-[13px]">{wallet?.totalSales || 0} sales all time</div>
+                      </button>
+
+                      <div className="rounded-lg bg-white border border-[#d9e2dc] p-5">
+                        <div className="text-sm uppercase tracking-wider text-slate-400 font-bold mb-4">
+                          Needs your attention
+                        </div>
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => setTab("messages")}
+                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <span className="flex items-center gap-2 text-gray-700">
+                              <MessageSquare className="w-4 h-4 text-[#52796F]" /> Unread messages
+                            </span>
+                            <span className="font-bold text-[#354F52]">{unreadCount}</span>
+                          </button>
+                          <button
+                            onClick={() => setTab("notifications")}
+                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                          >
+                            <span className="flex items-center gap-2 text-gray-700">
+                              <Bell className="w-4 h-4 text-[#52796F]" /> New notifications
+                            </span>
+                            <span className="font-bold text-[#354F52]">{unreadNotifs}</span>
+                          </button>
+                          {coachId && (
+                            <Link
+                              href={`/coaches/${coachId}`}
+                              className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
+                            >
+                              <span className="flex items-center gap-2 text-gray-700">
+                                <ExternalLink className="w-4 h-4 text-[#52796F]" /> View public profile
+                              </span>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {tab === "messages" && (
                   <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h2 className="text-2xl md:text-3xl font-black text-[#354F52]">Messages</h2>
+                    <div className="flex items-center justify-between mb-6 gap-4">
+                      <div className="min-w-0">
+                        <h2 className="text-2xl md:text-3xl font-black text-[#354F52] truncate">
+                          {openThread ? openThread.name : "Messages"}
+                        </h2>
                         <p className="text-gray-500 mt-1">
-                          People who reached out from your public profile.
+                          {openThread
+                            ? "Your conversation with this member."
+                            : "People who reached out from your public profile."}
                         </p>
                       </div>
                       <button
-                        onClick={loadMessages}
-                        className="px-4 py-2 rounded-xl border-2 border-[#d9e2dc] text-[#354F52] font-semibold hover:bg-gray-50 transition-colors"
+                        onClick={() => {
+                          if (openThread) {
+                            setOpenThread(null);
+                            setThreadMessages([]);
+                          } else {
+                            loadMessages();
+                          }
+                        }}
+                        className="px-4 py-2 rounded-xl border-2 border-[#d9e2dc] text-[#354F52] font-semibold hover:bg-gray-50 transition-colors shrink-0"
                       >
-                        Refresh
+                        {openThread ? "All conversations" : "Refresh"}
                       </button>
                     </div>
 
-                    {messagesLoading ? (
-                      <div className="text-gray-600">Loading…</div>
-                    ) : messages.length === 0 ? (
+                    {openThread ? (
+                      threadLoading ? (
+                        <div className="text-gray-600">Loading...</div>
+                      ) : (
+                        <>
+                          <div className="space-y-3 mb-5 max-h-[46vh] overflow-y-auto pr-1">
+                            {threadMessages.map((m) => (
+                              <div
+                                key={m.id}
+                                className={`max-w-[80%] p-4 rounded-2xl ${
+                                  m.fromMe
+                                    ? "ml-auto bg-[#354F52] text-white rounded-br-md"
+                                    : "bg-gray-100 text-gray-800 rounded-bl-md"
+                                }`}
+                              >
+                                <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                                <div
+                                  className={`text-[11px] mt-1 ${
+                                    m.fromMe ? "text-white/70" : "text-gray-400"
+                                  }`}
+                                >
+                                  {m.createdAt ? new Date(m.createdAt).toLocaleString() : ""}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="border-t border-[#d9e2dc] pt-4">
+                            <textarea
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              rows={3}
+                              placeholder={`Reply to ${openThread.name}...`}
+                              className="w-full p-3 border-2 border-[#d9e2dc] rounded-xl focus:border-[#52796F] outline-none resize-y"
+                            />
+                            <button
+                              onClick={sendReply}
+                              disabled={sendingReply || !replyText.trim()}
+                              className="mt-2 px-5 py-2.5 rounded-xl bg-[#354F52] text-white font-semibold hover:bg-[#52796F] transition-colors disabled:opacity-50"
+                            >
+                              {sendingReply ? "Sending..." : "Send reply"}
+                            </button>
+                          </div>
+                        </>
+                      )
+                    ) : messagesLoading && conversations.length === 0 ? (
+                      <div className="text-gray-600">Loading...</div>
+                    ) : conversations.length === 0 ? (
                       <div className="text-center py-16 px-6 bg-gray-50/70 rounded-2xl border border-dashed border-[#d9e2dc]">
                         <Mail className="w-14 h-14 text-[#52796F]/40 mx-auto mb-4" />
                         <div className="text-lg font-bold text-[#354F52] mb-1">No messages yet</div>
@@ -1446,55 +1693,55 @@ export default function CoachDashboardPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        {messages.map((m) => (
-                          <div
-                            key={m.id}
-                            className={`flex gap-4 p-5 rounded-2xl border transition-colors ${
-                              m.read
-                                ? "bg-white border-[#d9e2dc]"
-                                : "bg-[#6BB371]/5 border-[#6BB371]/40"
+                      <div className="space-y-2">
+                        {conversations.map((c) => (
+                          <button
+                            key={c.otherId}
+                            onClick={() => openConversation(c.contact)}
+                            className={`w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all hover:shadow-md ${
+                              c.unread > 0
+                                ? "bg-[#6BB371]/5 border-[#6BB371]/40"
+                                : "bg-white border-[#d9e2dc] hover:border-[#52796F]/40"
                             }`}
                           >
                             <div className="relative w-12 h-12 shrink-0 rounded-full overflow-hidden bg-[#52796F]/10 border border-[#d9e2dc]">
-                              {m.sender?.profilePicture ? (
+                              {c.contact?.picture ? (
                                 <Image
-                                  src={m.sender.profilePicture}
-                                  alt={m.sender.fullName || "User"}
+                                  src={c.contact.picture}
+                                  alt={c.contact.name || "Member"}
                                   fill
                                   className="object-cover"
                                   unoptimized
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[#354F52] font-bold">
-                                  {(m.sender?.fullName || "?").charAt(0).toUpperCase()}
+                                  {(c.contact?.name || "?").charAt(0).toUpperCase()}
                                 </div>
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <span className="font-bold text-[#354F52]">
-                                  {m.sender?.fullName || "Unknown"}
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-[#354F52] truncate">
+                                  {c.contact?.name || "Member"}
                                 </span>
-                                {!m.read && (
-                                  <span className="px-2 py-0.5 rounded-full bg-[#6BB371] text-white text-[11px] font-bold">
-                                    New
+                                {c.unread > 0 && (
+                                  <span className="px-2 py-0.5 rounded-full bg-[#6BB371] text-white text-[11px] font-bold shrink-0">
+                                    {c.unread} new
                                   </span>
                                 )}
-                                <span className="text-xs text-gray-400 ml-auto">
-                                  {m.createdAt ? new Date(m.createdAt).toLocaleString() : ""}
+                                <span className="text-xs text-gray-400 ml-auto shrink-0">
+                                  {c.lastAt ? new Date(c.lastAt).toLocaleDateString() : ""}
                                 </span>
                               </div>
-                              <p className="text-gray-700 whitespace-pre-wrap break-words">{m.content}</p>
+                              <p className="text-sm text-gray-500 truncate">
+                                {c.lastFromMe ? "You: " : ""}
+                                {c.lastMessage}
+                              </p>
                             </div>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     )}
-
-                    <p className="text-xs text-gray-400 mt-6">
-                      Replying is not built yet -- this is the receiving half.
-                    </p>
                   </div>
                 )}
 

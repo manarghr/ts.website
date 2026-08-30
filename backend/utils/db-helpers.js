@@ -368,6 +368,39 @@ export async function listFollowedCoaches(userId) {
     .toArray();
 }
 
+/**
+ * The users following this coach, newest first.
+ *
+ * The follow row is the source of truth for "when", so the joined user document is
+ * merged onto it rather than the other way round -- coaches.followers_count is a
+ * running counter and can drift; this cannot.
+ */
+export async function listCoachFollowers(coachId, limit = 200) {
+  const followsCollection = await getCollection('follows');
+  const usersCollection = await getCollection('users');
+
+  const rows = await followsCollection
+    .find({ following_id: coachId })
+    .sort({ created_at: -1 })
+    .limit(limit)
+    .toArray();
+
+  if (rows.length === 0) return [];
+
+  const users = await usersCollection
+    .find({ id: { $in: rows.map((row) => row.follower_id) } })
+    .project({ _id: 0, id: 1, fullName: 1, profilePicture: 1, selectedPlan: 1 })
+    .toArray();
+
+  const byId = new Map(users.map((user) => [user.id, user]));
+
+  return rows.map((row) => ({
+    id: row.follower_id,
+    followedAt: row.created_at,
+    ...(byId.get(row.follower_id) || { fullName: 'Deleted user' }),
+  }));
+}
+
 export async function toggleFollow(userId, coachId, action) {
   const followsCollection = await getCollection('follows');
   const coachesCollection = await getCollection('coaches');
