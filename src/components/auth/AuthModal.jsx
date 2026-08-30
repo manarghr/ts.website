@@ -37,6 +37,7 @@ export default function AuthModal({ isOpen, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
+  const [successTitle, setSuccessTitle] = useState("")
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [resetEmail, setResetEmail] = useState("")
   const prevIsOpenRef = useRef(isOpen)
@@ -279,13 +280,12 @@ export default function AuthModal({ isOpen, onClose }) {
 
       setIsSubmitting(false)
       setShowSuccess(true)
+      setSuccessTitle(`Welcome aboard, ${formData.fullName.split(" ")[0]}!`)
       setSuccessMessage(
-        `Welcome aboard, ${formData.fullName.split(" ")[0]}! Your fitness journey starts now. We're excited to help you achieve your goals!`,
+        "Your account is ready. Set up your profile, follow a coach, and start training.",
       )
-
-      setTimeout(() => {
-        onClose()
-      }, 3000)
+      // No auto-close: the screen now has buttons, and closing it while someone is
+      // deciding which one to press is worse than leaving it open.
     } catch (error) {
       console.error("Error during signup:", error)
       setErrors({ email: "Network error. Please check your connection and try again." })
@@ -319,13 +319,8 @@ export default function AuthModal({ isOpen, onClose }) {
 
       setIsSubmitting(false)
       setShowSuccess(true)
-      setSuccessMessage(
-        `Welcome back, ${data.user.fullName}! Ready to crush your fitness goals today? Let's make it happen!`,
-      )
-
-      setTimeout(() => {
-        onClose()
-      }, 2500)
+      setSuccessTitle(`Welcome back, ${(data.user.fullName || "").split(" ")[0]}!`)
+      setSuccessMessage("Ready to crush your fitness goals today? Let's make it happen.")
     } catch (error) {
       console.error("Error during login:", error)
       setErrors({ email: "Network error. Please check your connection and try again." })
@@ -368,9 +363,10 @@ export default function AuthModal({ isOpen, onClose }) {
       {/* Decorative blurred blobs removed: they were animate-pulse + blur-3xl,
           repainting a large blur every frame behind an opaque overlay. */}
       
-      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col animate-in zoom-in-95 duration-300 border border-white/20 flex-shrink-0">
-        {/* Sporty decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371] rounded-t-3xl z-20"></div>
+      {/* overflow-hidden is what keeps the top bar inside the rounded corners. Without
+          it the 8px bar could not follow a 24px radius and poked out at both ends. */}
+      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col animate-in zoom-in-95 duration-300 border border-white/20 flex-shrink-0">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371] z-20"></div>
         
         <button
           onClick={(e) => {
@@ -491,7 +487,9 @@ export default function AuthModal({ isOpen, onClose }) {
                     </div>
                   </div>
 
-                  <div className="grid lg:grid-cols-2 gap-4">
+                  {/* items-start keeps a two-line label from stretching its neighbour;
+                      gap-x is wider than gap-y because the columns are what felt tight. */}
+                  <div className="grid lg:grid-cols-2 gap-x-5 gap-y-5 items-start">
                     <div className="lg:col-span-2 animate-fadeInUp">
                       <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                         <User className="w-4 h-4 text-[#52796F]" />
@@ -608,7 +606,7 @@ export default function AuthModal({ isOpen, onClose }) {
                           name="gender"
                           value={formData.gender}
                           onChange={handleInputChange}
-                          className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md appearance-none cursor-pointer ${
+                          className={`w-full pl-4 pr-11 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md appearance-none cursor-pointer truncate ${
                             errors.gender 
                               ? "border-red-500 focus:ring-red-500 focus:border-red-500 animate-pulse" 
                               : "border-slate-200 hover:border-[#52796F]/50"
@@ -672,7 +670,7 @@ export default function AuthModal({ isOpen, onClose }) {
                           name="workoutExperience"
                           value={formData.workoutExperience}
                           onChange={handleInputChange}
-                          className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md appearance-none cursor-pointer ${
+                          className={`w-full pl-4 pr-11 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md appearance-none cursor-pointer truncate ${
                             errors.workoutExperience 
                               ? "border-red-500 focus:ring-red-500 focus:border-red-500 animate-pulse" 
                               : "border-slate-200 hover:border-[#52796F]/50"
@@ -699,15 +697,15 @@ export default function AuthModal({ isOpen, onClose }) {
 
                     <div className="animate-fadeInUp" style={{ animationDelay: '350ms' }}>
                       <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <Star className="w-4 h-4 text-[#52796F]" />
-                        Sports Experience Rating *
+                        <Star className="w-4 h-4 text-[#52796F] shrink-0" />
+                        Sports Rating *
                       </label>
                       <div className="relative group">
                         <select
                           name="sportsRating"
                           value={formData.sportsRating}
                           onChange={handleInputChange}
-                          className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md appearance-none cursor-pointer ${
+                          className={`w-full pl-4 pr-11 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#52796F] focus:border-[#52796F] outline-none transition-all duration-300 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md appearance-none cursor-pointer truncate ${
                             errors.sportsRating 
                               ? "border-red-500 focus:ring-red-500 focus:border-red-500 animate-pulse" 
                               : "border-slate-200 hover:border-[#52796F]/50"
@@ -1363,7 +1361,7 @@ export default function AuthModal({ isOpen, onClose }) {
                 type="button"
                 onClick={handleForgotPassword}
                 disabled={isSubmitting}
-                className="w-full bg-linear-to-r from-[#354F52] to-[#52796F] text-white py-3.5 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-[#354F52] to-[#52796F] text-white py-3.5 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50"
               >
                 {isSubmitting ? "Sending..." : "Send Reset Link"}
               </button>
@@ -1372,14 +1370,44 @@ export default function AuthModal({ isOpen, onClose }) {
         )}
 
         {showSuccess && (
-          <div className="p-8 text-center animate-in zoom-in-95 duration-500">
-            <div className="w-20 h-20 bg-linear-to-r from-[#354F52] to-[#52796F] rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+          <div className="px-8 py-14 sm:py-16 flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+            <div className="relative mb-6">
+              <span className="absolute inset-0 rounded-full bg-[#6BB371]/20 animate-ping" />
+              <div className="relative w-24 h-24 bg-gradient-to-br from-[#354F52] to-[#6BB371] rounded-full flex items-center justify-center shadow-xl ring-8 ring-[#6BB371]/10">
+                <svg
+                  className="w-12 h-12 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
             </div>
-            <h3 className="text-2xl font-bold text-[#354F52] mb-3">Success!</h3>
-            <p className="text-slate-600 text-lg leading-relaxed max-w-md mx-auto">{successMessage}</p>
+
+            <h3 className="text-3xl sm:text-4xl font-extrabold text-[#354F52] mb-3">
+              {successTitle || "Success!"}
+            </h3>
+            <p className="text-slate-600 text-lg leading-relaxed max-w-md mb-9">{successMessage}</p>
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+              {/* A plain link, not a router push: a full load re-reads the new session
+                  cookie everywhere instead of reusing the signed-out state React holds. */}
+              <a
+                href="/profile"
+                className="flex-1 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#354F52] to-[#52796F] text-white font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              >
+                Go to my profile
+              </a>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-7 py-3.5 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+              >
+                Stay on this page
+              </button>
+            </div>
           </div>
         )}
       </div>

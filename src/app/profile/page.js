@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   User,
@@ -216,19 +217,26 @@ export default function ProfilePage({ userId }) {
 
   // Handle logout
   const handleLogout = async () => {
-    // Delete the session row server-side first. Clearing localStorage alone left the
-    // cookie valid for its full 30 days -- on a shared computer the next person
-    // opening /profile was still signed in as you.
+    if (loggingOut) return;
+    setLoggingOut(true);
+
+    // Clear the local copy and repaint the navbar first, so the click feels
+    // instant. The request below is what actually ends the session -- clearing
+    // localStorage alone left the cookie valid for its full 30 days, and on a
+    // shared computer the next person opening /profile was still signed in as you.
+    localStorage.removeItem("trainsight_current_user");
+    window.dispatchEvent(new Event("userLoggedOut"));
+
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch (error) {
       console.error("Logout request failed:", error);
     }
-    localStorage.removeItem("trainsight_current_user");
-    window.dispatchEvent(new Event("userLoggedOut"));
-    // Full load rather than a router push: it clears cached images and re-reads
-    // the now-missing session everywhere.
-    window.location.href = "/";
+
+    // A client-side navigation. The old window.location.href re-downloaded the
+    // whole home page -- video, images and all -- which is what made this slow.
+    router.replace("/");
+    router.refresh();
   };
 
 
@@ -298,6 +306,8 @@ export default function ProfilePage({ userId }) {
     height: "",
   })
   const [isUploadingPicture, setIsUploadingPicture] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
+  const router = useRouter()
   const [showPlanModal, setShowPlanModal] = useState(false)
   const [savingPlan, setSavingPlan] = useState(false)
   const [showFollowModal, setShowFollowModal] = useState(null)
@@ -1129,15 +1139,20 @@ export default function ProfilePage({ userId }) {
                 {isOwnProfile && (
                   <motion.button
                     onClick={handleLogout}
+                    disabled={loggingOut}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.8 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 px-5 py-2.5 text-white bg-gradient-to-r from-[#354F52] to-[#52796F] rounded-xl hover:shadow-xl transition-all font-semibold shadow-lg absolute right-6 bottom-6"
+                    whileHover={{ scale: loggingOut ? 1 : 1.05 }}
+                    whileTap={{ scale: loggingOut ? 1 : 0.95 }}
+                    className="flex items-center gap-2 px-5 py-2.5 text-white bg-gradient-to-r from-[#354F52] to-[#52796F] rounded-xl hover:shadow-xl transition-all font-semibold shadow-lg absolute right-6 bottom-6 disabled:opacity-70 disabled:cursor-wait"
                   >
-                    <LogOut size={18} />
-                    Logout
+                    {loggingOut ? (
+                      <span className="w-[18px] h-[18px] rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    ) : (
+                      <LogOut size={18} />
+                    )}
+                    {loggingOut ? "Signing out..." : "Logout"}
                   </motion.button>
                 )}
               </div>

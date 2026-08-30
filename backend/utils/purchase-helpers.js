@@ -127,7 +127,7 @@ export async function listPurchasesForUser(userId, limit = 100) {
   if (programIds.length > 0) {
     const programs = await getCollection("training_programs");
     const docs = await programs
-      .find({ id: { : programIds } })
+      .find({ id: { $in: programIds } })
       .project({ _id: 0 })
       .toArray();
     const byId = new Map(docs.map((doc) => [doc.id, doc]));

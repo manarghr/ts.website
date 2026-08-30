@@ -363,7 +363,7 @@ export async function listFollowedCoaches(userId) {
   if (rows.length === 0) return [];
 
   return coachesCollection
-    .find({ id: { : rows.map((row) => row.following_id) } })
+    .find({ id: { $in: rows.map((row) => row.following_id) } })
     .project({ _id: 0, id: 1, name: 1, image_url: 1, category: 1 })
     .toArray();
 }
