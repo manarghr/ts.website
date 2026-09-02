@@ -12,7 +12,8 @@ import {
   FaTools,
   FaUser,
   FaDollarSign,
-  FaClock
+  FaClock,
+  FaLock
 } from "react-icons/fa";
 
 export default function ProgramDetail({ programId }) {
@@ -21,6 +22,10 @@ export default function ProgramDetail({ programId }) {
   const [error, setError] = useState(null);
   const [enrolling, setEnrolling] = useState(false);
   const [owned, setOwned] = useState(false);
+  // The server strips the schedule for programs you have not bought, and says so.
+  const [locked, setLocked] = useState(false);
+  // Bumped after a purchase so the program is fetched again, unlocked this time.
+  const [refreshKey, setRefreshKey] = useState(0);
   // The server quotes the price, including the subscriber discount. Working it out
   // here as well would eventually disagree with what actually gets charged.
   const [quote, setQuote] = useState(null);
@@ -70,6 +75,7 @@ export default function ProgramDetail({ programId }) {
         
         if (data.success && data.program) {
           setProgram(data.program);
+          setLocked(Boolean(data.locked));
         } else {
           setError(data.error || 'Program not found');
         }
@@ -87,7 +93,7 @@ export default function ProgramDetail({ programId }) {
       setError('Program ID is required');
       setLoading(false);
     }
-  }, [programId]);
+  }, [programId, refreshKey]);
 
   // Ask the server whether this is already owned and what it would cost. Only the
   // server knows the buyer's plan, so only the server can quote the real price.
@@ -141,11 +147,13 @@ export default function ProgramDetail({ programId }) {
 
       if (res.status === 409) {
         setOwned(true);
+        setRefreshKey((key) => key + 1);
         return;
       }
       if (!res.ok) throw new Error(data.error || 'Could not complete enrollment');
 
       setOwned(true);
+      setRefreshKey((key) => key + 1);
       alert(`You now have access to "${program.name}".`);
     } catch (err) {
       console.error('Error enrolling:', err);
@@ -337,7 +345,21 @@ export default function ProgramDetail({ programId }) {
                     <FaCalendar className="text-[#52796F] text-2xl" />
                     <h2 className="text-3xl font-bold text-[#354F52]">Day-by-Day Schedule</h2>
                   </div>
-                  <p className="text-gray-500 italic">Schedule details will be available after enrollment.</p>
+                  {locked ? (
+                    <div className="p-6 bg-[#C8CDC5]/15 rounded-lg border border-[#C8CDC5] text-center">
+                      <FaLock className="text-[#52796F] text-2xl mx-auto mb-3" />
+                      <p className="text-[#354F52] font-semibold mb-1">
+                        {program.lockedDays > 0
+                          ? `${program.lockedDays} days of training, unlocked when you buy this program.`
+                          : "The full schedule is unlocked when you buy this program."}
+                      </p>
+                      <p className="text-gray-500 text-sm">
+                        Every session, exercise and coach note is included.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">Schedule details will be available after enrollment.</p>
+                  )}
                 </div>
               )}
 

@@ -17,7 +17,13 @@ export async function GET(request) {
       query.goal = goal;
     }
     
-    const programs = await programsCollection.find(query).sort({ created_at: -1 }).toArray();
+    // The cards never render the schedule, and sending it here would hand out
+    // every paid program's contents in one request.
+    const programs = await programsCollection
+      .find(query)
+      .project({ schedule: 0, coach_recommendation: 0 })
+      .sort({ created_at: -1 })
+      .toArray();
     
     return NextResponse.json({ 
       success: true, 
