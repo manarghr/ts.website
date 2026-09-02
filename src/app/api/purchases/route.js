@@ -13,7 +13,7 @@ import {
   findPurchasableItem,
 } from "@/backend/utils/purchase-helpers";
 import { priceBreakdown } from "@/lib/pricing";
-import { isPaidPlan } from "@/lib/plans";
+import { hasPaidSubscription } from "@/lib/plans";
 import { getUserById } from "@/backend/utils/auth-helpers";
 
 const UNAUTHORIZED = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -44,7 +44,7 @@ export async function GET(request) {
       ? priceBreakdown({
           basePrice: item.basePrice,
           coachDiscountPercent: item.coachDiscountPercent,
-          isSubscriber: isPaidPlan(user?.selectedPlan),
+          isSubscriber: hasPaidSubscription(user),
         })
       : null;
 

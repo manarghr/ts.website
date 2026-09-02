@@ -3,14 +3,20 @@
 
 import crypto from "crypto";
 import { getCollection } from "@/lib/mongodb";
-import { isValidPlan } from "@/lib/plans";
+import { newSubscriptionFields } from "@/lib/plans";
 
 // bcryptjs is pure JS -- no native build step, so it works on Windows and on Vercel.
 import bcrypt from "bcryptjs";
 
 const BCRYPT_ROUNDS = 10;
 
-/** Fields a user is allowed to change about themselves. Anything else is ignored. */
+/**
+ * Fields a user is allowed to change about themselves. Anything else is ignored.
+ *
+ * `selectedPlan` is deliberately NOT here. It used to be, which meant a plain
+ * PUT /api/auth/profile {"selectedPlan":"annual"} granted a paid membership for
+ * free. Plan changes go through POST /api/subscription instead.
+ */
 const EDITABLE_FIELDS = [
   "fullName",
   "phone",
@@ -22,7 +28,6 @@ const EDITABLE_FIELDS = [
   "profilePicture",
   "workoutExperience",
   "sportsRating",
-  "selectedPlan",
   "privacySettings",
 ];
 
@@ -105,7 +110,9 @@ export async function createUser(userData) {
     height: toNumberOrNull(userData.height),
     workoutExperience: userData.workoutExperience || "",
     sportsRating: toNumberOrNull(userData.sportsRating),
-    selectedPlan: userData.selectedPlan || "",
+    // Picking "annual" on the signup form records the intent; it does not make
+    // them a paying member. Only a completed payment can do that.
+    ...newSubscriptionFields(userData.selectedPlan, now),
     profilePicture: userData.profilePicture || "",
     bio: userData.bio || "",
     createdAt: now,
@@ -170,14 +177,6 @@ export async function updateUser(userId, updateData) {
     if (field === "privacySettings") {
       const clean = sanitizePrivacySettings(updateData[field]);
       if (clean) patch[field] = clean;
-      continue;
-    }
-
-    // Whitelisted, but the VALUE still has to be one we offer -- otherwise a request
-    // could store any string and the profile badge would render it.
-    if (field === "selectedPlan") {
-      if (!isValidPlan(updateData[field])) throw new Error("Invalid plan");
-      patch[field] = updateData[field];
       continue;
     }
 

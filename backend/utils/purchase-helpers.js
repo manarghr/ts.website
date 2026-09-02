@@ -8,7 +8,7 @@
 
 import { getCollection } from "@/lib/mongodb";
 import { priceBreakdown, isPurchasableType } from "@/lib/pricing";
-import { isPaidPlan } from "@/lib/plans";
+import { hasPaidSubscription } from "@/lib/plans";
 import { getUserById } from "@/backend/utils/auth-helpers";
 import { notify, NOTIFICATION_TYPES } from "@/backend/utils/notification-helpers";
 
@@ -71,7 +71,7 @@ export async function createPurchase({ userId, itemType, itemId }) {
   const breakdown = priceBreakdown({
     basePrice: item.basePrice,
     coachDiscountPercent: item.coachDiscountPercent,
-    isSubscriber: isPaidPlan(user.selectedPlan),
+    isSubscriber: hasPaidSubscription(user),
   });
 
   const purchases = await getCollection("purchases");

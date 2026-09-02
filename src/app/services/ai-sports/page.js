@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import PoseOverlay from "@/components/AI/PoseOverlay";
-import { isPaidPlan } from "@/lib/plans";
+import { hasPremiumAccess } from "@/lib/plans";
 import { 
   Camera,
   Video,
@@ -39,7 +39,7 @@ export default function AISportsPage() {
   const streamRef = useRef(null);
   const [currentUser, setCurrentUser] = useState(null);
   // Premium comes from the plan on the account, checked against one shared list.
-  const hasPremium = isPaidPlan(currentUser?.selectedPlan);
+  const hasPremium = hasPremiumAccess(currentUser);
   const [repCount, setRepCount] = useState(0);
   const [formScore, setFormScore] = useState(0);
   const [workoutTime, setWorkoutTime] = useState(0);
