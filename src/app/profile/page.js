@@ -38,7 +38,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { PLANS, getPlan } from "@/lib/plans"
+import { PLANS, SUBSCRIPTION_STATUS, getPlan } from "@/lib/plans"
 
 // Animated background component
 const AnimatedBackground = () => {
@@ -364,6 +364,7 @@ export default function ProfilePage({ userId }) {
   const router = useRouter()
   const [showPlanModal, setShowPlanModal] = useState(false)
   const [savingPlan, setSavingPlan] = useState(false)
+  const [planNotice, setPlanNotice] = useState(null)
   const [showFollowModal, setShowFollowModal] = useState(null)
   const [privacySettings, setPrivacySettings] = useState({
     coaches: "public",
@@ -536,17 +537,71 @@ export default function ProfilePage({ userId }) {
     }
   }
 
-  // No payment step yet, so switching is just a flag change. When checkout exists,
-  // the paid plans route through it first and only set this on success.
+  /**
+   * What the badge says under the plan name. Picking a plan and paying for one are
+   * different things now, so the UI has to be able to say "chosen, not active".
+   */
+  const planStatusLabel = (user) => {
+    if (!user?.selectedPlan) return null
+
+    switch (user.subscriptionStatus) {
+      case SUBSCRIPTION_STATUS.ACTIVE:
+        return user.subscriptionExpiresAt
+          ? `Active until ${new Date(user.subscriptionExpiresAt).toLocaleDateString()}`
+          : "Active"
+      case SUBSCRIPTION_STATUS.PENDING:
+        return "Awaiting payment - not active yet"
+      case SUBSCRIPTION_STATUS.CANCELLED:
+        return "Cancelled"
+      default:
+        return "Not active"
+    }
+  }
+
+  // Plan changes go to /api/subscription -- PUT /api/auth/profile deliberately
+  // ignores selectedPlan now, because accepting it there was a free membership.
+  //
+  // A paid plan answers 402: the choice is recorded, nothing is granted, and the
+  // account keeps whatever access it already had. That is the honest outcome while
+  // there is no checkout, so it is shown as a notice rather than an error.
   const handleChangePlan = async (value) => {
     if (value === profileUser?.selectedPlan) {
       setShowPlanModal(false)
       return
     }
+
     setSavingPlan(true)
-    const saved = await saveProfile({ selectedPlan: value })
-    setSavingPlan(false)
-    if (saved) setShowPlanModal(false)
+    setPlanNotice(null)
+
+    try {
+      const res = await fetch("/api/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: value }),
+      })
+
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setPlanNotice({
+          paymentRequired: Boolean(data?.paymentRequired),
+          text: data?.paymentRequired
+            ? "Checkout is not connected yet, so this plan cannot be switched on. Your choice is saved and it will activate once payments go live."
+            : data?.error || "Could not change your plan. Please try again.",
+        })
+        // Even a 402 wrote the intent, so the badge has to be refreshed.
+        await loadProfile()
+        return
+      }
+
+      await loadProfile()
+      setShowPlanModal(false)
+    } catch (error) {
+      console.error("Failed to change plan:", error)
+      setPlanNotice({ paymentRequired: false, text: "Could not reach the server. Please try again." })
+    } finally {
+      setSavingPlan(false)
+    }
   }
 
   const handleSaveBio = async () => {
@@ -953,7 +1008,10 @@ export default function ProfilePage({ userId }) {
                   balance sits at the top of a dashboard. */}
               {isOwnProfile && (
                 <button
-                  onClick={() => setShowPlanModal(true)}
+                  onClick={() => {
+                    setPlanNotice(null)
+                    setShowPlanModal(true)
+                  }}
                   className="w-full text-left rounded-lg bg-slate-900 text-white px-4 py-3.5 mb-5 hover:bg-slate-800 transition-colors group"
                 >
                   <div className="text-xs uppercase tracking-wider text-white/55 font-semibold mb-1.5">
@@ -967,6 +1025,17 @@ export default function ProfilePage({ userId }) {
                       Change
                     </span>
                   </div>
+                  {planStatusLabel(profileUser) && (
+                    <div
+                      className={`mt-1.5 text-xs font-semibold ${
+                        profileUser?.subscriptionStatus === SUBSCRIPTION_STATUS.ACTIVE
+                          ? "text-emerald-300"
+                          : "text-amber-300"
+                      }`}
+                    >
+                      {planStatusLabel(profileUser)}
+                    </div>
+                  )}
                 </button>
               )}
 
@@ -1480,10 +1549,24 @@ export default function ProfilePage({ userId }) {
                               <div className="font-extrabold text-slate-800 text-lg">
                                 {getPlan(profileUser?.selectedPlan)?.title || "Not selected"}
                               </div>
+                              {planStatusLabel(profileUser) && (
+                                <div
+                                  className={`mt-1 text-xs font-bold ${
+                                    profileUser?.subscriptionStatus === SUBSCRIPTION_STATUS.ACTIVE
+                                      ? "text-emerald-600"
+                                      : "text-amber-600"
+                                  }`}
+                                >
+                                  {planStatusLabel(profileUser)}
+                                </div>
+                              )}
                             </div>
                             {isOwnProfile && (
                               <motion.button
-                                onClick={() => setShowPlanModal(true)}
+                                onClick={() => {
+                                  setPlanNotice(null)
+                                  setShowPlanModal(true)
+                                }}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className="px-4 py-2 bg-[#52796F] text-white rounded-xl hover:bg-[#354F52] transition-colors text-sm font-bold whitespace-nowrap"
@@ -2364,15 +2447,37 @@ export default function ProfilePage({ userId }) {
                         </div>
                         <p className="text-xs text-slate-600 leading-relaxed">{plan.description}</p>
                         {current && (
-                          <span className="inline-flex items-center gap-1 mt-2 text-xs font-bold text-[#52796F]">
-                            <Check className="w-3 h-3" /> Current plan
+                          <span
+                            className={`inline-flex items-center gap-1 mt-2 text-xs font-bold ${
+                              profileUser?.subscriptionStatus === SUBSCRIPTION_STATUS.ACTIVE
+                                ? "text-[#52796F]"
+                                : "text-amber-600"
+                            }`}
+                          >
+                            <Check className="w-3 h-3" />
+                            {profileUser?.subscriptionStatus === SUBSCRIPTION_STATUS.ACTIVE
+                              ? "Current plan"
+                              : "Chosen - not active yet"}
                           </span>
                         )}
                       </button>
                     )
                   })}
+                  {planNotice && (
+                    <div
+                      className={`rounded-2xl px-4 py-3 text-xs font-semibold leading-relaxed ${
+                        planNotice.paymentRequired
+                          ? "bg-amber-50 text-amber-800 border border-amber-200"
+                          : "bg-red-50 text-red-700 border border-red-200"
+                      }`}
+                    >
+                      {planNotice.text}
+                    </div>
+                  )}
+
                   <p className="text-xs text-slate-400 text-center pt-2">
-                    Payment is not set up yet, so switching applies immediately.
+                    The free trial starts straight away, once per account. Paid plans
+                    switch on after checkout, which is not connected yet.
                   </p>
                 </div>
               </motion.div>
