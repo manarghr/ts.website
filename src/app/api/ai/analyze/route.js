@@ -8,6 +8,9 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/backend/utils/session";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 // A 640x480 JPEG is ~100KB as base64. 2MB leaves generous headroom while stopping
 // someone from streaming arbitrary payloads through us to the Python server.
 const MAX_BODY_BYTES = 2 * 1024 * 1024;

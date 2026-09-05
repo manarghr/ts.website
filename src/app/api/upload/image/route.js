@@ -13,6 +13,9 @@ import {
   MAX_IMAGE_BYTES,
 } from "@/backend/utils/upload-helpers";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 export async function POST(request) {
   try {
     if (!(await getCurrentSession(request))) {

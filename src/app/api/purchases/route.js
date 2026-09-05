@@ -16,6 +16,9 @@ import { priceBreakdown } from "@/lib/pricing";
 import { hasPaidSubscription } from "@/lib/plans";
 import { getUserById } from "@/backend/utils/auth-helpers";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 const UNAUTHORIZED = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
 // GET /api/purchases                          -> everything you have bought

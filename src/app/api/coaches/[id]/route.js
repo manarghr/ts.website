@@ -9,6 +9,9 @@ import {
   getCoachRatings,
 } from '../../../../../backend/utils/db-helpers';
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 export async function GET(request, { params }) {
   try {
     const { id } = await params;

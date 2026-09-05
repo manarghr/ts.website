@@ -4,6 +4,9 @@
 import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 // GET - Get all training programs (public access)
 export async function GET(request) {
   try {

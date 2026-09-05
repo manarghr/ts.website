@@ -15,6 +15,9 @@ import {
 } from '@/backend/utils/db-helpers';
 import { notify, NOTIFICATION_TYPES } from '@/backend/utils/notification-helpers';
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 const UNAUTHORIZED = NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
 const MIN_COMMENT_LENGTH = 10;

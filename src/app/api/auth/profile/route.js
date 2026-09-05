@@ -9,6 +9,9 @@ import { NextResponse } from "next/server";
 import { updateUser } from "@/backend/utils/auth-helpers";
 import { requireUser } from "@/backend/utils/session";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 export async function PUT(request) {
   try {
     const userId = await requireUser(request);

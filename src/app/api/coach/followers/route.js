@@ -5,6 +5,9 @@ import { NextResponse } from "next/server";
 import { requireCoach } from "@/backend/utils/session";
 import { listCoachFollowers } from "@/backend/utils/db-helpers";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 export async function GET(request) {
   try {
     const coachId = await requireCoach(request);

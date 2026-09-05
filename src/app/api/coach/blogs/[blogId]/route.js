@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getCollection } from "@/lib/mongodb";
 import { getCoachIdFromSession, getCoachSessionCookieName } from "@/backend/utils/coach-auth-helpers";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 export async function PUT(request, { params }) {
   try {
     const sid = request?.cookies?.get(getCoachSessionCookieName())?.value;

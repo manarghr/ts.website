@@ -11,6 +11,9 @@ import { getCoachById } from '@/backend/utils/db-helpers';
 import { getUserById } from '@/backend/utils/auth-helpers';
 import { notify, NOTIFICATION_TYPES } from '@/backend/utils/notification-helpers';
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 const UNAUTHORIZED = NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
 // POST /api/coaches/[id]/message   { content }

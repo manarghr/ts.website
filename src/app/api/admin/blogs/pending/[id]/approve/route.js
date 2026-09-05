@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
 import { requireAdmin } from "@/backend/utils/session";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 // POST - Approve pending blog
 export async function POST(request, context) {
   // Admin-only. Without this, anyone who knew the URL could call it.

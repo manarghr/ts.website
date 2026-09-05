@@ -6,6 +6,9 @@ import { getCoaches, createCoach } from '../../../../backend/utils/db-helpers';
 import { requireAdmin } from '@/backend/utils/session';
 import { deleteCoachCascade } from '@/backend/utils/cascade-helpers';
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 // GET /api/coaches - list coaches with optional filters
 export async function GET(request) {
   try {

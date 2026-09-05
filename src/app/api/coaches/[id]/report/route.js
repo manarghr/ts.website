@@ -13,6 +13,9 @@ import {
 } from '@/backend/utils/report-helpers';
 import { getCoachById } from '@/backend/utils/db-helpers';
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 const UNAUTHORIZED = NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
 // POST /api/coaches/[id]/report   { reason, description }

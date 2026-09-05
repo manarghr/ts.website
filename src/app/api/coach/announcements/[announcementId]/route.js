@@ -3,6 +3,9 @@ import { ObjectId } from "mongodb";
 import { getCoachIdFromSession, getCoachSessionCookieName } from "@/backend/utils/coach-auth-helpers";
 import { getCollection } from "@/lib/mongodb";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 function isValidDateString(d) {
   return typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d);
 }

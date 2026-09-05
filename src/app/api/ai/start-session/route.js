@@ -4,6 +4,9 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/backend/utils/session";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 export async function POST(request) {
   try {
     if (!(await requireUser(request))) {

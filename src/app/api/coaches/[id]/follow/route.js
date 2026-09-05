@@ -11,6 +11,9 @@ import { requireUser } from '@/backend/utils/session';
 import { getUserById } from '@/backend/utils/auth-helpers';
 import { notify, NOTIFICATION_TYPES } from '@/backend/utils/notification-helpers';
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 // POST - follow or unfollow
 export async function POST(request, { params }) {
   try {

@@ -16,6 +16,9 @@ import {
   FAVORITE_TYPES,
 } from "@/backend/utils/favorites-helpers";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 const UNAUTHORIZED = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
 function badType() {

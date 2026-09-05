@@ -5,6 +5,9 @@ import { NextResponse } from "next/server";
 import { authenticateCoach, createCoachSession } from "@/backend/utils/coach-auth-helpers";
 import { setSessionCookie } from "@/backend/utils/session";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 export async function POST(request) {
   try {
     const { email, password } = await request.json();

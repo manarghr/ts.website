@@ -10,6 +10,9 @@ import { getCollection } from '@/lib/mongodb';
 import { requireUser } from '@/backend/utils/session';
 import { hasPurchased } from '@/backend/utils/purchase-helpers';
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 // What you are actually paying for. Everything else stays public so the page can
 // still sell the program: name, description, overview, price, the exercise list.
 const PAID_FIELDS = ['schedule', 'coach_recommendation'];

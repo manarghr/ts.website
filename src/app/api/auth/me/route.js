@@ -8,6 +8,9 @@ import { NextResponse } from "next/server";
 import { getUserById } from "@/backend/utils/auth-helpers";
 import { getCurrentSession, ROLES, clearSessionCookie } from "@/backend/utils/session";
 
+// Never prerendered: this route depends on the request and the database.
+export const dynamic = "force-dynamic";
+
 export async function GET(request) {
   try {
     const session = await getCurrentSession(request);
