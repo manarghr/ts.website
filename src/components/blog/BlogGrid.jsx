@@ -118,7 +118,7 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
                 {searchTerm && (
                   <span>
                     {" "}
-                    for "<strong>{searchTerm}</strong>"
+                    for &quot;<strong>{searchTerm}</strong>&quot;
                   </span>
                 )}
                 {selectedCategory !== "all" && (
@@ -255,7 +255,7 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-bold text-[#354F52] mb-2">No articles found</h3>
             <p className="text-gray-600 mb-6">
-              Try adjusting your search terms or filters to find what you're looking for.
+              Try adjusting your search terms or filters to find what you&apos;re looking for.
             </p>
             <button
               onClick={() => {

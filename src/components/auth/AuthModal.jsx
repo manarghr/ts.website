@@ -64,7 +64,6 @@ export default function AuthModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen && !prevIsOpenRef.current) {
       // Modal just opened (transitioned from false to true)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(initialFormData)
       setLoginData(initialLoginData)
       setErrors({})

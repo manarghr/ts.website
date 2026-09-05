@@ -170,7 +170,7 @@ export default function Services() {
           
           <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-medium">
             Comprehensive fitness solutions designed to help you achieve your goals, 
-            whether you're building strength, improving endurance, or recovering from injury
+            whether you&apos;re building strength, improving endurance, or recovering from injury
           </p>
         </motion.div>
 

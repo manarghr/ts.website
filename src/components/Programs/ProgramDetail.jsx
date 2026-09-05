@@ -463,7 +463,7 @@ export default function ProgramDetail({ programId }) {
 
                 {/* Access Info */}
                 <div className="mb-6 p-3 bg-white/10 rounded-lg">
-                  <div className="text-sm font-semibold mb-2">What you'll get:</div>
+                  <div className="text-sm font-semibold mb-2">What you&apos;ll get:</div>
                   <ul className="text-xs space-y-1 text-white/90">
                     <li className="flex items-center gap-2">
                       <FaCheckCircle className="text-[#6BB371] text-xs" />

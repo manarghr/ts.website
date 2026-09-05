@@ -98,7 +98,7 @@ export default function MealPost({ postId }) {
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-700 mb-2">Meal not found</h2>
-          <p className="text-gray-500 mb-4">The recipe you're looking for doesn't exist.</p>
+          <p className="text-gray-500 mb-4">The recipe you&apos;re looking for doesn&apos;t exist.</p>
           <button
             onClick={() => router.push("/services/meals")}
             className="px-6 py-3 bg-[#6BB371] text-white rounded-lg hover:bg-[#52796F] transition-colors"

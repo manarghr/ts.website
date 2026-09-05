@@ -161,7 +161,7 @@ export default function TestimonialSection() {
 
             {/* Testimonial Text */}
             <p className="text-gray-100 text-lg md:text-xl leading-relaxed mb-8 relative z-10">
-              "{currentTestimonial.text}"
+              &quot;{currentTestimonial.text}&quot;
             </p>
 
             {/* Author Info */}

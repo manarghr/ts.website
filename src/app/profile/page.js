@@ -91,15 +91,10 @@ const AnimatedBackground = () => {
       
       {/* Animated particles */}
       {particles.map((_, i) => {
-        // eslint-disable-next-line react-hooks/purity
         const size = Math.random() * 6 + 3;
-        // eslint-disable-next-line react-hooks/purity
         const posX = Math.random() * 100;
-        // eslint-disable-next-line react-hooks/purity
         const posY = Math.random() * 100;
-        // eslint-disable-next-line react-hooks/purity
         const duration = Math.random() * 15 + 8;
-        // eslint-disable-next-line react-hooks/purity
         const delay = Math.random() * -15;
         
         return (
@@ -114,7 +109,6 @@ const AnimatedBackground = () => {
             }}
             animate={{
               y: [0, 100, 0],
-              // eslint-disable-next-line react-hooks/purity
               x: [0, Math.random() * 100 - 50, 0],
               opacity: [0.1, 0.4, 0.1],
               scale: [1, 1.3, 1],

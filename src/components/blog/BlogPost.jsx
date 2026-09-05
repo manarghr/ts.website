@@ -69,7 +69,7 @@ export default function BlogPost({ postId }) {
         >
           <div className="text-6xl mb-4">😕</div>
           <h1 className="text-4xl font-bold text-[#354F52] mb-4">Blog Post Not Found</h1>
-          <p className="text-gray-600 mb-8 text-lg">Sorry, we couldn't find the article you're looking for.</p>
+          <p className="text-gray-600 mb-8 text-lg">Sorry, we couldn&apos;t find the article you&apos;re looking for.</p>
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 px-8 py-3 bg-[#52796F] text-white rounded-xl font-semibold hover:bg-[#354F52] transition-all duration-300 shadow-lg hover:shadow-xl"

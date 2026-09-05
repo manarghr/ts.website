@@ -2198,7 +2198,7 @@ export default function CoachDashboardPage() {
                                   ))
                                 ) : (
                                   <div className="text-center py-6 text-gray-400 text-sm border-2 border-dashed rounded-lg">
-                                    No schedule days added. Click "Add Day" to create a schedule.
+                                    No schedule days added. Click &quot;Add Day&quot; to create a schedule.
                                   </div>
                                 )}
                               </div>

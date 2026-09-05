@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "next lint --dir src --dir backend",
     "setup-db": "node scripts/setup-db.mjs"
   },
   "dependencies": {
@@ -16,7 +16,6 @@
     "@mediapipe/camera_utils": "^0.3.1675466862",
     "@mediapipe/drawing_utils": "^0.3.1675466124",
     "@mediapipe/pose": "^0.5.1675469404",
-    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.452.0",

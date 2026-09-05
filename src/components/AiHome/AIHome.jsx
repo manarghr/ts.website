@@ -132,7 +132,7 @@ export default function AIHome() {
           >
             {/* Decorative Elements */}
             <div className="absolute -top-10 -right-10 w-72 h-72  group-hover:scale-150 transition-transform duration-1000" style={{ background: "radial-gradient(circle, rgba(82,121,111,0.1) 0%, transparent 70%)" }}></div>
-            <div className="absolute -bottom-10 -left-10 w-64 h-64  group-hover:scale-150 transition-transform duration-1000" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.1) 0%, transparent 70%)" }} style={{ transitionDelay: '0.2s' }}></div>
+            <div className="absolute -bottom-10 -left-10 w-64 h-64  group-hover:scale-150 transition-transform duration-1000" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.1) 0%, transparent 70%)", transitionDelay: '0.2s' }}></div>
             
             {/* Image Container */}
             <div className="relative">

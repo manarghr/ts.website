@@ -1986,7 +1986,7 @@ const updateSection = (index, field, value) => {
                       </div>
                       {meals.length === 0 && (
                         <div className="text-center py-12 text-gray-500">
-                          No meals found. Click "Add Meal" to create your first meal.
+                          No meals found. Click &quot;Add Meal&quot; to create your first meal.
                         </div>
                       )}
                     </div>
@@ -2652,7 +2652,7 @@ const updateSection = (index, field, value) => {
                       </div>
                       {blogs.length === 0 && (
                         <div className="text-center py-12 text-gray-500">
-                          No blogs found. Click "Add Blog" to create your first blog post.
+                          No blogs found. Click &quot;Add Blog&quot; to create your first blog post.
                         </div>
                       )}
                     </div>
@@ -3330,7 +3330,7 @@ const updateSection = (index, field, value) => {
                                   ))
                                 ) : (
                                   <div className="text-center py-6 text-gray-400 text-sm border-2 border-dashed rounded-lg">
-                                    No schedule days added. Click "Add Day" to create a schedule.
+                                    No schedule days added. Click &quot;Add Day&quot; to create a schedule.
                                   </div>
                                 )}
                               </div>
