@@ -1,66 +1,65 @@
-// Backend Health Check API
+// Backend health check
 // File: src/app/api/health/route.js
+//
+// Two audiences, two answers.
+//
+// Anyone may ask whether the site is up -- uptime monitors and load balancers
+// need that, and it has to work without credentials. They get a bare status and
+// the right code: 200 healthy, 503 not.
+//
+// Everything useful for debugging is also everything useful for reconnaissance:
+// the database name, the list of collections, which env vars are set, and raw
+// driver errors. That used to be public. It now requires an admin session.
 
-import { NextResponse } from 'next/server';
-import { testConnection, getDatabase } from '@/lib/mongodb';
+import { NextResponse } from "next/server";
+import { requireAdmin } from "@/backend/utils/session";
+import { testConnection, getDatabase } from "@/lib/mongodb";
 
-export async function GET() {
+// Reads the session cookie, so it can never be statically rendered.
+export const dynamic = "force-dynamic";
+
+export async function GET(request) {
+  const timestamp = new Date().toISOString();
+
+  // Ask the admin question first: if the ping throws, we still need to know
+  // whether this caller is allowed to see why.
+  const isAdmin = Boolean(await requireAdmin(request).catch(() => null));
+
+  let connected = false;
+  let failure = null;
+
   try {
-    const health = {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      services: {}
-    };
-
-    // Test MongoDB connection
-    try {
-      const isConnected = await testConnection();
-      health.services.mongodb = {
-        status: isConnected ? 'connected' : 'disconnected',
-        message: isConnected ? 'MongoDB connection successful' : 'MongoDB connection failed'
-      };
-
-      if (isConnected) {
-        const db = await getDatabase();
-        const dbName = db.databaseName;
-        const collections = await db.listCollections().toArray();
-        
-        health.services.mongodb.database = dbName;
-        health.services.mongodb.collections = collections.map(c => c.name);
-        health.services.mongodb.collectionCount = collections.length;
-      }
-    } catch (error) {
-      health.services.mongodb = {
-        status: 'error',
-        message: error.message,
-        error: error.message.includes('timed out') 
-          ? 'Connection timeout - check if MongoDB is running'
-          : error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')
-          ? 'Cannot reach MongoDB server - check MONGODB_URI'
-          : 'Unknown error'
-      };
-    }
-
-    // Check environment variables
-    health.config = {
-      mongodbUri: !!process.env.MONGODB_URI ? 'configured' : 'missing',
-      mongodbDb: process.env.MONGODB_DB || 'trainsight (default)',
-      nodeEnv: process.env.NODE_ENV || 'development'
-    };
-
-    const allServicesOk = health.services.mongodb?.status === 'connected';
-    const statusCode = allServicesOk ? 200 : 503;
-
-    return NextResponse.json(health, { status: statusCode });
+    connected = await testConnection();
   } catch (error) {
-    return NextResponse.json(
-      {
-        status: 'error',
-        message: error.message,
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
+    failure = error?.message || "Unknown error";
   }
-}
 
+  const status = connected ? "ok" : "error";
+  const httpStatus = connected ? 200 : 503;
+
+  if (!isAdmin) {
+    return NextResponse.json({ status, timestamp }, { status: httpStatus });
+  }
+
+  const detail = {
+    database: process.env.MONGODB_DB || "trainsight (default)",
+    nodeEnv: process.env.NODE_ENV || "development",
+    mongodbUri: process.env.MONGODB_URI ? "configured" : "missing",
+  };
+
+  if (connected) {
+    try {
+      const db = await getDatabase();
+      const collections = await db.listCollections().toArray();
+      detail.database = db.databaseName;
+      detail.collections = collections.map((c) => c.name);
+      detail.collectionCount = collections.length;
+    } catch (error) {
+      detail.collectionsError = error?.message || "Could not list collections";
+    }
+  } else if (failure) {
+    detail.error = failure;
+  }
+
+  return NextResponse.json({ status, timestamp, mongodb: detail }, { status: httpStatus });
+}
