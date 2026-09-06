@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/components/auth/AuthProvider"
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -138,6 +140,7 @@ const defaultImages = [
 ];
 
 export default function CoachProfile({ coachId }) {
+  const { user: authUser } = useAuth();
   const router = useRouter();
   const [coach, setCoach] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -169,27 +172,18 @@ export default function CoachProfile({ coachId }) {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  // Who is signed in comes from the auth provider, which asks the server.
   useEffect(() => {
-    // Check if user is logged in
-    if (typeof window !== "undefined") {
-      const user = localStorage.getItem("trainsight_current_user");
-      if (user) {
-        setCurrentUser(JSON.parse(user));
-      }
-    }
+    setCurrentUser(authUser);
+  }, [authUser]);
 
+  useEffect(() => {
     fetchCoachData();
     checkFollowStatus();
     
     // Listen for storage changes and user updates
     const handleStorageChange = () => {
       checkFollowStatus();
-      const user = localStorage.getItem("trainsight_current_user");
-      if (user) {
-        setCurrentUser(JSON.parse(user));
-      } else {
-        setCurrentUser(null);
-      }
     };
     
     window.addEventListener("storage", handleStorageChange);

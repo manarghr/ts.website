@@ -167,13 +167,9 @@ export default function CoachAuthModal({ isOpen, onClose }) {
       );
       setShowSuccess(true);
 
-      // Coaches and users cannot be logged in at the same time
-      try {
-        localStorage.removeItem("trainsight_current_user");
-        window.dispatchEvent(new Event("userLoggedOut"));
-      } catch {
-        // ignore
-      }
+      // Coaches and users cannot be signed in at the same time. One cookie means
+      // the server has already ended the user session; this just tells the UI.
+      window.dispatchEvent(new Event("userLoggedOut"));
       window.dispatchEvent(new Event("coachSessionUpdated"));
 
       // Reset form

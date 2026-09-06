@@ -255,11 +255,9 @@ export default function ProfilePage({ userId }) {
     if (loggingOut) return;
     setLoggingOut(true);
 
-    // Clear the local copy and repaint the navbar first, so the click feels
-    // instant. The request below is what actually ends the session -- clearing
-    // localStorage alone left the cookie valid for its full 30 days, and on a
-    // shared computer the next person opening /profile was still signed in as you.
-    localStorage.removeItem("trainsight_current_user");
+    // Repaint the navbar first so the click feels instant. The request below is
+    // what actually ends the session: the cookie is what keeps you signed in, and
+    // on a shared computer it stayed valid for its full 30 days without it.
     window.dispatchEvent(new Event("userLoggedOut"));
 
     try {
@@ -521,7 +519,7 @@ export default function ProfilePage({ userId }) {
 
       setCurrentUser(data.user)
       setProfileUser((prev) => ({ ...prev, ...data.user }))
-      localStorage.setItem("trainsight_current_user", JSON.stringify(data.user))
+      // Tells the navbar to re-read the profile from the server.
       window.dispatchEvent(new Event("userUpdated"))
       return true
     } catch (error) {

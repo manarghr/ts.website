@@ -1,4 +1,5 @@
 import "./globals.css";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Montserrat, Inter } from "next/font/google";
 
 const montserrat = Montserrat({
@@ -27,7 +28,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${montserrat.variable} ${inter.variable}`}>
-      <body className="font-inter">{children}</body>
+      <body className="font-inter">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

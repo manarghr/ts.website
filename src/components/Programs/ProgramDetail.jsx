@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/components/auth/AuthProvider"
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
@@ -17,6 +19,7 @@ import {
 } from "react-icons/fa";
 
 export default function ProgramDetail({ programId }) {
+  const { user: authUser } = useAuth();
   const [program, setProgram] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,21 +36,11 @@ export default function ProgramDetail({ programId }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
-  // Check if user is logged in
+  // Who is signed in comes from the auth provider, which asks the server.
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const user = localStorage.getItem("trainsight_current_user");
-      if (user) {
-        try {
-          const userData = JSON.parse(user);
-          setCurrentUser(userData);
-          setIsLoggedIn(true);
-        } catch (err) {
-          console.error("Error parsing user data:", err);
-        }
-      }
-    }
-  }, []);
+    setCurrentUser(authUser);
+    setIsLoggedIn(Boolean(authUser));
+  }, [authUser]);
 
   useEffect(() => {
     const fetchProgram = async () => {

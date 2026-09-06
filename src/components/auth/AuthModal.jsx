@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { X, Mail, Lock, User, Phone, Calendar, Dumbbell, Upload, Camera, AlertCircle, Users, Star, Gift, Trophy, Zap, Edit, CreditCard, Globe, Hash, CheckCircle2 } from "lucide-react"
+import { useAuth } from "@/components/auth/AuthProvider"
 
 const initialFormData = {
   fullName: "",
@@ -30,6 +31,7 @@ const initialLoginData = {
 }
 
 export default function AuthModal({ isOpen, onClose }) {
+  const { signedInAsUser } = useAuth()
   const [activeTab, setActiveTab] = useState("signup")
   const [formData, setFormData] = useState(initialFormData)
   const [loginData, setLoginData] = useState(initialLoginData)
@@ -225,12 +227,11 @@ export default function AuthModal({ isOpen, onClose }) {
   // Signup + login both go through the API. There is no localStorage fallback any
   // more: if the database is unreachable we say so instead of pretending it worked.
   //
-  // The session itself lives in an httpOnly cookie set by the server. The copy we
-  // keep in localStorage is ONLY a UI cache so the navbar can render instantly --
-  // it is never trusted for permissions.
+  // The session itself lives in an httpOnly cookie set by the server. Telling the
+  // auth provider directly repaints the navbar immediately; there is no second
+  // copy of the user to go stale or be edited from devtools.
   const cacheUserAndNotify = (user) => {
-    localStorage.setItem("trainsight_current_user", JSON.stringify(user))
-    localStorage.removeItem("currentCoach")
+    signedInAsUser(user)
     window.dispatchEvent(new Event("coachLoggedOut"))
     window.dispatchEvent(new Event("userUpdated"))
   }
