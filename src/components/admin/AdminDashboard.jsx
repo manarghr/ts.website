@@ -29,6 +29,7 @@ import {
 import { motion } from "framer-motion"
 import { useToast } from "@/components/ui/ToastProvider"
 import { useConfirm } from "@/components/ui/ConfirmProvider"
+import SafeImage from "@/components/ui/SafeImage"
 
 export default function AdminDashboard({ onLogout }) {
   const toast = useToast()
@@ -1473,10 +1474,11 @@ const updateSection = (index, field, value) => {
                           >
                             <div className="h-48 bg-gradient-to-br from-blue-400 to-purple-500 relative">
                               {coach.image_url ? (
-                                <img
-                                  src={coach.image_url || "/placeholder.svg"}
-                                  alt={coach.name}
-                                  className="w-full h-full object-cover"
+                                <SafeImage
+                                  src={coach.image_url}
+                                  alt={coach.name || "Coach"}
+                                  className="object-cover"
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-white text-4xl font-bold">
@@ -1598,10 +1600,11 @@ const updateSection = (index, field, value) => {
                                 </div>
                                 {(coachImagePreview || coachForm.image_url) && (
                                   <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200">
-                                    <img
+                                    <SafeImage
                                       src={coachImagePreview || coachForm.image_url}
-                                      alt="Preview"
-                                      className="w-full h-full object-cover"
+                                      alt="Coach image preview"
+                                      className="object-cover"
+                                      sizes="(max-width: 768px) 100vw, 32rem"
                                     />
                                     <button
                                       type="button"
@@ -1684,11 +1687,14 @@ const updateSection = (index, field, value) => {
                             className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all"
                           >
                             {video.thumbnail_url && (
-                              <img
-                                src={video.thumbnail_url || "/placeholder.svg"}
-                                alt={video.title}
-                                className="w-full h-48 object-cover"
-                              />
+                              <div className="relative w-full h-48">
+                                <SafeImage
+                                  src={video.thumbnail_url}
+                                  alt={video.title || "Video thumbnail"}
+                                  className="object-cover"
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                                />
+                              </div>
                             )}
                             <div className="p-4">
                               <h3 className="font-bold text-lg mb-2">{video.title}</h3>
@@ -1814,10 +1820,11 @@ const updateSection = (index, field, value) => {
                                 </div>
                                 {(videoThumbnailPreview || videoForm.thumbnail_url) && (
                                   <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200">
-                                    <img
+                                    <SafeImage
                                       src={videoThumbnailPreview || videoForm.thumbnail_url}
-                                      alt="Preview"
-                                      className="w-full h-full object-cover"
+                                      alt="Thumbnail preview"
+                                      className="object-cover"
+                                      sizes="(max-width: 768px) 100vw, 32rem"
                                     />
                                     <button
                                       type="button"
@@ -1975,11 +1982,12 @@ const updateSection = (index, field, value) => {
                               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-200"
                             >
                               {meal.image && (
-                                <div className="h-48 overflow-hidden">
-                                  <img
-                                    src={meal.image || "/placeholder.svg"}
-                                    alt={meal.name}
-                                    className="w-full h-full object-cover"
+                                <div className="relative h-48 overflow-hidden">
+                                  <SafeImage
+                                    src={meal.image}
+                                    alt={meal.name || "Meal"}
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                                   />
                                 </div>
                               )}
@@ -2639,14 +2647,13 @@ const updateSection = (index, field, value) => {
                               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all border border-gray-200"
                             >
                               {blog.image && (
-                                <div className="h-48 overflow-hidden">
-                                  <img
+                                <div className="relative h-48 overflow-hidden">
+                                  <SafeImage
                                     src={blog.image}
-                                    alt={blog.title}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      e.target.src = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800';
-                                    }}
+                                    alt={blog.title || "Blog image"}
+                                    className="object-cover"
+                                    fallbackSrc="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800"
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                                   />
                                 </div>
                               )}
@@ -2899,14 +2906,13 @@ const updateSection = (index, field, value) => {
                                 >
                                   <div className="flex gap-6">
                                     {blog.image && (
-                                      <div className="w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
-                                        <img
+                                      <div className="relative w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                                        <SafeImage
                                           src={blog.image}
-                                          alt={blog.title}
-                                          className="w-full h-full object-cover"
-                                          onError={(e) => {
-                                            e.target.src = 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800';
-                                          }}
+                                          alt={blog.title || "Blog image"}
+                                          className="object-cover"
+                                          fallbackSrc="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800"
+                                          sizes="12rem"
                                         />
                                       </div>
                                     )}

@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 
+import { OPTIMIZED_IMAGE_HOSTS } from "./src/lib/image-hosts.mjs";
+
 const isDev = process.env.NODE_ENV !== "production";
 
 // Content-Security-Policy, written as data so each source has a reason next to it.
@@ -18,14 +20,13 @@ const csp = {
   "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
   "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
   // blob:/data: cover the pose canvas and camera frames drawn client-side.
+  // Same allowlist the image optimizer uses -- a host added there but not here
+  // would be resized by /_next/image and then blocked by CSP in the browser.
   "img-src": [
     "'self'",
     "data:",
     "blob:",
-    "https://images.unsplash.com",
-    "https://plus.unsplash.com",
-    "https://img.youtube.com",
-    "https://via.placeholder.com",
+    ...OPTIMIZED_IMAGE_HOSTS.map((hostname) => `https://${hostname}`),
   ],
   "media-src": ["'self'", "blob:"],
   // jsdelivr is fetched, not just scripted: MediaPipe pulls its .wasm and model
@@ -79,13 +80,12 @@ const nextConfig = {
     // here. When uploads move to Cloudinary/S3, add that hostname below.
     //
     // An image from a host that is not listed will not render -- that is the
-    // point. Add the host here rather than widening the pattern.
-    remotePatterns: [
-      { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "plus.unsplash.com" },
-      { protocol: "https", hostname: "img.youtube.com" },
-      { protocol: "https", hostname: "via.placeholder.com" },
-    ],
+    // point. Add the host to src/lib/image-hosts.mjs rather than widening the
+    // pattern; SafeImage reads the same list, so the two cannot drift apart.
+    remotePatterns: OPTIMIZED_IMAGE_HOSTS.map((hostname) => ({
+      protocol: "https",
+      hostname,
+    })),
   },
 
   async headers() {
