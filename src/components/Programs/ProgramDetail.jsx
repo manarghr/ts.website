@@ -17,8 +17,12 @@ import {
   FaClock,
   FaLock
 } from "react-icons/fa";
+import { useToast } from "@/components/ui/ToastProvider";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 export default function ProgramDetail({ programId }) {
+  const toast = useToast();
+  const confirm = useConfirm();
   const { user: authUser } = useAuth();
   const [program, setProgram] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -116,7 +120,13 @@ export default function ProgramDetail({ programId }) {
 
   const handleEnroll = async () => {
     if (!isLoggedIn || !currentUser) {
-      const proceed = confirm('You need to be logged in to enroll in this program. Would you like to login now?');
+      const proceed = await confirm({
+        title: 'Log in to enroll',
+        message: `You need an account to enroll in "${program?.name ?? 'this program'}". Would you like to log in now?`,
+        confirmText: 'Log in',
+        cancelText: 'Not now',
+        danger: false,
+      });
       if (proceed) router.push('/?auth=login');
       return;
     }
@@ -147,10 +157,10 @@ export default function ProgramDetail({ programId }) {
 
       setOwned(true);
       setRefreshKey((key) => key + 1);
-      alert(`You now have access to "${program.name}".`);
+      toast.success(`You now have access to "${program.name}".`, { title: "You're enrolled" });
     } catch (err) {
       console.error('Error enrolling:', err);
-      alert(err.message || 'Error enrolling in program. Please try again.');
+      toast.error(err.message || 'Could not complete enrollment. Please try again.');
     } finally {
       setEnrolling(false);
     }

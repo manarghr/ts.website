@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import MainLayout from "@/components/layout/MainLayout";
 import Image from "next/image";
 import { Activity, Camera, Dumbbell, ExternalLink, Flame, Sparkles, Trophy, Plus, Trash2, X, User, Megaphone, FileText, Video, MessageSquare, Mail, Wallet, TrendingUp, ShoppingBag, Bell, Star, UserPlus, LayoutGrid } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 function fmtErr(e) {
   if (!e) return "Unknown error";
@@ -14,6 +16,8 @@ function fmtErr(e) {
 }
 
 export default function CoachDashboardPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [coachId, setCoachId] = useState(null);
@@ -141,12 +145,12 @@ export default function CoachDashboardPage() {
     if (!file) return;
 
     if (!file.type?.startsWith("image/")) {
-      alert("Please upload an image file");
+      toast.error("Please choose an image file.");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image size should be less than 5MB");
+      toast.error("That image is too large. Maximum size is 5MB.");
       return;
     }
 
@@ -158,7 +162,7 @@ export default function CoachDashboardPage() {
       if (!res.ok || !data?.success) throw new Error(data.error || "Failed to upload image");
       setImageUrl(data.imageUrl || "");
     } catch (err) {
-      alert(err?.message || "Failed to upload image");
+      toast.error(err?.message || "Could not upload that image.");
     }
   };
 
@@ -169,13 +173,13 @@ export default function CoachDashboardPage() {
     // Validate file type
     const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
     if (!validTypes.includes(file.type)) {
-      alert("Please upload a video file (MP4, WebM, OGG, MOV, or AVI)");
+      toast.error("Please choose a video file: MP4, WebM, OGG, MOV, or AVI.");
       return;
     }
 
     // Validate file size (max 500MB)
     if (file.size > 500 * 1024 * 1024) {
-      alert("Video size should be less than 500MB");
+      toast.error("That video is too large. Maximum size is 500MB.");
       return;
     }
 
@@ -193,7 +197,7 @@ export default function CoachDashboardPage() {
       setVideoUploadProgress("Video uploaded successfully!");
       setTimeout(() => setVideoUploadProgress(""), 3000);
     } catch (err) {
-      alert(err?.message || "Failed to upload video");
+      toast.error(err?.message || "Could not upload that video.");
       setVideoUploadProgress("");
       setVideoFile(null);
     } finally {
@@ -366,7 +370,12 @@ export default function CoachDashboardPage() {
   };
 
   const clearAllNotifications = async () => {
-    if (!confirm("Clear all notifications?")) return;
+    const proceed = await confirm({
+      title: "Clear all notifications?",
+      message: "This removes every notification from your inbox. It cannot be undone.",
+      confirmText: "Clear all",
+    });
+    if (!proceed) return;
     const previous = notifications;
     setNotifications([]);
     setUnreadNotifs(0);
@@ -556,7 +565,12 @@ export default function CoachDashboardPage() {
 
   const deleteAnnouncement = async (id) => {
     if (!id) return;
-    if (!confirm("Delete this announcement?")) return;
+    const proceed = await confirm({
+      title: "Delete this announcement?",
+      message: "Your followers will no longer see it. This cannot be undone.",
+      confirmText: "Delete",
+    });
+    if (!proceed) return;
     setAnnSaving(true);
     setErr("");
     try {
@@ -686,7 +700,12 @@ export default function CoachDashboardPage() {
   };
   const deleteProgram = async (id) => {
     if (!id) return;
-    if (!confirm("Delete this program?")) return;
+    const proceed = await confirm({
+      title: "Delete this program?",
+      message: "The program is removed from your profile. Athletes who already bought it keep their access.",
+      confirmText: "Delete program",
+    });
+    if (!proceed) return;
     setProgramSaving(true);
     setErr("");
     try {
@@ -705,7 +724,7 @@ export default function CoachDashboardPage() {
   const handleAddBlog = async (e) => {
     e.preventDefault();
     if (!blogForm.title || !blogForm.excerpt) {
-      alert("Title and excerpt are required");
+      toast.warning("Add a title and an excerpt before submitting.");
       return;
     }
     setBlogSaving(true);
@@ -727,7 +746,7 @@ export default function CoachDashboardPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      alert(data.message || "Blog submitted for review. It will be published after admin approval.");
+      toast.success(data.message || "It will be published once an admin approves it.", { title: "Submitted for review" });
       setShowBlogForm(false);
       setBlogForm({
         id: "",
@@ -743,7 +762,7 @@ export default function CoachDashboardPage() {
       await loadBlogs();
     } catch (e) {
       setErr(fmtErr(e));
-      alert(fmtErr(e));
+      toast.error(fmtErr(e));
     } finally {
       setBlogSaving(false);
     }
@@ -784,7 +803,12 @@ export default function CoachDashboardPage() {
 
   const deleteBlog = async (id) => {
     if (!id) return;
-    if (!confirm("Delete this blog post?")) return;
+    const proceed = await confirm({
+      title: "Delete this blog post?",
+      message: "This permanently removes the post and its content.",
+      confirmText: "Delete post",
+    });
+    if (!proceed) return;
     setBlogSaving(true);
     setErr("");
     try {
@@ -799,7 +823,7 @@ export default function CoachDashboardPage() {
       await loadBlogs();
     } catch (e) {
       setErr(fmtErr(e));
-      alert(fmtErr(e));
+      toast.error(fmtErr(e));
     } finally {
       setBlogSaving(false);
     }
@@ -808,11 +832,11 @@ export default function CoachDashboardPage() {
   // -------- Videos CRUD --------
   const createVideo = async () => {
     if (!videoUrl) {
-      alert("Please upload a video file first");
+      toast.warning("Upload a video file first.");
       return;
     }
     if (!videoTitle.trim()) {
-      alert("Please enter a video title");
+      toast.warning("Give the video a title.");
       return;
     }
     setVideoSaving(true);
@@ -878,7 +902,12 @@ export default function CoachDashboardPage() {
   };
   const deleteVideo = async (id) => {
     if (!id) return;
-    if (!confirm("Delete this video?")) return;
+    const proceed = await confirm({
+      title: "Delete this video?",
+      message: "This permanently removes the video from your library.",
+      confirmText: "Delete video",
+    });
+    if (!proceed) return;
     setVideoSaving(true);
     setErr("");
     try {
@@ -2686,11 +2715,11 @@ export default function CoachDashboardPage() {
                                         if (!file) return;
                                         const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
                                         if (!validTypes.includes(file.type)) {
-                                          alert("Please upload a video file (MP4, WebM, OGG, MOV, or AVI)");
+                                          toast.error("Please choose a video file: MP4, WebM, OGG, MOV, or AVI.");
                                           return;
                                         }
                                         if (file.size > 500 * 1024 * 1024) {
-                                          alert("Video size should be less than 500MB");
+                                          toast.error("That video is too large. Maximum size is 500MB.");
                                           return;
                                         }
                                         setVideoUploading(true);
@@ -2701,9 +2730,9 @@ export default function CoachDashboardPage() {
                                           const data = await res.json().catch(() => ({}));
                                           if (!res.ok || !data?.success) throw new Error(data.error || "Failed to upload video");
                                           setVideoDraft((d) => ({ ...d, video_url: data.videoUrl || "" }));
-                                          alert("Video uploaded successfully!");
+                                          toast.success("Video uploaded.");
                                         } catch (err) {
-                                          alert(err?.message || "Failed to upload video");
+                                          toast.error(err?.message || "Could not upload that video.");
                                         } finally {
                                           setVideoUploading(false);
                                         }

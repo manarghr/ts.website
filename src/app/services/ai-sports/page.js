@@ -26,8 +26,10 @@ import {
   Heart,
   AlertCircle
 } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function AISportsPage() {
+  const toast = useToast();
   const [isVisible, setIsVisible] = useState({});
   const sectionRefs = useRef({});
   const [cameraActive, setCameraActive] = useState(false);
@@ -844,7 +846,7 @@ export default function AISportsPage() {
     try {
       // Check if mediaDevices is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert("Camera access is not supported in this browser. Please use Chrome, Firefox, or Edge.");
+        toast.error("This browser cannot access the camera. Try Chrome, Firefox, or Edge.", { title: "Camera unavailable" });
         return;
       }
 
@@ -883,7 +885,7 @@ export default function AISportsPage() {
         errorMessage += "Please check your camera settings and try again.";
       }
       
-      alert(errorMessage);
+      toast.error(errorMessage, { title: "Camera error" });
     }
   };
 
@@ -1027,7 +1029,7 @@ export default function AISportsPage() {
 
   const handlePlaylistClick = (playlist) => {
     if (!playlist.isFree && !hasPremium) {
-      alert("This playlist requires a premium subscription. Please upgrade to access.");
+      toast.warning("This playlist is part of the premium plan. Upgrade to unlock it.", { title: "Premium only" });
       return;
     }
     setSelectedPlaylist(playlist);

@@ -19,8 +19,10 @@ import {
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function MealPost({ postId }) {
+  const toast = useToast();
   const router = useRouter();
   const [meal, setMeal] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -79,7 +81,7 @@ export default function MealPost({ postId }) {
 
       if (res.status === 401) {
         setIsFavorite(!next);
-        alert("Please login to save meals");
+        toast.error("Please log in to save meals.");
         return;
       }
       if (!res.ok) throw new Error("Request failed");
@@ -88,7 +90,7 @@ export default function MealPost({ postId }) {
     } catch (error) {
       console.error("Failed to update saved meal:", error);
       setIsFavorite(!next);
-      alert("Could not save this meal. Please try again.");
+      toast.error("Could not save this meal. Please try again.");
     }
   };
 

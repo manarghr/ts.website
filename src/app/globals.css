@@ -268,3 +268,22 @@ html {
   animation: sporty-float 8s ease-in-out infinite;
 }
 
+
+/* Respect the operating system's "reduce motion" setting.
+   This site animates almost everything -- floats, fades, slides, parallax. For
+   a user with a vestibular disorder that is not decoration, it is a symptom
+   trigger, and the OS toggle is how they say so. framer-motion components read
+   the same preference through useReducedMotion(); this covers the CSS keyframe
+   animations and transitions it cannot see.
+   Durations collapse to ~0 rather than to `none` so that animationend/
+   transitionend listeners still fire and nothing waits forever on a callback. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

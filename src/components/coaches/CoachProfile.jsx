@@ -19,6 +19,8 @@ import {
   FaChevronLeft,
   FaPlay,
 } from "react-icons/fa";
+import { useToast } from "@/components/ui/ToastProvider";
+import { useConfirm } from "@/components/ui/ConfirmProvider";
 
 // --- Modal components ---
 function MessageModalContent({ onSend, onClose, onNotify }) {
@@ -140,6 +142,8 @@ const defaultImages = [
 ];
 
 export default function CoachProfile({ coachId }) {
+  const toast = useToast();
+  const confirm = useConfirm();
   const { user: authUser } = useAuth();
   const router = useRouter();
   const [coach, setCoach] = useState(null);
@@ -151,7 +155,6 @@ export default function CoachProfile({ coachId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const [toast, setToast] = useState(null);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -163,14 +166,11 @@ export default function CoachProfile({ coachId }) {
     Yoga: <FaLeaf />,
   };
 
-  const notify = (text, tone = "success") => setToast({ text, tone });
-
-  // Clears itself. Errors linger a little longer -- they are worth reading twice.
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), toast.tone === "error" ? 6000 : 3500);
-    return () => clearTimeout(timer);
-  }, [toast]);
+  // Kept as notify(text, tone) so every existing call site reads the same; the
+  // stacking, timing and screen-reader announcement now come from the shared
+  // provider instead of a copy that only this page had.
+  const notify = (text, tone = "success") =>
+    tone === "error" ? toast.error(text) : toast.success(text);
 
   // Who is signed in comes from the auth provider, which asks the server.
   useEffect(() => {
@@ -387,9 +387,12 @@ export default function CoachProfile({ coachId }) {
       return;
     }
 
-    if (!confirm("Are you sure you want to delete your review?")) {
-      return;
-    }
+    const proceed = await confirm({
+      title: "Delete your review?",
+      message: "This removes your rating and comment from this coach's profile. You can write a new one later.",
+      confirmText: "Delete review",
+    });
+    if (!proceed) return;
 
     try {
       // No body -- the server deletes the signed-in user's own review.
@@ -445,28 +448,6 @@ export default function CoachProfile({ coachId }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-[#C8CDC5]/10 to-white">
-      {/* Replaces window.alert(): a browser dialog steals focus, blocks the page and
-          looks nothing like the site. This slides in and leaves on its own. */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-[100] animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <div
-            className={`flex items-start gap-3 max-w-sm px-5 py-4 rounded-2xl shadow-2xl text-white ${
-              toast.tone === "error" ? "bg-red-600" : "bg-[#354F52]"
-            }`}
-          >
-            <span className="mt-0.5 shrink-0">{toast.tone === "error" ? "⚠" : "✓"}</span>
-            <p className="font-semibold leading-snug">{toast.text}</p>
-            <button
-              onClick={() => setToast(null)}
-              className="ml-2 shrink-0 text-white/60 hover:text-white transition-colors"
-              aria-label="Dismiss"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Header with Back Button */}
       <div className="bg-[#354F52] text-white py-4">
         <div className="max-w-7xl mx-auto px-6 md:px-12">

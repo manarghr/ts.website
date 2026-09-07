@@ -27,8 +27,12 @@ import {
   User,
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { useToast } from "@/components/ui/ToastProvider"
+import { useConfirm } from "@/components/ui/ConfirmProvider"
 
 export default function AdminDashboard({ onLogout }) {
+  const toast = useToast()
+  const confirm = useConfirm()
   const [activeSection, setActiveSection] = useState("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [users, setUsers] = useState([])
@@ -215,13 +219,13 @@ export default function AdminDashboard({ onLogout }) {
     // Validate file type
     const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
     if (!validTypes.includes(file.type)) {
-      alert("Invalid file type. Please upload an image (JPEG, PNG, GIF, or WebP).")
+      toast.error("Please choose a JPEG, PNG, GIF, or WebP image.")
       return null
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size too large. Maximum size is 5MB.")
+      toast.error("That image is too large. Maximum size is 5MB.")
       return null
     }
 
@@ -245,12 +249,12 @@ export default function AdminDashboard({ onLogout }) {
       if (data.success) {
         return data.imageUrl
       } else {
-        alert(data.error || "Failed to upload image")
+        toast.error(data.error || "Could not upload that image.")
         return null
       }
     } catch (error) {
       console.error("Error uploading image:", error)
-      alert("Failed to upload image. Please try again.")
+      toast.error("Could not upload that image. Please try again.")
       return null
     } finally {
       if (type === "coach") {
@@ -345,7 +349,11 @@ export default function AdminDashboard({ onLogout }) {
   }
 
   const handleDeleteCoach = async (id) => {
-    if (!confirm("Are you sure you want to delete this coach?")) return
+    if (!(await confirm({
+      title: "Delete this coach?",
+      message: "This removes the coach and their profile from the site. It cannot be undone.",
+      confirmText: "Delete coach",
+    }))) return
     try {
       const res = await fetch(`/api/coaches?id=${id}`, { method: "DELETE" })
       const data = await res.json()
@@ -417,7 +425,11 @@ export default function AdminDashboard({ onLogout }) {
   }
 
   const handleDeleteVideo = async (id) => {
-    if (!confirm("Are you sure you want to delete this video?")) return
+    if (!(await confirm({
+      title: "Delete this video?",
+      message: "This permanently removes the video from the library.",
+      confirmText: "Delete video",
+    }))) return
     try {
       const res = await fetch(`/api/admin/videos?id=${id}`, { method: "DELETE" })
       const data = await res.json()
@@ -436,17 +448,17 @@ const handleAddMeal = async (e) => {
   try {
     // Validation
     if (!mealForm.name || !mealForm.mealType) {
-      alert("Name and meal type are required");
+      toast.warning("A name and a meal type are required.");
       return;
     }
 
     if (!mealForm.prepTime || parseInt(mealForm.prepTime) <= 0) {
-      alert("Prep time must be a positive number greater than 0");
+      toast.warning("Prep time must be greater than 0.");
       return;
     }
 
     if (!mealForm.servings || parseInt(mealForm.servings) <= 0) {
-      alert("Servings must be a positive number greater than 0");
+      toast.warning("Servings must be greater than 0.");
       return;
     }
 
@@ -493,7 +505,7 @@ const handleAddMeal = async (e) => {
     
     if (data.success) {
       console.log("Meal added successfully!");
-      alert("Meal added successfully!");
+      toast.success("Meal added.");
       
       // Reset form
       setShowMealForm(false);
@@ -530,14 +542,14 @@ const handleAddMeal = async (e) => {
       fetchData();
     } else {
       console.error("Error from API:", data.error);
-      alert(`Error: ${data.error || 'Failed to add meal'}`);
+      toast.error(data.error || 'Could not add that meal.');
     }
   } catch (error) {
     console.error("=== Error adding meal ===");
     console.error("Error:", error);
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
-    alert(`Failed to add meal: ${error.message}`);
+    toast.error(`Could not add that meal: ${error.message}`);
   }
 };
 
@@ -551,17 +563,17 @@ const handleUpdateMeal = async (e) => {
   try {
     // Validation
     if (!editingItem || !editingItem.id) {
-      alert("No meal selected for editing");
+      toast.warning("No meal is selected for editing.");
       return;
     }
 
     if (!mealForm.prepTime || parseInt(mealForm.prepTime) <= 0) {
-      alert("Prep time must be a positive number greater than 0");
+      toast.warning("Prep time must be greater than 0.");
       return;
     }
 
     if (!mealForm.servings || parseInt(mealForm.servings) <= 0) {
-      alert("Servings must be a positive number greater than 0");
+      toast.warning("Servings must be greater than 0.");
       return;
     }
 
@@ -609,7 +621,7 @@ const handleUpdateMeal = async (e) => {
     
     if (data.success) {
       console.log("Meal updated successfully!");
-      alert("Meal updated successfully!");
+      toast.success("Meal updated.");
       
       // Reset form
       setShowMealForm(false);
@@ -647,20 +659,24 @@ const handleUpdateMeal = async (e) => {
       fetchData();
     } else {
       console.error("Error from API:", data.error);
-      alert(`Error: ${data.error || 'Failed to update meal'}`);
+      toast.error(data.error || 'Could not update that meal.');
     }
   } catch (error) {
     console.error("=== Error updating meal ===");
     console.error("Error:", error);
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
-    alert(`Failed to update meal: ${error.message}`);
+    toast.error(`Could not update that meal: ${error.message}`);
   }
 };
 
 
   const handleDeleteMeal = async (id) => {
-  if (!confirm("Are you sure you want to delete this meal?")) return;
+  if (!(await confirm({
+    title: "Delete this meal?",
+    message: "This permanently removes the meal and its recipe.",
+    confirmText: "Delete meal",
+  }))) return;
   try {
     const res = await fetch(`/api/admin/meals?id=${id}`, { 
       method: "DELETE" 
@@ -669,11 +685,11 @@ const handleUpdateMeal = async (e) => {
     if (data.success) {
       fetchData(); // Reload meals from database
     } else {
-      alert(`Error: ${data.error}`);
+      toast.error(data.error);
     }
   } catch (error) {
     console.error("Error deleting meal:", error);
-    alert("Failed to delete meal. Please try again.");
+    toast.error("Could not delete that meal. Please try again.");
   }
 };
 
@@ -735,7 +751,11 @@ const handleUpdateMeal = async (e) => {
   }
 
   const handleDeleteProgram = async (id) => {
-    if (!confirm("Are you sure you want to delete this program?")) return
+    if (!(await confirm({
+      title: "Delete this program?",
+      message: "This removes the program from the site. Athletes who already bought it keep their access.",
+      confirmText: "Delete program",
+    }))) return
     try {
       const res = await fetch(`/api/admin/programs?id=${id}`, { method: "DELETE" })
       const data = await res.json()
@@ -853,7 +873,7 @@ const handleUpdateMeal = async (e) => {
   e.preventDefault();
   try {
     if (!blogForm.title || !blogForm.excerpt) {
-      alert("Title and excerpt are required");
+      toast.warning("A title and an excerpt are required.");
       return;
     }
 
@@ -876,7 +896,7 @@ const handleUpdateMeal = async (e) => {
 
     const data = await res.json();
     if (data.success) {
-      alert("Blog added successfully!");
+      toast.success("Blog published.");
       setShowBlogForm(false);
       setBlogForm({
         id: "",
@@ -891,11 +911,11 @@ const handleUpdateMeal = async (e) => {
       });
       fetchData();
     } else {
-      alert(`Error: ${data.error || 'Failed to add blog'}`);
+      toast.error(data.error || 'Could not add that blog.');
     }
   } catch (error) {
     console.error("Error adding blog:", error);
-    alert(`Failed to add blog: ${error.message}`);
+    toast.error(`Could not add that blog: ${error.message}`);
   }
 };
 
@@ -903,7 +923,7 @@ const handleUpdateBlog = async (e) => {
   e.preventDefault();
   try {
     if (!editingItem || !editingItem.id) {
-      alert("No blog selected for editing");
+      toast.warning("No blog is selected for editing.");
       return;
     }
 
@@ -927,7 +947,7 @@ const handleUpdateBlog = async (e) => {
 
     const data = await res.json();
     if (data.success) {
-      alert("Blog updated successfully!");
+      toast.success("Blog updated.");
       setShowBlogForm(false);
       setEditingItem(null);
       setBlogForm({
@@ -943,16 +963,20 @@ const handleUpdateBlog = async (e) => {
       });
       fetchData();
     } else {
-      alert(`Error: ${data.error || 'Failed to update blog'}`);
+      toast.error(data.error || 'Could not update that blog.');
     }
   } catch (error) {
     console.error("Error updating blog:", error);
-    alert(`Failed to update blog: ${error.message}`);
+    toast.error(`Could not update that blog: ${error.message}`);
   }
 };
 
 const handleDeleteBlog = async (id) => {
-  if (!confirm("Are you sure you want to delete this blog?")) return;
+  if (!(await confirm({
+    title: "Delete this blog?",
+    message: "This permanently removes the post and its content.",
+    confirmText: "Delete blog",
+  }))) return;
   try {
     const res = await fetch(`/api/admin/blogs?id=${id}`, { 
       method: "DELETE" 
@@ -961,11 +985,11 @@ const handleDeleteBlog = async (id) => {
     if (data.success) {
       fetchData();
     } else {
-      alert(`Error: ${data.error}`);
+      toast.error(data.error);
     }
   } catch (error) {
     console.error("Error deleting blog:", error);
-    alert("Failed to delete blog. Please try again.");
+    toast.error("Could not delete that blog. Please try again.");
   }
 };
 
@@ -1076,15 +1100,19 @@ const updateSection = (index, field, value) => {
       setPendingBlogs(prev => prev.filter(b => b.id !== blogId));
       setBlogs(prev => [...prev, data.blog]);
       
-      alert("Blog approved and published!");
+      toast.success("Blog approved and published.");
     } catch (error) {
       console.error('Error approving blog:', error);
-      alert('Failed to approve blog. Please try again.');
+      toast.error('Could not approve that blog. Please try again.');
     }
   };
 
   const handleRejectBlog = async (blogId) => {
-    if (confirm("Are you sure you want to reject this blog submission?")) {
+    if (await confirm({
+      title: "Reject this submission?",
+      message: "The post is removed from the pending list and the author is not published.",
+      confirmText: "Reject",
+    })) {
       try {
         const response = await fetch(`/api/admin/blogs/pending/${blogId}`, {
           method: 'DELETE',
@@ -1095,10 +1123,10 @@ const updateSection = (index, field, value) => {
         if (!data.success) throw new Error(data.error || 'Failed to reject blog');
 
         setPendingBlogs(prev => prev.filter(b => b.id !== blogId));
-        alert("Blog rejected and removed from pending list.");
+        toast.success("Blog rejected and removed from the pending list.");
       } catch (error) {
         console.error('Error rejecting blog:', error);
-        alert('Failed to reject blog. Please try again.');
+        toast.error('Could not reject that blog. Please try again.');
       }
     }
   };
@@ -1379,7 +1407,12 @@ const updateSection = (index, field, value) => {
                         <div className="flex gap-3">
                           <button
                             onClick={async () => {
-                              if (!confirm("This will create 15+ sample coaches. Continue?")) return
+                              if (!(await confirm({
+                                title: "Create sample coaches?",
+                                message: "This adds 15+ placeholder coaches to the database for testing.",
+                                confirmText: "Create them",
+                                danger: false,
+                              }))) return
                               setLoading(true)
                               try {
                                 const res = await fetch("/api/test-db/create-sample-coaches", {
@@ -1388,14 +1421,14 @@ const updateSection = (index, field, value) => {
                                 })
                                 const data = await res.json()
                                 if (data.success) {
-                                  alert(`✅ Successfully created ${data.coachesCreated} sample coaches!`)
+                                  toast.success(`Created ${data.coachesCreated} sample coaches.`)
                                   fetchData()
                                 } else {
-                                  alert(`Error: ${data.error || data.message}`)
+                                  toast.error(data.error || data.message)
                                 }
                               } catch (error) {
                                 console.error("Error creating sample coaches:", error)
-                                alert("Error creating sample coaches. Check console for details.")
+                                toast.error("Could not create the sample coaches. Check the console for details.")
                               } finally {
                                 setLoading(false)
                               }
@@ -2968,7 +3001,12 @@ const updateSection = (index, field, value) => {
                         <div className="flex gap-3">
                           <button
                             onClick={async () => {
-                              if (!confirm("This will create 12+ sample programs. Continue?")) return
+                              if (!(await confirm({
+                                title: "Create sample programs?",
+                                message: "This adds 12+ placeholder programs to the database for testing.",
+                                confirmText: "Create them",
+                                danger: false,
+                              }))) return
                               setLoading(true)
                               try {
                                 const res = await fetch("/api/test-db/create-sample-programs", {
@@ -2977,14 +3015,14 @@ const updateSection = (index, field, value) => {
                                 })
                                 const data = await res.json()
                                 if (data.success) {
-                                  alert(`✅ Successfully created ${data.programsCreated} sample programs!`)
+                                  toast.success(`Created ${data.programsCreated} sample programs.`)
                                   fetchData()
                                 } else {
-                                  alert(`Error: ${data.error || data.message}`)
+                                  toast.error(data.error || data.message)
                                 }
                               } catch (error) {
                                 console.error("Error creating sample programs:", error)
-                                alert("Error creating sample programs. Check console for details.")
+                                toast.error("Could not create the sample programs. Check the console for details.")
                               } finally {
                                 setLoading(false)
                               }

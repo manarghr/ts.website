@@ -19,8 +19,10 @@ import {
   Heart
 } from "lucide-react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function MealsPage() {
+  const toast = useToast();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGoal, setSelectedGoal] = useState("all");
@@ -73,7 +75,7 @@ const [currentPages, setCurrentPages] = useState({
 
       if (res.status === 401) {
         setFavoriteMeals(previous);
-        alert("Please login to save meals");
+        toast.error("Please log in to save meals.");
         return;
       }
       if (!res.ok) throw new Error("Request failed");
@@ -82,7 +84,7 @@ const [currentPages, setCurrentPages] = useState({
     } catch (error) {
       console.error("Failed to update saved meal:", error);
       setFavoriteMeals(previous);
-      alert("Could not save this meal. Please try again.");
+      toast.error("Could not save this meal. Please try again.");
     }
   };
 

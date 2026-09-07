@@ -39,6 +39,8 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { PLANS, SUBSCRIPTION_STATUS, getPlan } from "@/lib/plans"
+import { useToast } from "@/components/ui/ToastProvider"
+import { useConfirm } from "@/components/ui/ConfirmProvider"
 
 // Animated background component
 const AnimatedBackground = () => {
@@ -175,6 +177,8 @@ const AnimatedBackground = () => {
 };
 
 export default function ProfilePage({ userId }) {
+  const toast = useToast()
+  const confirm = useConfirm()
   const [showBlogSubmissionForm, setShowBlogSubmissionForm] = useState(false);
   const [blogSubmissionForm, setBlogSubmissionForm] = useState({
     title: "",
@@ -277,7 +281,7 @@ export default function ProfilePage({ userId }) {
     e.preventDefault();
     
     if (!currentUser) {
-      alert("Please log in to submit a blog");
+      toast.error("Please log in to submit a blog.");
       return;
     }
 
@@ -298,7 +302,7 @@ export default function ProfilePage({ userId }) {
 
       if (!data.success) throw new Error(data.error || 'Failed to submit blog');
 
-      alert("Blog submitted successfully! It will be reviewed by an admin.");
+      toast.success("An admin will review it before it goes live.", { title: "Blog submitted" });
 
       // Land them on My Blogs so the new post is visible with its pending status,
       // rather than leaving them wondering where it went.
@@ -318,7 +322,7 @@ export default function ProfilePage({ userId }) {
       setShowBlogSubmissionForm(false);
     } catch (error) {
       console.error('Error submitting blog:', error);
-      alert('Failed to submit blog. Please try again.');
+      toast.error('Could not submit your blog. Please try again.');
     }
   };
 
@@ -513,7 +517,7 @@ export default function ProfilePage({ userId }) {
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok || !data?.user) {
-        alert(data?.error || "Could not save your changes. Please try again.")
+        toast.error(data?.error || "Could not save your changes. Please try again.")
         return false
       }
 
@@ -524,7 +528,7 @@ export default function ProfilePage({ userId }) {
       return true
     } catch (error) {
       console.error("Failed to save profile:", error)
-      alert("Could not reach the server. Please try again.")
+      toast.error("Could not reach the server. Please try again.")
       return false
     }
   }
@@ -621,13 +625,13 @@ export default function ProfilePage({ userId }) {
     if (!file || !isOwnProfile) return
 
     if (!file.type.startsWith("image/")) {
-      alert("Please choose an image file")
+      toast.error("Please choose an image file.")
       return
     }
 
     // Must match the 5MB limit enforced in /api/upload/image
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image must be smaller than 5MB")
+      toast.error("That image is too large. Maximum size is 5MB.")
       return
     }
 
@@ -646,7 +650,7 @@ export default function ProfilePage({ userId }) {
       await saveProfile({ profilePicture: data.imageUrl })
     } catch (error) {
       console.error("Profile picture upload failed:", error)
-      alert(error.message || "Could not upload image. Please try again.")
+      toast.error(error.message || "Could not upload image. Please try again.")
     } finally {
       setIsUploadingPicture(false)
       // Let the same file be picked again after a failure.
@@ -672,7 +676,13 @@ export default function ProfilePage({ userId }) {
 
   const handleUnfavoriteCoach = async (coach) => {
     if (!isOwnProfile || !currentUser) return
-    if (!window.confirm(`Unfollow ${coach.name}?`)) return
+    const proceed = await confirm({
+      title: `Unfollow ${coach.name}?`,
+      message: "You will stop seeing their announcements. You can follow them again at any time.",
+      confirmText: "Unfollow",
+      danger: false,
+    })
+    if (!proceed) return
 
     const previous = profileUser?.favoriteCoaches || []
     setProfileUser((prev) => ({
@@ -689,7 +699,7 @@ export default function ProfilePage({ userId }) {
     } catch (error) {
       console.error("Failed to unfollow coach:", error)
       setProfileUser((prev) => ({ ...prev, favoriteCoaches: previous }))
-      alert("Could not unfollow. Please try again.")
+      toast.error("Could not unfollow. Please try again.")
     }
   }
 
@@ -711,7 +721,7 @@ export default function ProfilePage({ userId }) {
     } catch (error) {
       console.error("Failed to remove saved meal:", error)
       setProfileUser((prev) => ({ ...prev, favoriteMeals: previous }))
-      alert("Could not remove this meal. Please try again.")
+      toast.error("Could not remove this meal. Please try again.")
     }
   }
 
@@ -739,7 +749,7 @@ export default function ProfilePage({ userId }) {
       setCommentText("")
     } catch (error) {
       console.error("Failed to save note:", error)
-      alert("Could not save your note. Please try again.")
+      toast.error("Could not save your note. Please try again.")
     }
   }
 

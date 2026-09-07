@@ -1,5 +1,7 @@
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { ToastProvider } from "@/components/ui/ToastProvider";
+import { ConfirmProvider } from "@/components/ui/ConfirmProvider";
 import { Montserrat, Inter } from "next/font/google";
 
 const montserrat = Montserrat({
@@ -29,7 +31,12 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${montserrat.variable} ${inter.variable}`}>
       <body className="font-inter">
-        <AuthProvider>{children}</AuthProvider>
+        {/* Feedback sits above AuthProvider so the auth modals can use it too. */}
+        <ToastProvider>
+          <ConfirmProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ConfirmProvider>
+        </ToastProvider>
       </body>
     </html>
   );

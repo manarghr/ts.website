@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Mail, Lock, User, Phone, Award, Briefcase, FileText, Upload, Camera } from "lucide-react";
 import Image from "next/image";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export default function CoachAuthModal({ isOpen, onClose }) {
+  const toast = useToast();
   const [isLogin, setIsLogin] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -71,13 +73,13 @@ export default function CoachAuthModal({ isOpen, onClose }) {
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        alert('Please upload an image file');
+        toast.error('Please choose an image file.');
         return;
       }
       
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('Image size should be less than 5MB');
+        toast.error('That image is too large. Maximum size is 5MB.');
         return;
       }
 
