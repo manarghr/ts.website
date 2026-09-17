@@ -94,6 +94,17 @@ export default function AISportsPage() {
   const liveRepsRef = useRef(0);
   const [aiStatus, setAiStatus] = useState({ state: "loading" });
 
+  // Form score averaged over the whole session. The displayed score is whatever
+  // the latest frame said, which is a poor summary -- a set that ended mid-rep
+  // would be judged by that one frame.
+  const scoreSumRef = useRef(0);
+  const scoreCountRef = useRef(0);
+
+  // The saved training log: summary numbers only, never footage (see /privacy).
+  const [history, setHistory] = useState([]);
+  const [totals, setTotals] = useState(null);
+  const [savingWorkout, setSavingWorkout] = useState(false);
+
   // Rep counting is stateful, so each stream keeps one session across frames.
   const sessionFor = (ref) => {
     if (!ref.current) {
@@ -118,9 +129,56 @@ export default function AISportsPage() {
     setFormScore(result.formScore);
     setRepCount(result.reps);
 
+    // Only frames where a pose was actually judged count towards the average;
+    // frames we declined to score would drag it towards zero.
+    if (result.hasPose) {
+      scoreSumRef.current += result.formScore;
+      scoreCountRef.current += 1;
+    }
+
     const gained = result.reps - liveRepsRef.current;
     liveRepsRef.current = result.reps;
     if (gained > 0) setCalories((prev) => prev + gained * 0.5);
+  };
+
+  // -----------------------------
+  // Training log
+  // -----------------------------
+  const loadHistory = async () => {
+    try {
+      const res = await fetch("/api/workouts?limit=10", { cache: "no-store" });
+      if (!res.ok) return; // signed out, or nothing saved yet
+      const data = await res.json();
+      setHistory(Array.isArray(data.workouts) ? data.workouts : []);
+      setTotals(data.totals || null);
+    } catch {
+      // The log is a nicety; failing to load it must not break the workout page.
+    }
+  };
+
+  const saveWorkout = async ({ exercise, reps, formScore, durationSeconds, calories }) => {
+    setSavingWorkout(true);
+    try {
+      const res = await fetch("/api/workouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ exercise, reps, formScore, durationSeconds, calories }),
+      });
+
+      if (res.status === 401) {
+        toast.info("Sign in to keep a history of your workouts.");
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      toast.success(`Saved: ${reps} reps in ${formatTime(durationSeconds)}.`);
+      await loadHistory();
+    } catch (error) {
+      console.error("Could not save the workout:", error);
+      toast.error("Could not save this workout. Your numbers are still on screen.");
+    } finally {
+      setSavingWorkout(false);
+    }
   };
 
   // How far the frame-by-frame reviewer jumps per analysed frame.
@@ -412,7 +470,10 @@ export default function AISportsPage() {
         const res = await fetch("/api/auth/me", { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
-        if (!cancelled && data?.authenticated && data.user) setCurrentUser(data.user);
+        if (!cancelled && data?.authenticated && data.user) {
+          setCurrentUser(data.user);
+          loadHistory();
+        }
       } catch (error) {
         console.error("Could not load the signed-in user:", error);
       }
@@ -441,9 +502,7 @@ export default function AISportsPage() {
         audio: false
       };
 
-      console.log("Requesting camera access...");
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log("Camera access granted, stream:", stream);
 
       // Store stream first, then render the video by enabling cameraActive.
       // The actual attachment to <video> happens in a useEffect once the element exists.
@@ -493,13 +552,6 @@ export default function AISportsPage() {
 
     const videoEl = videoRef.current;
 
-    console.log("Attaching stream to <video>...");
-    console.log("Stream active:", cameraStream.active);
-    console.log(
-      "Stream tracks:",
-      cameraStream.getTracks().map((t) => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState }))
-    );
-
     try {
       videoEl.srcObject = cameraStream;
     } catch (e) {
@@ -518,22 +570,18 @@ export default function AISportsPage() {
     const tryPlay = async () => {
       try {
         await videoEl.play();
-        console.log("Video play() OK");
       } catch (err) {
         console.error("Video play() failed:", err);
       }
     };
 
     const onLoadedMetadata = () => {
-      console.log("Video metadata loaded");
-      console.log("Video dimensions:", videoEl.videoWidth, "x", videoEl.videoHeight);
       updateCanvasToContainer();
       setStreamReady(true);
       tryPlay();
     };
 
     const onCanPlay = () => {
-      console.log("Video canplay");
       setStreamReady(true);
       tryPlay();
     };
@@ -566,6 +614,8 @@ export default function AISportsPage() {
       setWorkoutTime(0);
       setCalories(0);
       liveRepsRef.current = 0;
+      scoreSumRef.current = 0;
+      scoreCountRef.current = 0;
       // Fresh session so reps and rep-counter phase start clean.
       liveSessionRef.current = null;
       
@@ -588,6 +638,22 @@ export default function AISportsPage() {
         if (videoRef.current.dataset.timeIntervalId) {
           clearInterval(parseInt(videoRef.current.dataset.timeIntervalId));
         }
+      }
+
+      // Record the session, but not an accidental one -- a tap of start/stop
+      // with nothing counted is not a workout worth keeping.
+      const averageScore = scoreCountRef.current
+        ? Math.round(scoreSumRef.current / scoreCountRef.current)
+        : 0;
+
+      if (repCount > 0 || workoutTime >= 10) {
+        saveWorkout({
+          exercise: selectedExercise,
+          reps: repCount,
+          formScore: averageScore,
+          durationSeconds: workoutTime,
+          calories: Math.round(calories),
+        });
       }
     }
   };
@@ -781,6 +847,10 @@ export default function AISportsPage() {
                       >
                         <X className="w-6 h-6" />
                       </button>
+                      <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm text-white/90 px-3 py-1.5 rounded-full text-xs z-10">
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Processed on your device — nothing uploaded</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -817,6 +887,113 @@ export default function AISportsPage() {
                         <div>
                           <h4 className="font-semibold text-[#354F52] mb-1">Calorie Tracking</h4>
                           <p className="text-sm text-gray-600">Monitor calories burned during your workout</p>
+                        </div>
+                      </div>
+
+                      {/* The saved log. Summary numbers only: this is what makes
+                          progress tracking possible without keeping footage. */}
+                      {currentUser && (
+                        <div className="mt-6 rounded-xl border-2 border-[#C8CDC5] p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-[#354F52]">Your recent sessions</h4>
+                            {totals?.sessions > 0 && (
+                              <span className="text-xs text-gray-500">
+                                {totals.sessions} total
+                              </span>
+                            )}
+                          </div>
+
+                          {history.length === 0 ? (
+                            <p className="text-sm text-gray-600">
+                              Finish a workout and it will be saved here — the exercise,
+                              your reps, your average form score and how long it took.
+                              Never any video.
+                            </p>
+                          ) : (
+                            <>
+                              {totals && (
+                                <div className="grid grid-cols-3 gap-2 mb-3 text-center">
+                                  <div className="rounded-lg bg-[#6BB371]/10 py-2">
+                                    <div className="text-lg font-bold text-[#354F52]">
+                                      {totals.reps}
+                                    </div>
+                                    <div className="text-[11px] text-gray-600">total reps</div>
+                                  </div>
+                                  <div className="rounded-lg bg-[#52796F]/10 py-2">
+                                    <div className="text-lg font-bold text-[#354F52]">
+                                      {formatTime(totals.seconds)}
+                                    </div>
+                                    <div className="text-[11px] text-gray-600">total time</div>
+                                  </div>
+                                  <div className="rounded-lg bg-[#354F52]/10 py-2">
+                                    <div className="text-lg font-bold text-[#354F52]">
+                                      {totals.averageFormScore}
+                                    </div>
+                                    <div className="text-[11px] text-gray-600">avg form</div>
+                                  </div>
+                                </div>
+                              )}
+
+                              <ul className="divide-y divide-[#C8CDC5]/60">
+                                {history.map((w) => (
+                                  <li key={w.id} className="flex items-center justify-between py-2">
+                                    <div>
+                                      <span className="text-sm font-medium text-[#354F52] capitalize">
+                                        {w.exercise.replace(/_/g, " ")}
+                                      </span>
+                                      <span className="block text-[11px] text-gray-500">
+                                        {new Date(w.created_at).toLocaleDateString(undefined, {
+                                          day: "numeric",
+                                          month: "short",
+                                        })}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-sm text-gray-700">
+                                      <span>
+                                        <strong className="text-[#354F52]">{w.reps}</strong> reps
+                                      </span>
+                                      <span>{formatTime(w.duration_seconds)}</span>
+                                      <span
+                                        className={
+                                          w.form_score >= 85
+                                            ? "text-[#6BB371] font-semibold"
+                                            : "text-amber-600 font-semibold"
+                                        }
+                                      >
+                                        {w.form_score}
+                                      </span>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Stated here, next to the permission prompt, because that is
+                          where it is relevant. Claims only what the code does: the
+                          camera path is local, uploads elsewhere on the site are not
+                          covered by this. */}
+                      <div className="flex items-start gap-3 p-4 bg-[#6BB371]/10 rounded-xl border-2 border-[#6BB371]/30">
+                        <Lock className="w-6 h-6 text-[#6BB371] flex-shrink-0 mt-1" />
+                        <div>
+                          <h4 className="font-semibold text-[#354F52] mb-1">
+                            Your camera stays on your device
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            The pose model runs inside your browser. No image or video from
+                            your camera is uploaded, sent to our servers, or stored anywhere —
+                            only you ever see it. Reps and form scores are worked out on your
+                            device too.{" "}
+                            <a
+                              href="/privacy#camera"
+                              className="font-medium text-[#52796F] underline hover:text-[#354F52]"
+                            >
+                              How this works
+                            </a>
+                            .
+                          </p>
                         </div>
                       </div>
 
@@ -890,13 +1067,16 @@ export default function AISportsPage() {
                           <div className="text-3xl font-bold">{Math.round(calories)}</div>
                         </div>
 
-                        {/* Heart Rate (Simulated) */}
-                        <div className="bg-gradient-to-br from-red-500 to-pink-600 rounded-xl p-4 text-white">
+                        {/* Heart rate needs a sensor we do not have. A camera cannot
+                            measure it, so this reports no reading rather than a
+                            plausible-looking invention. */}
+                        <div className="bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl p-4 text-white">
                           <div className="flex items-center gap-2 mb-1">
                             <Heart className="w-4 h-4" />
                             <span className="text-xs font-medium opacity-90">HR</span>
                           </div>
-                          <div className="text-3xl font-bold">{isRecording ? Math.floor(120 + Math.random() * 40) : "--"}</div>
+                          <div className="text-3xl font-bold">--</div>
+                          <div className="text-[11px] opacity-90 mt-0.5">Needs a heart-rate strap</div>
                         </div>
                       </div>
 
@@ -987,13 +1167,19 @@ export default function AISportsPage() {
                       <div className="space-y-3">
                         <button
                           onClick={toggleRecording}
-                          className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg ${
+                          disabled={savingWorkout}
+                          className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 ${
                             isRecording
                               ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
                               : "bg-gradient-to-r from-[#354F52] to-[#52796F] hover:from-[#52796F] hover:to-[#6BB371] text-white"
                           }`}
                         >
-                          {isRecording ? (
+                          {savingWorkout ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                              Saving…
+                            </>
+                          ) : isRecording ? (
                             <>
                               <div className="w-4 h-4 bg-white rounded-sm" />
                               Stop Workout

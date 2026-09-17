@@ -99,6 +99,12 @@ const INDEXES = [
   ["purchases", { user_id: 1, created_at: -1 }, {}],
   ["payouts", { coach_id: 1, created_at: -1 }, {}],
 
+  // --- training log ---
+  // The AI page writes one row per finished session and reads them back newest
+  // first, which is exactly this index. Summary numbers only -- never footage.
+  ["workout_sessions", { user_id: 1, created_at: -1 }, {}],
+  ["workout_sessions", { id: 1 }, { unique: true }],
+
   // --- inboxes ---
   ["notifications", { recipient_id: 1, recipient_role: 1, created_at: -1 }, {}],
   ["notifications", { recipient_id: 1, recipient_role: 1, read: 1 }, {}],
