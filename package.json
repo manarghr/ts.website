@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/copy-mediapipe.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/copy-mediapipe.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint --dir src --dir backend",
-    "setup-db": "node scripts/setup-db.mjs"
+    "setup-db": "node scripts/setup-db.mjs",
+    "copy-mediapipe": "node scripts/copy-mediapipe.mjs"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.5.2",

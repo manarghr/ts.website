@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import PoseOverlay from "@/components/AI/PoseOverlay";
+import PoseEngine from "@/components/AI/PoseEngine";
+import { createAnalysisSession } from "@/lib/ai/session";
 import { hasPremiumAccess } from "@/lib/plans";
 import { 
   Camera,
@@ -52,31 +54,21 @@ export default function AISportsPage() {
   const canvasRef = useRef(null);
   const [feedback, setFeedback] = useState([]);
   const [useMediaPipe, setUseMediaPipe] = useState(true);
-  const repStateRef = useRef({ phase: "up", lastCountAt: 0 });
-  const [backendSessionId, setBackendSessionId] = useState(null);
   const [backendLandmarks, setBackendLandmarks] = useState(null);
-  const aiIntervalRef = useRef(null);
-  const backendLeadMsRef = useRef(0);
-  const backendLastTsRef = useRef(0);
   // Upload video analysis (separate from live camera)
   const uploadVideoRef = useRef(null);
   const uploadCanvasRef = useRef(null);
   const [uploadUrl, setUploadUrl] = useState(null);
-  const [uploadSessionId, setUploadSessionId] = useState(null);
   const [uploadLandmarks, setUploadLandmarks] = useState(null);
   const [uploadFeedback, setUploadFeedback] = useState([]);
   const [uploadFormScore, setUploadFormScore] = useState(0);
   const [uploadReps, setUploadReps] = useState(0);
   const [uploadAnalyzing, setUploadAnalyzing] = useState(false);
-  const [uploadSyncMode, setUploadSyncMode] = useState(true); // false = smooth playback, true = perfect overlay (main.py mode)
+  // true = step through the clip one analysed frame at a time (form review),
+  // false = analyse it at normal playback speed. Both stay in sync now that
+  // detection is local; stepping is for studying a rep, not for alignment.
+  const [uploadSyncMode, setUploadSyncMode] = useState(true);
   const uploadStepActiveRef = useRef(false);
-  const uploadIntervalRef = useRef(null);
-  const uploadInFlightRef = useRef(false);
-  const uploadFailCountRef = useRef(0);
-  const uploadLeadMsRef = useRef(0);
-  const uploadLastTsRef = useRef(0);
-  const backendInFlightRef = useRef(false);
-  const backendFailCountRef = useRef(0);
 
   const exercises = [
     { id: "squat", name: "Squats", icon: Activity },
@@ -85,528 +77,117 @@ export default function AISportsPage() {
     { id: "plank", name: "Planks", icon: Timer }
   ];
 
-  // Calculate angle between three points
-  const calculateAngle = (a, b, c) => {
-    const radians = Math.atan2(c[1] - b[1], c[0] - b[0]) - Math.atan2(a[1] - b[1], a[0] - b[0]);
-    let angle = Math.abs(radians * 180.0 / Math.PI);
-    if (angle > 180.0) {
-      angle = 360 - angle;
+  // -----------------------------
+  // Pose analysis (in this browser)
+  // -----------------------------
+  // PoseEngine finds the 33 landmarks and calls the handlers below; the session
+  // in lib/ai/session.js turns them into feedback, a form score and reps.
+  //
+  // This used to POST a JPEG to the Python service every 200ms. The maths was
+  // ported to JS instead (lib/ai/), so AI/mediapipe_api.py is now the reference
+  // implementation rather than a runtime dependency: nothing to host, no
+  // per-frame network hop, and the overlay lines up because there is no latency
+  // to compensate for.
+
+  const liveSessionRef = useRef(null);
+  const uploadSessionRef = useRef(null);
+  const liveRepsRef = useRef(0);
+  const [aiStatus, setAiStatus] = useState({ state: "loading" });
+
+  // Rep counting is stateful, so each stream keeps one session across frames.
+  const sessionFor = (ref) => {
+    if (!ref.current) {
+      ref.current = createAnalysisSession(selectedExercise);
+    } else {
+      // No-op unless the athlete picked a different exercise mid-session.
+      ref.current.setExercise(selectedExercise);
     }
-    return angle;
+    return ref.current;
   };
 
-  // Analyze pose based on exercise
-  const analyzePose = (landmarks, exercise) => {
-    const newFeedback = [];
-    let formScore = 90;
+  const handleLiveLandmarks = (landmarks) => {
+    // Draw as soon as the camera is on, so the skeleton is visible before the
+    // workout starts and you can frame yourself properly.
+    setBackendLandmarks(landmarks);
 
-    try {
-      // MediaPipe Pose landmarks indices
-      // Right side: 12 (shoulder), 14 (elbow), 16 (wrist), 24 (hip), 26 (knee), 28 (ankle)
-      // Left side: 11 (shoulder), 13 (elbow), 15 (wrist), 23 (hip), 25 (knee), 27 (ankle)
-
-      if (!landmarks || landmarks.length < 29) {
-        setFeedback(["Place your full body in frame (more light / step back)."]);
-        setFormScore(0);
-        return;
-      }
-
-      const vis = (i) => (landmarks[i]?.visibility ?? 1);
-
-      const bestOf = (candidates) => {
-        // candidates: [{ idxs:[a,b,c], minVisIdxs:[...], label }]
-        let best = null;
-        for (const cand of candidates) {
-          const ok = cand.idxs.every((i) => landmarks[i]);
-          if (!ok) continue;
-          const v = cand.idxs.reduce((acc, i) => acc + vis(i), 0) / cand.idxs.length;
-          if (!best || v > best.v) best = { ...cand, v };
-        }
-        return best;
-      };
-
-      const kneeAngle = () => {
-        const cand = bestOf([
-          { idxs: [24, 26, 28] },
-          { idxs: [23, 25, 27] },
-        ]);
-        if (!cand) return null;
-        const [h, k, a] = cand.idxs;
-        return calculateAngle([landmarks[h].x, landmarks[h].y], [landmarks[k].x, landmarks[k].y], [landmarks[a].x, landmarks[a].y]);
-      };
-
-      const elbowAngle = () => {
-        const cand = bestOf([
-          { idxs: [12, 14, 16] },
-          { idxs: [11, 13, 15] },
-        ]);
-        if (!cand) return null;
-        const [s, e, w] = cand.idxs;
-        return calculateAngle([landmarks[s].x, landmarks[s].y], [landmarks[e].x, landmarks[e].y], [landmarks[w].x, landmarks[w].y]);
-      };
-      
-      if (exercise === "squat") {
-        const angle = kneeAngle();
-        if (angle == null) {
-          newFeedback.push("I can't see your legs clearly — step back so knees/ankles are visible.");
-          formScore = 0;
-        } else if (angle > 155) {
-          newFeedback.push("Descends un peu plus pour un squat complet.");
-          formScore -= 15;
-        } else if (angle > 125) {
-          newFeedback.push("Bonne profondeur de squat ! Continue.");
-        } else if (angle > 95) {
-          newFeedback.push("Très bien — garde le dos droit et pousse sur les talons.");
-          formScore -= 5;
-        } else {
-          newFeedback.push("Squat trop bas — remonte un peu.");
-          formScore -= 15;
-        }
-      } else if (exercise === "pushup") {
-        const angle = elbowAngle();
-        if (angle == null) {
-          newFeedback.push("I can't see your arms clearly — keep shoulders/elbows/wrists in frame.");
-          formScore = 0;
-        } else if (angle > 165) {
-          newFeedback.push("Descends un peu plus (plie les coudes).");
-          formScore -= 15;
-        } else if (angle > 120) {
-          newFeedback.push("Bien — garde le corps gainé.");
-        } else if (angle > 85) {
-          newFeedback.push("Bonne profondeur de push-up !");
-        } else {
-          newFeedback.push("Très bas — remonte légèrement, garde le contrôle.");
-          formScore -= 10;
-        }
-      } else if (exercise === "lunge") {
-        const angle = kneeAngle();
-        if (angle == null) {
-          newFeedback.push("I can't see your legs clearly — step back so knees/ankles are visible.");
-          formScore = 0;
-        } else if (angle > 155) {
-          newFeedback.push("Approfondis le lunge (descends plus).");
-          formScore -= 15;
-        } else if (angle > 120) {
-          newFeedback.push("Bonne forme de lunge !");
-        } else if (angle > 90) {
-          newFeedback.push("Bien — genou stable, buste droit.");
-          formScore -= 5;
-        } else {
-          newFeedback.push("Trop profond — remonte un peu.");
-          formScore -= 10;
-        }
-      } else if (exercise === "plank") {
-        const cand = bestOf([
-          { idxs: [12, 24, 28] },
-          { idxs: [11, 23, 27] },
-        ]);
-        if (!cand) {
-          newFeedback.push("I can't see your body line — step back and keep full body in frame.");
-          formScore = 0;
-        } else {
-          const [s, h, a] = cand.idxs;
-          const shoulder = [landmarks[s].x, landmarks[s].y];
-          const hip = [landmarks[h].x, landmarks[h].y];
-          const ankle = [landmarks[a].x, landmarks[a].y];
-
-          const shoulderHipDiff = Math.abs(shoulder[1] - hip[1]);
-          const hipAnkleDiff = Math.abs(hip[1] - ankle[1]);
-
-          if (shoulderHipDiff > 0.06 || hipAnkleDiff > 0.06) {
-            newFeedback.push("Maintenir le corps droit (gainage).");
-            formScore -= 20;
-          } else {
-            newFeedback.push("Excellente forme de planche !");
-          }
-        }
-      }
-
-      if (newFeedback.length === 0) {
-        newFeedback.push("Move into frame so I can analyze your posture.");
-        formScore = 0;
-      }
-
-      setFeedback(newFeedback);
-      setFormScore(Math.max(0, Math.min(100, formScore)));
-    } catch (error) {
-      console.error("Error analyzing pose:", error);
-    }
-  };
-
-  // Basic rep counting based on joint angle thresholds
-  const updateRepsFromPose = (landmarks, exercise) => {
+    // But only judge form and bank reps once recording has begun.
     if (!isRecording) return;
-    if (!landmarks || landmarks.length < 29) return;
 
-    const now = Date.now();
-    const minMsBetweenReps = 250; // feel more real-time
+    const result = sessionFor(liveSessionRef).analyse(landmarks);
+    setFeedback(result.feedback);
+    setFormScore(result.formScore);
+    setRepCount(result.reps);
 
-    const getAngle = () => {
-      // Right side indices
-      if (exercise === "squat" || exercise === "lunge") {
-        const rightOk = landmarks[24] && landmarks[26] && landmarks[28];
-        const leftOk = landmarks[23] && landmarks[25] && landmarks[27];
-        const angles = [];
-        if (rightOk) {
-          const hip = [landmarks[24].x, landmarks[24].y];
-          const knee = [landmarks[26].x, landmarks[26].y];
-          const ankle = [landmarks[28].x, landmarks[28].y];
-          angles.push(calculateAngle(hip, knee, ankle));
-        }
-        if (leftOk) {
-          const hip = [landmarks[23].x, landmarks[23].y];
-          const knee = [landmarks[25].x, landmarks[25].y];
-          const ankle = [landmarks[27].x, landmarks[27].y];
-          angles.push(calculateAngle(hip, knee, ankle));
-        }
-        if (!angles.length) return null;
-        // Use the smaller angle (deeper bend) which is usually the active leg
-        return Math.min(...angles);
-      }
-      if (exercise === "pushup") {
-        const rightOk = landmarks[12] && landmarks[14] && landmarks[16];
-        const leftOk = landmarks[11] && landmarks[13] && landmarks[15];
-        const angles = [];
-        if (rightOk) {
-          const shoulder = [landmarks[12].x, landmarks[12].y];
-          const elbow = [landmarks[14].x, landmarks[14].y];
-          const wrist = [landmarks[16].x, landmarks[16].y];
-          angles.push(calculateAngle(shoulder, elbow, wrist));
-        }
-        if (leftOk) {
-          const shoulder = [landmarks[11].x, landmarks[11].y];
-          const elbow = [landmarks[13].x, landmarks[13].y];
-          const wrist = [landmarks[15].x, landmarks[15].y];
-          angles.push(calculateAngle(shoulder, elbow, wrist));
-        }
-        if (!angles.length) return null;
-        return Math.min(...angles);
-      }
-      return null; // plank has no reps
-    };
+    const gained = result.reps - liveRepsRef.current;
+    liveRepsRef.current = result.reps;
+    if (gained > 0) setCalories((prev) => prev + gained * 0.5);
+  };
 
-    const angle = getAngle();
-    if (angle == null) return;
+  // How far the frame-by-frame reviewer jumps per analysed frame.
+  const UPLOAD_STEP_SECONDS = 1 / 15;
 
-    // Thresholds
-    const downThreshold = exercise === "pushup" ? 105 : 125;
-    const upThreshold = exercise === "pushup" ? 155 : 160;
+  const advanceUploadFrame = () => {
+    const video = uploadVideoRef.current;
+    if (!video || !uploadStepActiveRef.current) return;
 
-    const state = repStateRef.current;
+    // The previous jump has not landed yet; the frame on screen is still stale.
+    if (video.seeking) return;
 
-    // Detect "down" phase
-    if (state.phase === "up" && angle <= downThreshold) {
-      state.phase = "down";
+    const duration = Number.isFinite(video.duration) ? video.duration : 0;
+    if (video.ended || (duration && video.currentTime >= duration - 0.001)) {
+      stopUploadAnalysis();
       return;
     }
 
-    // Count rep when returning to "up"
-    if (state.phase === "down" && angle >= upThreshold) {
-      if (now - state.lastCountAt >= minMsBetweenReps) {
-        state.lastCountAt = now;
-        state.phase = "up";
-        setRepCount((prev) => prev + 1);
-        setCalories((prev) => prev + 0.5);
-      }
-    }
+    const next = video.currentTime + UPLOAD_STEP_SECONDS;
+    video.currentTime = duration ? Math.min(duration, next) : next;
   };
 
-  // -----------------------------
-  // Python backend AI (your model)
-  // -----------------------------
-  const startBackendSession = async () => {
-    try {
-      const res = await fetch(`/api/ai/start-session`, { method: "POST" });
-      const data = await res.json();
-      if (data?.sessionId) {
-        setBackendSessionId(data.sessionId);
-        return data.sessionId;
-      }
-    } catch (e) {
-      console.error("AI backend not reachable:", e);
-    }
-    return null;
-  };
+  const handleUploadLandmarks = (landmarks) => {
+    setUploadLandmarks(landmarks);
+    if (!uploadAnalyzing) return;
 
-  const captureFrameBase64 = () => {
-    const video = videoRef.current;
-    if (!video) return null;
-    if (video.readyState < 2) return null;
+    const result = sessionFor(uploadSessionRef).analyse(landmarks);
+    setUploadFeedback(result.feedback);
+    setUploadFormScore(result.formScore);
+    setUploadReps(result.reps);
 
-    const vw = video.videoWidth || 0;
-    const vh = video.videoHeight || 0;
-    if (!vw || !vh) return null;
-
-    // Keep the original aspect ratio (prevents stretched landmarks => misaligned overlay)
-    const maxW = 960; // better detection, less jitter
-    const scale = Math.min(1, maxW / vw);
-    const w = Math.max(1, Math.round(vw * scale));
-    const h = Math.max(1, Math.round(vh * scale));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-
-    // IMPORTANT: do NOT mirror the frame we send to backend.
-    // The UI video is mirrored via CSS, and the overlay mirrors landmarks to match that.
-    ctx.drawImage(video, 0, 0, w, h);
-
-    return canvas.toDataURL("image/jpeg", 0.82);
-  };
-
-  const tickBackendAI = async (reset = false) => {
-    try {
-      if (backendInFlightRef.current) return;
-      backendInFlightRef.current = true;
-      const t0 = performance.now();
-
-      const img = captureFrameBase64();
-      if (!img) return;
-
-      let sid = backendSessionId;
-      if (!sid) sid = await startBackendSession();
-      if (!sid) return;
-
-      // Monotonic timestamps for Tasks VIDEO-mode tracking (stable, less "limb swapping").
-      const candidateTs = Math.round(performance.now());
-      const ts = Math.max(backendLastTsRef.current + 1, candidateTs);
-      backendLastTsRef.current = ts;
-
-      const res = await fetch(`/api/ai/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: img,
-          exercise: selectedExercise,
-          sessionId: sid,
-          reset,
-          // Live camera frames are sequential => VIDEO mode gives more stable tracking.
-          mode: "video",
-          timestampMs: ts,
-        }),
-      });
-      const data = await res.json();
-      if (!data?.ok) return;
-      const rtt = performance.now() - t0;
-      // Smooth RTT a bit (prevents jittery prediction)
-      backendLeadMsRef.current = Math.max(
-        0,
-        Math.min(400, Math.round(0.85 * backendLeadMsRef.current + 0.15 * rtt))
-      );
-
-      backendFailCountRef.current = 0;
-      setBackendSessionId(data.sessionId);
-      setBackendLandmarks(data.poseLandmarks || null);
-      setFeedback(Array.isArray(data.feedback) ? data.feedback : []);
-      setFormScore(typeof data.formScore === "number" ? data.formScore : 0);
-      if (typeof data.reps === "number") setRepCount(data.reps);
-    } catch (e) {
-      backendFailCountRef.current += 1;
-      console.error("AI backend error:", e);
-      if (backendFailCountRef.current >= 5) {
-        setFeedback(["AI server not reachable. Start the Python server (AI/mediapipe_api.py) then try again."]);
-      }
-    } finally {
-      backendInFlightRef.current = false;
-    }
-  };
-
-  // -----------------------------
-  // Upload video -> analyze with Python backend (your model)
-  // -----------------------------
-  const captureFrameBase64FromEl = (videoEl) => {
-    if (!videoEl) return null;
-    if (videoEl.readyState < 2) return null;
-
-    const vw = videoEl.videoWidth || 0;
-    const vh = videoEl.videoHeight || 0;
-    if (!vw || !vh) return null;
-
-    // Higher resolution for better pose detection (like main.py)
-    const maxW = 1280; // Increased from 960 for better accuracy
-    const scale = Math.min(1, maxW / vw);
-    const w = Math.max(1, Math.round(vw * scale));
-    const h = Math.max(1, Math.round(vh * scale));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-
-    // IMPORTANT: do NOT mirror the frame we send to backend.
-    // The UI video is mirrored via CSS, and the overlay mirrors landmarks to match that.
-    ctx.drawImage(videoEl, 0, 0, w, h);
-
-    return canvas.toDataURL("image/jpeg", 0.82);
-  };
-
-  const startUploadSession = async () => {
-    try {
-      const res = await fetch(`/api/ai/start-session`, { method: "POST" });
-      const data = await res.json();
-      if (data?.sessionId) {
-        setUploadSessionId(data.sessionId);
-        return data.sessionId;
-      }
-    } catch (e) {
-      console.error("AI backend not reachable:", e);
-    }
-    return null;
-  };
-
-  const tickUploadAI = async (reset = false, { allowPaused = true } = {}) => {
-    try {
-      if (uploadInFlightRef.current) return;
-      uploadInFlightRef.current = true;
-      const t0 = performance.now();
-
-      const videoEl = uploadVideoRef.current;
-      if (!videoEl) return;
-      if (videoEl.ended) return;
-
-      // In "main.py mode" we analyze while paused + step frames ourselves
-      if (!allowPaused && videoEl.paused) return;
-
-      const img = captureFrameBase64FromEl(videoEl);
-      if (!img) return;
-
-      let sid = uploadSessionId;
-      if (!sid) sid = await startUploadSession();
-      if (!sid) return;
-
-      // Monotonic timestamps for MediaPipe video-mode landmarker
-      const candidateTs = Math.round((videoEl.currentTime || 0) * 1000);
-      const ts = Math.max(uploadLastTsRef.current + 1, candidateTs);
-      uploadLastTsRef.current = ts;
-
-      const res = await fetch(`/api/ai/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: img,
-          exercise: selectedExercise,
-          sessionId: sid,
-          reset,
-          timestampMs: ts,
-          // Upload Sync: ON seeks/steps (not sequential) => IMAGE mode.
-          // Upload Sync: OFF plays normally (sequential) => VIDEO mode for stable tracking.
-          mode: uploadSyncMode ? "image" : "video",
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
-        console.error("Upload AI: HTTP error", res.status, errorData);
-        throw new Error(`HTTP ${res.status}: ${errorData.error || "Server error"}`);
-      }
-
-      const data = await res.json();
-      if (!data?.ok) return;
-      const rtt = performance.now() - t0;
-      uploadLeadMsRef.current = Math.max(
-        0,
-        Math.min(400, Math.round(0.85 * uploadLeadMsRef.current + 0.15 * rtt))
-      );
-
-      uploadFailCountRef.current = 0;
-      setUploadSessionId(data.sessionId);
-      setUploadLandmarks(data.poseLandmarks || null);
-      setUploadFeedback(Array.isArray(data.feedback) ? data.feedback : []);
-      setUploadFormScore(typeof data.formScore === "number" ? data.formScore : 0);
-      if (typeof data.reps === "number") setUploadReps(data.reps);
-    } catch (e) {
-      uploadFailCountRef.current += 1;
-      console.error("AI backend error:", e);
-      if (uploadFailCountRef.current >= 5) {
-        setUploadFeedback(["AI server not reachable. Start the Python server (AI/mediapipe_api.py) then try again."]);
-        stopUploadAnalysis();
-      }
-    } finally {
-      uploadInFlightRef.current = false;
-    }
+    // Step mode is paced BY the analysis: advance only after the frame that is
+    // currently on screen has been measured. That is what keeps the skeleton on
+    // the body rather than trailing a frame or two behind it.
+    if (uploadStepActiveRef.current) advanceUploadFrame();
   };
 
   const stopUploadAnalysis = () => {
     uploadStepActiveRef.current = false;
-    if (uploadIntervalRef.current) {
-      clearInterval(uploadIntervalRef.current);
-      uploadIntervalRef.current = null;
-    }
     setUploadAnalyzing(false);
-    uploadInFlightRef.current = false;
   };
 
   const startUploadAnalysis = async () => {
-    if (!uploadVideoRef.current) return;
-    if (!uploadUrl) return;
+    const video = uploadVideoRef.current;
+    if (!video || !uploadUrl) return;
 
-    // reset UI + session
     setUploadAnalyzing(true);
     setUploadFeedback([]);
     setUploadFormScore(0);
     setUploadReps(0);
     setUploadLandmarks(null);
-    setUploadSessionId(null);
-    uploadLastTsRef.current = 0;
-
-    const v = uploadVideoRef.current;
+    // Drop the old session so this run starts from zero reps.
+    uploadSessionRef.current = null;
 
     if (uploadSyncMode) {
-      // Perfect overlay (main.py-style): pause + step through frames; video speed == AI speed
-      try {
-        v.pause();
-      } catch {}
-
+      // Frame-by-frame review. The video is paused and stepped forward by
+      // handleUploadLandmarks, one analysed frame at a time.
       uploadStepActiveRef.current = true;
-      uploadLeadMsRef.current = 0; // no lead compensation needed when stepped
-
-      const stepSeconds = 1 / 15; // target "fps" for stepping (will slow down if AI is slower)
-
-      const waitForSeek = () =>
-        new Promise((resolve) => {
-          const el = uploadVideoRef.current;
-          if (!el) return resolve();
-          el.addEventListener("seeked", () => resolve(), { once: true });
-        });
-
-      const loop = async (isFirst) => {
-        if (!uploadStepActiveRef.current) return;
-        const el = uploadVideoRef.current;
-        if (!el) return;
-
-        if (el.ended || (Number.isFinite(el.duration) && el.currentTime >= el.duration - 0.001)) {
-          stopUploadAnalysis();
-          return;
-        }
-
-        await tickUploadAI(isFirst, { allowPaused: true });
-        if (!uploadStepActiveRef.current) return;
-
-        const dur = el.duration || 0;
-        const nextTime = dur ? Math.min(dur, el.currentTime + stepSeconds) : el.currentTime + stepSeconds;
-        el.currentTime = nextTime;
-        await waitForSeek();
-
-        loop(false);
-      };
-
-      loop(true);
+      try {
+        video.pause();
+      } catch {}
     } else {
-      // Smooth playback: keep video playing and analyze in the background (may show some delay)
+      // Normal playback, analysed as it plays.
       uploadStepActiveRef.current = false;
       try {
-        await v.play();
+        await video.play();
       } catch {}
-
-      await tickUploadAI(true, { allowPaused: false });
-      if (uploadIntervalRef.current) clearInterval(uploadIntervalRef.current);
-      uploadIntervalRef.current = setInterval(() => {
-        tickUploadAI(false, { allowPaused: false });
-        if (uploadVideoRef.current?.ended) stopUploadAnalysis();
-      }, 80);
     }
   };
 
@@ -902,10 +483,6 @@ export default function AISportsPage() {
     setCameraStream(null);
     setIsRecording(false);
     setBackendLandmarks(null);
-    if (aiIntervalRef.current) {
-      clearInterval(aiIntervalRef.current);
-      aiIntervalRef.current = null;
-    }
   };
 
   // Attach stream to the video element once it is mounted.
@@ -988,8 +565,9 @@ export default function AISportsPage() {
       setFormScore(0);
       setWorkoutTime(0);
       setCalories(0);
-      repStateRef.current = { phase: "up", lastCountAt: 0 };
-      setBackendLandmarks(null);
+      liveRepsRef.current = 0;
+      // Fresh session so reps and rep-counter phase start clean.
+      liveSessionRef.current = null;
       
       // Timer for workout duration
       const timeInterval = setInterval(() => {
@@ -1001,22 +579,15 @@ export default function AISportsPage() {
         videoRef.current.dataset.timeIntervalId = timeInterval;
       }
 
-      // Start YOUR Python model loop
-      if (aiIntervalRef.current) clearInterval(aiIntervalRef.current);
-      tickBackendAI(true);
-      aiIntervalRef.current = setInterval(() => {
-        tickBackendAI(false);
-      }, 200);
+      // No analysis loop to start: PoseEngine is already running whenever the
+      // camera is on, and handleLiveLandmarks begins scoring once isRecording
+      // flips to true.
     } else {
       setIsRecording(false);
       if (videoRef.current) {
         if (videoRef.current.dataset.timeIntervalId) {
           clearInterval(parseInt(videoRef.current.dataset.timeIntervalId));
         }
-      }
-      if (aiIntervalRef.current) {
-        clearInterval(aiIntervalRef.current);
-        aiIntervalRef.current = null;
       }
     }
   };
@@ -1183,14 +754,20 @@ export default function AISportsPage() {
                           }}
                         />
                       )}
+                      <PoseEngine
+                        videoRef={videoRef}
+                        isActive={useMediaPipe && cameraActive && streamReady}
+                        onLandmarks={handleLiveLandmarks}
+                        onStatus={setAiStatus}
+                      />
                       <PoseOverlay
                         videoRef={videoRef}
                         canvasRef={canvasRef}
                         landmarks={backendLandmarks}
                         enabled={useMediaPipe && cameraActive && streamReady}
-                        // Lead/prediction can make points look "off-body". Keep it exact.
-                          leadMs={uploadSyncMode ? 0 : uploadLeadMsRef.current}
-                          mirror={false}
+                        // The preview video is CSS-flipped (scaleX(-1)) so it reads
+                        // like a mirror, so the landmarks have to be flipped to match.
+                        mirror={true}
                       />
                       {isRecording && (
                         <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full animate-pulse z-10">
@@ -1355,6 +932,40 @@ export default function AISportsPage() {
                         )}
                       </div>
 
+                      {/* Model status: the first load fetches and compiles the
+                          pose WASM, which is a visible wait on a cold cache. */}
+                      {useMediaPipe && cameraActive && aiStatus.state !== "ready" && (
+                        <div
+                          className={`border-2 rounded-xl p-4 ${
+                            aiStatus.state === "error"
+                              ? "bg-red-50 border-red-200"
+                              : "bg-amber-50 border-amber-200"
+                          }`}
+                        >
+                          {aiStatus.state === "error" ? (
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                              <div>
+                                <p className="text-sm font-semibold text-red-900">
+                                  Pose detection could not start
+                                </p>
+                                <p className="text-sm text-red-800">
+                                  {aiStatus.error} — this needs a browser with WebAssembly
+                                  enabled. Try Chrome, Edge or Safari.
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600" />
+                              <span className="text-sm font-semibold text-amber-900">
+                                Loading the pose model…
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* AI Feedback */}
                       {feedback.length > 0 && (
                         <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
@@ -1465,14 +1076,18 @@ export default function AISportsPage() {
                         className="absolute inset-0 pointer-events-none"
                         style={{ backgroundColor: "transparent", width: "100%", height: "100%" }}
                       />
+                      <PoseEngine
+                        videoRef={uploadVideoRef}
+                        isActive={useMediaPipe && !!uploadUrl}
+                        onLandmarks={handleUploadLandmarks}
+                        onStatus={setAiStatus}
+                      />
                       <PoseOverlay
                         videoRef={uploadVideoRef}
                         canvasRef={uploadCanvasRef}
                         landmarks={uploadLandmarks}
                         enabled={useMediaPipe && !!uploadUrl}
-                        // In Sync mode the video is stepped frame-by-frame, so there is no latency to compensate.
-                        // Lead compensation can overshoot and look "off-body", so disable it in Sync mode.
-                        leadMs={uploadSyncMode ? 0 : uploadLeadMsRef.current}
+                        // An uploaded video is shown as-is, not mirrored.
                         mirror={false}
                       />
                     </div>
@@ -1490,8 +1105,8 @@ export default function AISportsPage() {
                         <div className="text-sm font-semibold text-[#354F52]">Upload Mode</div>
                         <div className="text-xs text-gray-600">
                           {uploadSyncMode
-                            ? "Perfect overlay (video pauses/steps like main.py)"
-                            : "Smooth playback (video plays normally; overlay may lag a bit)"}
+                            ? "Frame-by-frame review (steps through the clip as it analyses)"
+                            : "Normal playback (analysed as it plays)"}
                         </div>
                       </div>
                       <button
@@ -1505,7 +1120,7 @@ export default function AISportsPage() {
                         } ${uploadAnalyzing ? "opacity-50 cursor-not-allowed" : ""}`}
                         title={uploadAnalyzing ? "Stop analysis to change mode" : "Toggle upload mode"}
                       >
-                        {uploadSyncMode ? "Sync: ON" : "Sync: OFF"}
+                        {uploadSyncMode ? "Step: ON" : "Step: OFF"}
                       </button>
                     </div>
                   </div>

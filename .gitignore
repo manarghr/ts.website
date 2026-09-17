@@ -47,3 +47,10 @@ mongo.guide.md
 
 # user-uploaded files (belong in cloud storage, not the repo)
 /public/uploads/
+
+# MediaPipe WASM runtime (copied from node_modules by scripts/copy-mediapipe.mjs)
+/public/mediapipe/
+
+# Python bytecode
+__pycache__/
+*.pyc
