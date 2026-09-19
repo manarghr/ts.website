@@ -25,9 +25,8 @@ export default function BlogHome() {
   // State management
   const [allBlogPosts, setAllBlogPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [current, setCurrent] = useState(0);
   const [mounted, setMounted] = useState(false);
-  const POSTS_PER_PAGE = 3;
 
   // Set mounted state
   useEffect(() => {
@@ -53,42 +52,39 @@ export default function BlogHome() {
     fetchBlogs();
   }, []);
 
-  // Get one post per category
-  const categories = ['training', 'nutrition', 'technology', 'wellness', 'mindset', 'progress'];
-
+  // One article per category, with the categories taken from the articles
+  // themselves. The previous version compared against a hardcoded lowercase
+  // list, so a post in any other category -- or the same one capitalised
+  // differently -- vanished, and the section claimed there were no articles
+  // while the database was full.
   const getOnePerCategory = () => {
+    const seen = new Set();
     const result = [];
-    categories.forEach(cat => {
-      const post = allBlogPosts.find(p => p.category === cat);
-      if (post) result.push(post);
-    });
+
+    for (const post of allBlogPosts) {
+      const key = (post.category || "uncategorised").toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push(post);
+    }
+
     return result;
   };
 
   const filteredPosts = getOnePerCategory();
-  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+  const totalSlides = filteredPosts.length;
+  const activePost = filteredPosts[Math.min(current, Math.max(0, totalSlides - 1))];
 
-  // Ensure currentPage is valid
-  useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(1);
-    }
-  }, [allBlogPosts.length, totalPages, currentPage]);
-
-  // Safe pagination - ensure we don't go out of bounds
-  const validPage = currentPage > totalPages && totalPages > 0 ? 1 : currentPage;
-  const startIndex = (validPage - 1) * POSTS_PER_PAGE;
-  const endIndex = startIndex + POSTS_PER_PAGE;
-  const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
-
-  const handlePageChange = (page) => {
-    const newPage = Math.max(1, Math.min(page, totalPages));
-    console.log('Changing to page:', newPage, 'Total pages:', totalPages, 'Filtered posts:', filteredPosts.length);
-    setCurrentPage(newPage);
-    if (mounted && typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+  const goTo = (next) => {
+    if (totalSlides === 0) return;
+    // Wrap around, so neither arrow is ever a dead end.
+    setCurrent(((next % totalSlides) + totalSlides) % totalSlides);
   };
+
+  // Keep the slide in range if the article list changes under it.
+  useEffect(() => {
+    if (current >= filteredPosts.length) setCurrent(0);
+  }, [filteredPosts.length, current]);
 
   // Loading state
   if (loading) {
@@ -103,16 +99,6 @@ export default function BlogHome() {
       </section>
     );
   }
-
-  console.log('Rendering:', {
-    allPosts: allBlogPosts.length,
-    filtered: filteredPosts.length,
-    currentPage,
-    totalPages,
-    paginated: paginatedPosts.length,
-    startIndex,
-    endIndex
-  });
 
   return (
     <section className="relative py-12 bg-white overflow-hidden z-10">
@@ -179,115 +165,98 @@ export default function BlogHome() {
         </motion.div>
 
         {/* Blog Posts Grid */}
-        {paginatedPosts.length > 0 ? (
+        {totalSlides > 0 && activePost ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
-              {paginatedPosts.map((post, index) => (
-                <motion.article
-                  key={`${post.id}-page-${currentPage}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 overflow-hidden"
-                >
-                  {/* Image */}
-                  <div className="relative h-48 overflow-hidden">
-                    <Image
-                      src={post.image || "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800"}
-                      alt={post.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800";
-                      }}
-                    />
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-[#52796F] text-white text-xs font-semibold rounded-full capitalize">
-                      {post.category}
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-[#354F52] mb-3 group-hover:text-[#52796F] transition-colors line-clamp-2">
-                      {post.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">
-                      {post.excerpt}
-                    </p>
-
-                    {/* Meta Info */}
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                      <div className="flex items-center gap-1">
-                        <FaUser className="w-3 h-3" />
-                        <span>{post.author}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <FaClock className="w-3 h-3" />
-                        <span>{post.readTime}</span>
-                      </div>
-                    </div>
-
-                    <Link
-                      href={`/blog/${post.id}`}
-                      className="inline-flex items-center gap-2 text-[#52796F] font-semibold hover:text-[#354F52] transition-colors group-hover:gap-3"
-                    >
-                      Read More
-                      <FaArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
-                </motion.article>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="flex justify-center items-center gap-8 mt-16 mb-12"
+            {/* One article at a time. A single wide card reads better on a
+                landing page than a grid of three narrow ones, and the arrows
+                make it obvious there is more behind it. */}
+            <div className="relative mb-10">
+              <motion.article
+                key={activePost.id}
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.35 }}
+                className="group mx-auto grid max-w-5xl overflow-hidden rounded-2xl border border-[#C8CDC5]/60 bg-white shadow-md transition-all duration-300 hover:shadow-xl md:grid-cols-2"
               >
-                {/* Previous Button */}
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  aria-label="Previous page"
-                  className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
-                >
-                  <IoIosArrowBack size={24} className="group-hover:-translate-x-1 transition-transform" />
-                </button>
-
-                {/* Page Dots Indicator */}
-                <div className="flex gap-3 items-center">
-                  {Array.from({ length: totalPages }).map((_, index) => {
-                    const page = index + 1;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          currentPage === page
-                            ? "bg-[#354F52] w-12 shadow-lg"
-                            : "bg-[#C8CDC5] w-2 hover:bg-[#52796F] hover:w-4"
-                        }`}
-                        aria-label={`Go to page ${page}`}
-                      />
-                    );
-                  })}
+                <div className="relative h-56 overflow-hidden md:h-full md:min-h-[320px]">
+                  <Image
+                    src={activePost.image || "/video-placeholder.svg"}
+                    alt={activePost.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute left-4 top-4 rounded-full bg-[#52796F] px-3 py-1 text-xs font-semibold capitalize text-white">
+                    {activePost.category}
+                  </div>
                 </div>
 
-                {/* Next Button */}
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  aria-label="Next page"
-                  className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
-                >
-                  <IoIosArrowForward size={24} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-              </motion.div>
+                <div className="flex flex-col justify-center p-6 md:p-10">
+                  <h3 className="mb-3 text-2xl font-bold text-[#354F52] transition-colors group-hover:text-[#52796F] md:text-3xl">
+                    {activePost.title}
+                  </h3>
+                  <p className="mb-5 leading-relaxed text-gray-600 line-clamp-3">
+                    {activePost.excerpt}
+                  </p>
+
+                  <div className="mb-6 flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <FaUser className="h-3 w-3" />
+                      <span>{activePost.author}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <FaClock className="h-3 w-3" />
+                      <span>{activePost.readTime}</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/blog/${activePost.id}`}
+                    className="inline-flex w-fit items-center gap-2 font-semibold text-[#52796F] transition-all hover:gap-3 hover:text-[#354F52]"
+                  >
+                    Read More
+                    <FaArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </motion.article>
+
+              {totalSlides > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => goTo(current - 1)}
+                    aria-label="Previous article"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 rounded-2xl bg-[#354F52] p-3 text-white shadow-xl transition-all duration-300 hover:scale-110 hover:bg-[#52796F] lg:-left-6"
+                  >
+                    <IoIosArrowBack size={22} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => goTo(current + 1)}
+                    aria-label="Next article"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 rounded-2xl bg-[#354F52] p-3 text-white shadow-xl transition-all duration-300 hover:scale-110 hover:bg-[#52796F] lg:-right-6"
+                  >
+                    <IoIosArrowForward size={22} />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {totalSlides > 1 && (
+              <div className="mb-12 flex justify-center gap-2">
+                {filteredPosts.map((post, index) => (
+                  <button
+                    key={post.id}
+                    type="button"
+                    onClick={() => setCurrent(index)}
+                    aria-label={`Go to article ${index + 1}`}
+                    aria-current={index === current}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === current ? "w-8 bg-[#354F52]" : "w-2 bg-[#C8CDC5] hover:bg-[#52796F]"
+                    }`}
+                  />
+                ))}
+              </div>
             )}
           </>
         ) : (

@@ -79,6 +79,15 @@ const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
 
   images: {
+    // next/image refuses to optimise SVG by default and answers 400, because a
+    // remote SVG can carry script. Our placeholders are SVG and same-origin, so
+    // this is turned on together with the sandbox policy below -- which strips
+    // scripting from anything served through the optimiser, restoring the
+    // protection the flag removes.
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+
     // Only hosts we actually load images from.
     //
     // This used to be `hostname: "**"` on both http and https, which made

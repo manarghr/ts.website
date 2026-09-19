@@ -1,23 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Coach avatar placeholder">
-  <title>Coach avatar placeholder</title>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="No profile photo">
+  <title>No profile photo</title>
 
-  <!-- Site palette: #C8CDC5 sage, #52796F mid, #6BB371 brand green.
-       A neutral silhouette rather than a stock photo of a real person -- these
-       are demo profiles, and borrowed faces make them read as impersonation. -->
-  <defs>
-    <clipPath id="coach-avatar-clip">
-      <circle cx="100" cy="100" r="86" />
-    </clipPath>
-  </defs>
+  <!-- Rectangular to match the card's image frame, with a flat background so
+       it still reads correctly when the card crops it to another aspect ratio.
+       A neutral silhouette rather than a photograph: these are demo profiles,
+       and a real person's face on an invented profile reads as impersonation.
+       Greys are tinted toward the site's sage palette so it belongs to the
+       page rather than looking like a missing asset. -->
 
-  <circle cx="100" cy="100" r="96" fill="#6BB371" fill-opacity="0.18" />
-  <circle cx="100" cy="100" r="88" fill="none" stroke="#6BB371" stroke-width="5" />
-  <circle cx="100" cy="100" r="86" fill="#C8CDC5" />
+  <rect width="400" height="300" fill="#D4DAD3" />
 
-  <g clip-path="url(#coach-avatar-clip)" fill="#52796F">
+  <g fill="#9BA89D">
     <!-- head -->
-    <circle cx="100" cy="80" r="30" />
-    <!-- shoulders -->
-    <path d="M100 118c-31 0-56 23-59 53a86 86 0 0 0 118 0c-3-30-28-53-59-53z" />
+    <circle cx="200" cy="120" r="46" />
+    <!-- shoulders: a wide arc, cropped by the frame the way Facebook's is -->
+    <path d="M200 180c-52 0-94 38-99 88h198c-5-50-47-88-99-88z" />
   </g>
 </svg>
