@@ -19,7 +19,8 @@
 import { MongoClient } from "mongodb";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { programs, blogs, meals, videos } from "./demo-data.mjs";
+import { programs, meals, videos } from "./demo-data.mjs";
+import { blogs } from "./demo-blogs.mjs";
 import { coaches } from "./demo-coaches.mjs";
 
 // Next.js loads .env.local automatically, a plain node script does not.
