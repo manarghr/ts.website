@@ -161,7 +161,7 @@ export default function Services() {
             <span>Comprehensive Training</span>
           </div>
           
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black mb-8 leading-tight tracking-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-tight">
             <span className="text-[#354F52]">Our</span>{" "}
             <span className="bg-gradient-to-r from-[#52796F] via-[#6BB371] to-[#52796F] bg-clip-text text-transparent animate-gradient">
               Training Services

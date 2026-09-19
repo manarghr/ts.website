@@ -37,7 +37,7 @@ export default function Home() {
         </div>
 
         {/* Features Section - Clean & Modern */}
-        <section className="relative py-10 md:py-12 bg-white overflow-hidden z-10">
+        <section className="relative py-20 md:py-28 bg-white overflow-hidden z-10">
           {/* Subtle Background Elements */}
           <div className="absolute inset-0">
             <div className="absolute top-0 right-0 w-[500px] h-[500px]" style={{ background: "radial-gradient(circle, rgba(82,121,111,0.03) 0%, transparent 70%)" }}></div>
@@ -56,7 +56,7 @@ export default function Home() {
                 <FaHeartbeat className="text-[#6BB371]" />
                 <span>Why Choose TrainSight</span>
               </div>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
                 <span className="text-[#354F52]">Powerful Features</span>{" "}
                 <span className="text-[#52796F]">For Your Success</span>
               </h2>
@@ -129,28 +129,28 @@ export default function Home() {
         </section>
 
         {/* Services Section */}
-        <section className="relative bg-white py-8 z-10">
+        <section className="relative bg-white z-10">
           <div className="relative z-10">
             <Services />
           </div>
         </section>
 
         {/* Coaches Section */}
-        <section className="relative bg-white py-8 z-10">
+        <section className="relative bg-white z-10">
           <div className="relative z-10">
             <CoachesHome />
           </div>
         </section>
 
         {/* Blog Section */}
-        <section className="relative bg-[#F8F9F7] py-8 overflow-hidden z-10">
+        <section className="relative bg-[#F8F9F7] overflow-hidden z-10">
           <div className="relative z-10">
             <BlogHome />
           </div>
         </section>
 
         {/* Final CTA Section - Clean Design */}
-        <section className="relative py-16 md:py-20 bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#354F52] overflow-hidden z-10">
+        <section className="relative py-20 md:py-28 bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#354F52] overflow-hidden z-10">
           {/* Grid Background for CTA - White grid on dark background */}
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:white;stroke-width:0.4;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
@@ -163,7 +163,7 @@ export default function Home() {
             <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px]"></div>
           </div>
 
-          <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12 text-center">
+          <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16 text-center">
             <motion.div
               variants={fadeInUp}
               initial="initial"

@@ -187,10 +187,10 @@ export default function CoachesHome() {
             <FaUsers className="text-[#6BB371]" />
             <span>Expert Trainers</span>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
             <span className="text-[#354F52]">Our Expert</span>{" "}
             <span className="text-[#52796F]">Coaches</span>
-          </h1>
+          </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Meet our team of professional trainers dedicated to helping you achieve your fitness goals
           </p>

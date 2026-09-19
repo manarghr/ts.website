@@ -101,7 +101,7 @@ export default function BlogHome() {
   }
 
   return (
-    <section className="relative py-12 bg-white overflow-hidden z-10">
+    <section className="relative py-20 md:py-28 bg-white overflow-hidden z-10">
       {/* Floating Gym and Food Icons Background */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {/* Gym Icons */}
@@ -155,7 +155,7 @@ export default function BlogHome() {
             <FaCalendarAlt className="text-[#6BB371]" />
             <span>Latest Articles</span>
           </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
             <span className="text-[#354F52]">Our</span>{" "}
             <span className="text-[#52796F]">Blog</span>
           </h2>
