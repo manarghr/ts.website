@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Coach avatar placeholder">
+  <title>Coach avatar placeholder</title>
+
+  <!-- Site palette: #C8CDC5 sage, #52796F mid, #6BB371 brand green.
+       A neutral silhouette rather than a stock photo of a real person -- these
+       are demo profiles, and borrowed faces make them read as impersonation. -->
+  <defs>
+    <clipPath id="coach-avatar-clip">
+      <circle cx="100" cy="100" r="86" />
+    </clipPath>
+  </defs>
+
+  <circle cx="100" cy="100" r="96" fill="#6BB371" fill-opacity="0.18" />
+  <circle cx="100" cy="100" r="88" fill="none" stroke="#6BB371" stroke-width="5" />
+  <circle cx="100" cy="100" r="86" fill="#C8CDC5" />
+
+  <g clip-path="url(#coach-avatar-clip)" fill="#52796F">
+    <!-- head -->
+    <circle cx="100" cy="80" r="30" />
+    <!-- shoulders -->
+    <path d="M100 118c-31 0-56 23-59 53a86 86 0 0 0 118 0c-3-30-28-53-59-53z" />
+  </g>
+</svg>

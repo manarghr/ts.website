@@ -26,11 +26,8 @@ const staggerContainer = {
 };
 
 // Default images array for fallback (using placeholder URLs)
-const defaultImages = [
-  "https://images.unsplash.com/photo-1571019613452-2df05eb5c3b?w=400",
-  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400",
-  "https://images.unsplash.com/photo-1518611012115-8f740f1e1072?w=400",
-];
+// Neutral silhouette instead of a stock photograph -- see Coaches.jsx.
+const COACH_AVATAR = "/coach-avatar.svg";
 
 export default function CoachesHome() {
   const sectionRef = useRef(null);
@@ -122,7 +119,7 @@ export default function CoachesHome() {
     if (coach.image_url) {
       return coach.image_url;
     }
-    return defaultImages[index % defaultImages.length];
+    return COACH_AVATAR;
   };
 
   // Changement de catégorie avec animation

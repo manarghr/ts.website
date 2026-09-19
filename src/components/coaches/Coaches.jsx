@@ -7,11 +7,10 @@ import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { FaDumbbell, FaRunning, FaLeaf, FaSearch, FaTimes, FaFilter } from "react-icons/fa";
 
 // Default images array for fallback (using placeholder URLs)
-const defaultImages = [
-  "https://images.unsplash.com/photo-1571019613452-2df05eb5c3b?w=400",
-  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400",
-  "https://images.unsplash.com/photo-1518611012115-8f740f1e1072?w=400",
-];
+// A coach without a photo gets a neutral silhouette in the site palette,
+// not a stock photograph. Borrowed faces on profiles that are not those
+// people read as impersonation, however harmless the intent.
+const COACH_AVATAR = "/coach-avatar.svg";
 
 export default function Coaches() {
   const [isVisible, setIsVisible] = useState({});
@@ -215,7 +214,7 @@ export default function Coaches() {
       return coach.image_url;
     }
     // Use default image based on index
-    return defaultImages[index % defaultImages.length];
+    return COACH_AVATAR;
   };
 
   // Carousel state for each category (dynamic)

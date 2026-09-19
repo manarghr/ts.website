@@ -135,11 +135,9 @@ function ReportModalContent({ onSubmit, onClose, onNotify }) {
 }
 
 // Default images for fallback (using placeholder URLs)
-const defaultImages = [
-  "https://images.unsplash.com/photo-1571019613452-2df05eb5c3b?w=400",
-  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400",
-  "https://images.unsplash.com/photo-1518611012115-8f740f1e1072?w=400",
-];
+// Demo videos have no real footage, so the thumbnail is a neutral card
+// rather than an unrelated stock photograph.
+const VIDEO_PLACEHOLDER = "/video-placeholder.svg";
 
 export default function CoachProfile({ coachId }) {
   const toast = useToast();
@@ -468,7 +466,7 @@ export default function CoachProfile({ coachId }) {
             <div className="relative">
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl">
                 <Image
-                  src={coach.image_url || coach.image || "/placeholder.svg"}
+                  src={coach.image_url || coach.image || "/coach-avatar.svg"}
                   alt={coach.name}
                   fill
                   className="object-cover"
@@ -629,7 +627,7 @@ export default function CoachProfile({ coachId }) {
                   >
                     <div className="relative h-48 bg-gradient-to-br from-[#354F52] to-[#52796F]">
                       <Image
-                        src={video.thumbnail || defaultImages[0]}
+                        src={video.thumbnail || video.thumbnail_url || VIDEO_PLACEHOLDER}
                         alt={video.title}
                         fill
                         className="object-cover"

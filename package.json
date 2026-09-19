@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint --dir src --dir backend",
     "setup-db": "node scripts/setup-db.mjs",
-    "copy-mediapipe": "node scripts/copy-mediapipe.mjs"
+    "copy-mediapipe": "node scripts/copy-mediapipe.mjs",
+    "seed-demo": "node scripts/seed-demo.mjs"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
