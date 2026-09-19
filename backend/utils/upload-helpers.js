@@ -79,12 +79,27 @@ export async function saveUpload(file, { allowed, maxBytes, subdir }) {
   }
 
   const dir = join(process.cwd(), "public", ...subdir);
-  await mkdir(dir, { recursive: true });
 
   // Random rather than Math.random(): predictable names let someone guess the URL
   // of a file another person just uploaded.
   const filename = `${Date.now()}_${crypto.randomBytes(8).toString("hex")}.${spec.ext}`;
-  await writeFile(join(dir, filename), buffer);
+
+  try {
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, filename), buffer);
+  } catch (error) {
+    // Serverless filesystems are read-only, so this path cannot work once
+    // deployed. Saying so plainly beats a 500: a generic failure reads as a
+    // broken site, where this reads as a feature that needs configuring.
+    if (error?.code === "EROFS" || error?.code === "EACCES" || error?.code === "EPERM") {
+      throw new UploadError(
+        "File uploads are not available on this deployment. The server stores " +
+          "uploads on disk, which is read-only here -- connecting object storage " +
+          "(Cloudinary, S3 or Vercel Blob) is what enables it."
+      );
+    }
+    throw error;
+  }
 
   return { url: `/${subdir.join("/")}/${filename}`, filename };
 }

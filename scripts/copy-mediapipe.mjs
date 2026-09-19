@@ -24,6 +24,12 @@ const DEST = join(ROOT, "public", "mediapipe", "pose");
 // pose_landmark_heavy.tflite (27MB) -- the page uses modelComplexity 0 or 1,
 // so the heavy model would be dead weight on every deploy.
 const REQUIRED = [
+  // The library itself. Loaded with a <script> tag rather than imported, so it
+  // runs as a classic script where `this` is the window and it can register
+  // window.Pose. Bundling it does not work: package.json marks pose.js as
+  // side-effect-free, so webpack is entitled to drop an import whose bindings
+  // are never used -- and then the global never appears.
+  "pose.js",
   "pose_solution_packed_assets_loader.js",
   "pose_solution_packed_assets.data",
   "pose_solution_simd_wasm_bin.js",

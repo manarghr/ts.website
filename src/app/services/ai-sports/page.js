@@ -5,6 +5,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import PoseOverlay from "@/components/AI/PoseOverlay";
 import PoseEngine from "@/components/AI/PoseEngine";
+import ExerciseGuide from "@/components/AI/ExerciseGuide";
 import { createAnalysisSession } from "@/lib/ai/session";
 import { hasPremiumAccess } from "@/lib/plans";
 import { 
@@ -94,6 +95,19 @@ export default function AISportsPage() {
   const liveRepsRef = useRef(0);
   const [aiStatus, setAiStatus] = useState({ state: "loading" });
 
+  // The joint angle behind the score, shown live against the target band.
+  const [liveAngle, setLiveAngle] = useState(null);
+  const [uploadAngle, setUploadAngle] = useState(null);
+
+  // Per-rep quality. The live score swings through every rep by nature, so
+  // these are the numbers that actually say how the set went.
+  const [liveRepScores, setLiveRepScores] = useState({ last: null, average: null, best: null });
+  const [uploadRepScores, setUploadRepScores] = useState({ last: null, average: null, best: null });
+
+  // Playback position, so the panel can show how far through the clip we are.
+  const [uploadTime, setUploadTime] = useState(0);
+  const [uploadDuration, setUploadDuration] = useState(0);
+
   // Form score averaged over the whole session. The displayed score is whatever
   // the latest frame said, which is a poor summary -- a set that ended mid-rep
   // would be judged by that one frame.
@@ -128,6 +142,12 @@ export default function AISportsPage() {
     setFeedback(result.feedback);
     setFormScore(result.formScore);
     setRepCount(result.reps);
+    setLiveAngle(result.angle);
+    setLiveRepScores({
+      last: result.lastRepScore,
+      average: result.averageRepScore,
+      best: result.bestRepScore,
+    });
 
     // Only frames where a pose was actually judged count towards the average;
     // frames we declined to score would drag it towards zero.
@@ -184,6 +204,53 @@ export default function AISportsPage() {
   // How far the frame-by-frame reviewer jumps per analysed frame.
   const UPLOAD_STEP_SECONDS = 1 / 15;
 
+  // Step mode is paced by the analysis, so it needs one decoded frame to get
+  // going. A paused <video> that has never played sits at HAVE_METADATA, and
+  // MediaPipe cannot read a frame that was never decoded -- which deadlocks:
+  // no frame -> no landmarks -> no step -> no frame. A seek forces the decode.
+  const waitForDecodedFrame = (video, timeoutMs = 5000) =>
+    new Promise((resolve) => {
+      if (video.readyState >= 2) return resolve(true);
+
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        video.removeEventListener("loadeddata", finish);
+        video.removeEventListener("seeked", finish);
+        resolve(video.readyState >= 2);
+      };
+
+      video.addEventListener("loadeddata", finish, { once: true });
+      video.addEventListener("seeked", finish, { once: true });
+
+      // Nudge the browser into decoding something.
+      try {
+        const duration = Number.isFinite(video.duration) ? video.duration : 0;
+        const nudge = video.currentTime + 0.001;
+        video.currentTime = duration ? Math.min(duration - 0.01, nudge) : nudge;
+      } catch {}
+
+      const timer = setTimeout(finish, timeoutMs);
+    });
+
+  // If the analysis stalls -- a dropped frame, a detection that throws -- the
+  // self-paced loop would stop silently. This keeps it moving.
+  const uploadWatchdogRef = useRef(null);
+  const lastStepAtRef = useRef(0);
+
+  const startUploadWatchdog = () => {
+    if (uploadWatchdogRef.current) clearInterval(uploadWatchdogRef.current);
+    lastStepAtRef.current = performance.now();
+
+    uploadWatchdogRef.current = setInterval(() => {
+      if (!uploadStepActiveRef.current) return;
+      if (performance.now() - lastStepAtRef.current < 2000) return;
+      advanceUploadFrame();
+    }, 1000);
+  };
+
   const advanceUploadFrame = () => {
     const video = uploadVideoRef.current;
     if (!video || !uploadStepActiveRef.current) return;
@@ -197,6 +264,7 @@ export default function AISportsPage() {
       return;
     }
 
+    lastStepAtRef.current = performance.now();
     const next = video.currentTime + UPLOAD_STEP_SECONDS;
     video.currentTime = duration ? Math.min(duration, next) : next;
   };
@@ -209,6 +277,12 @@ export default function AISportsPage() {
     setUploadFeedback(result.feedback);
     setUploadFormScore(result.formScore);
     setUploadReps(result.reps);
+    setUploadAngle(result.angle);
+    setUploadRepScores({
+      last: result.lastRepScore,
+      average: result.averageRepScore,
+      best: result.bestRepScore,
+    });
 
     // Step mode is paced BY the analysis: advance only after the frame that is
     // currently on screen has been measured. That is what keeps the skeleton on
@@ -218,6 +292,10 @@ export default function AISportsPage() {
 
   const stopUploadAnalysis = () => {
     uploadStepActiveRef.current = false;
+    if (uploadWatchdogRef.current) {
+      clearInterval(uploadWatchdogRef.current);
+      uploadWatchdogRef.current = null;
+    }
     setUploadAnalyzing(false);
   };
 
@@ -236,10 +314,19 @@ export default function AISportsPage() {
     if (uploadSyncMode) {
       // Frame-by-frame review. The video is paused and stepped forward by
       // handleUploadLandmarks, one analysed frame at a time.
-      uploadStepActiveRef.current = true;
       try {
         video.pause();
       } catch {}
+
+      const ready = await waitForDecodedFrame(video);
+      if (!ready) {
+        toast.error("Could not read this video. Try another file, or an MP4 (H.264).");
+        stopUploadAnalysis();
+        return;
+      }
+
+      uploadStepActiveRef.current = true;
+      startUploadWatchdog();
     } else {
       // Normal playback, analysed as it plays.
       uploadStepActiveRef.current = false;
@@ -255,8 +342,15 @@ export default function AISportsPage() {
     const url = URL.createObjectURL(file);
     setUploadUrl(url);
     setUploadAnalyzing(false);
-    setUploadSessionId(null);
+    // Stop any frame-stepping still running for the previous clip, and drop its
+    // analysis session so the new video starts from zero reps.
+    uploadStepActiveRef.current = false;
+    uploadSessionRef.current = null;
     setUploadLandmarks(null);
+    setUploadAngle(null);
+    setUploadRepScores({ last: null, average: null, best: null });
+    setUploadTime(0);
+    setUploadDuration(0);
     setUploadFeedback([]);
     setUploadFormScore(0);
     setUploadReps(0);
@@ -857,7 +951,23 @@ export default function AISportsPage() {
 
                 {/* AI Analytics Panel */}
                 <div className="p-8 bg-gradient-to-br from-white to-[#C8CDC5]/10">
-                  <h3 className="text-2xl font-bold text-[#354F52] mb-6">AI Analysis</h3>
+                  <div className="mb-6 flex items-center justify-between gap-3">
+                    <h3 className="text-2xl font-bold text-[#354F52]">AI Analysis</h3>
+                    {cameraActive && (
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                          isRecording ? "bg-red-50 text-red-700" : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            isRecording ? "animate-pulse bg-red-500" : "bg-gray-400"
+                          }`}
+                        />
+                        {isRecording ? "Recording" : "Ready"}
+                      </span>
+                    )}
+                  </div>
                   
                   {!cameraActive ? (
                     <div className="space-y-4">
@@ -1015,28 +1125,63 @@ export default function AISportsPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {/* Exercise Selector */}
-                      {!isRecording && (
-                        <div className="mb-4">
-                          <label className="text-sm font-semibold text-[#354F52] mb-2 block">Select Exercise</label>
-                          <div className="grid grid-cols-2 gap-2">
-                            {exercises.map((exercise) => (
+                      {/* Step 1 -- the choice everything else depends on. */}
+                      <div>
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#354F52] text-xs font-bold text-white">
+                            1
+                          </span>
+                          <h4 className="text-sm font-semibold text-[#354F52]">
+                            Choose your exercise
+                          </h4>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {exercises.map((exercise) => {
+                            const active = selectedExercise === exercise.id;
+                            return (
                               <button
                                 key={exercise.id}
                                 onClick={() => setSelectedExercise(exercise.id)}
-                                className={`flex items-center gap-2 p-3 rounded-xl font-medium text-sm transition-all ${
-                                  selectedExercise === exercise.id
-                                    ? "bg-[#6BB371] text-white shadow-lg"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                disabled={isRecording}
+                                className={`flex items-center gap-2.5 rounded-xl p-3 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                                  active
+                                    ? "bg-[#6BB371] text-white shadow-md"
+                                    : "border-2 border-[#C8CDC5] bg-white text-[#354F52] hover:border-[#6BB371]"
                                 }`}
                               >
-                                <exercise.icon className="w-4 h-4" />
+                                <exercise.icon className="h-4 w-4 shrink-0" />
                                 {exercise.name}
                               </button>
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
-                      )}
+                        {isRecording && (
+                          <p className="mt-2 text-[11px] text-gray-500">
+                            Stop the set to switch exercise.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Step 2 -- what good looks like, before you attempt it. */}
+                      <div>
+                        <div className="mb-2 flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#354F52] text-xs font-bold text-white">
+                            2
+                          </span>
+                          <h4 className="text-sm font-semibold text-[#354F52]">
+                            Learn the movement
+                          </h4>
+                        </div>
+                        <ExerciseGuide exercise={selectedExercise} angle={liveAngle} />
+                      </div>
+
+                      {/* Step 3 -- train. */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#354F52] text-xs font-bold text-white">
+                          3
+                        </span>
+                        <h4 className="text-sm font-semibold text-[#354F52]">Train</h4>
+                      </div>
 
                       {/* Stats Grid */}
                       <div className="grid grid-cols-2 gap-3">
@@ -1067,23 +1212,32 @@ export default function AISportsPage() {
                           <div className="text-3xl font-bold">{Math.round(calories)}</div>
                         </div>
 
-                        {/* Heart rate needs a sensor we do not have. A camera cannot
-                            measure it, so this reports no reading rather than a
-                            plausible-looking invention. */}
-                        <div className="bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl p-4 text-white">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Heart className="w-4 h-4" />
-                            <span className="text-xs font-medium opacity-90">HR</span>
+                        {/* This slot used to show an invented heart rate. A camera
+                            cannot measure one -- but it can measure how good the
+                            last rep was, which is worth the space. */}
+                        <div className="rounded-xl bg-gradient-to-br from-[#52796F] to-[#354F52] p-4 text-white">
+                          <div className="mb-1 flex items-center gap-2">
+                            <Award className="h-4 w-4" />
+                            <span className="text-xs font-medium opacity-90">Last rep</span>
                           </div>
-                          <div className="text-3xl font-bold">--</div>
-                          <div className="text-[11px] opacity-90 mt-0.5">Needs a heart-rate strap</div>
+                          <div className="text-3xl font-bold tabular-nums">
+                            {liveRepScores.last ?? "-"}
+                          </div>
+                          <div className="mt-0.5 text-[11px] opacity-80">
+                            {liveRepScores.average != null
+                              ? `avg ${liveRepScores.average} - best ${liveRepScores.best}`
+                              : "scored at the bottom of each rep"}
+                          </div>
                         </div>
                       </div>
 
                       {/* Form Score */}
                       <div className="bg-white border-2 border-[#C8CDC5] rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-semibold text-[#354F52]">Form Score</span>
+                          <span className="text-sm font-semibold text-[#354F52]">
+                            Live form
+                            <span className="ml-1.5 font-normal text-gray-500">this frame</span>
+                          </span>
                           <BarChart3 className="w-4 h-4 text-[#6BB371]" />
                         </div>
                         <div className="flex items-end gap-2 mb-2">
@@ -1146,17 +1300,39 @@ export default function AISportsPage() {
                         </div>
                       )}
 
-                      {/* AI Feedback */}
+                      {/* Coloured by the verdict rather than always blue, so a
+                          correction is distinguishable from praise at a glance. */}
                       {feedback.length > 0 && (
-                        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Zap className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-semibold text-blue-900">AI Feedback</span>
+                        <div
+                          className={`rounded-xl border-2 p-4 ${
+                            formScore >= 88
+                              ? "border-[#6BB371]/40 bg-[#6BB371]/10"
+                              : "border-amber-200 bg-amber-50"
+                          }`}
+                        >
+                          <div className="mb-2 flex items-center gap-2">
+                            <Zap
+                              className={`h-4 w-4 ${
+                                formScore >= 88 ? "text-[#6BB371]" : "text-amber-600"
+                              }`}
+                            />
+                            <span
+                              className={`text-sm font-semibold ${
+                                formScore >= 88 ? "text-[#2f6b39]" : "text-amber-900"
+                              }`}
+                            >
+                              Coaching cue
+                            </span>
                           </div>
                           <div className="space-y-1">
                             {feedback.map((fb, index) => (
-                              <p key={index} className="text-sm text-blue-800">
-                                • {fb}
+                              <p
+                                key={index}
+                                className={`text-sm ${
+                                  formScore >= 88 ? "text-[#354F52]" : "text-amber-900"
+                                }`}
+                              >
+                                {fb}
                               </p>
                             ))}
                           </div>
@@ -1250,9 +1426,17 @@ export default function AISportsPage() {
                       <video
                         ref={uploadVideoRef}
                         src={uploadUrl}
+                        // Without this the browser fetches metadata only, so a paused
+                        // video has no decoded frame for the pose model to read.
+                        preload="auto"
                         // Native controls add a bottom bar that breaks overlay alignment (canvas covers full element).
                         // Hide controls while analyzing so landmarks map 1:1 to the displayed video image.
                         controls={!uploadAnalyzing}
+                        onLoadedMetadata={(e) =>
+                          setUploadDuration(Number.isFinite(e.target.duration) ? e.target.duration : 0)
+                        }
+                        onTimeUpdate={(e) => setUploadTime(e.target.currentTime || 0)}
+                        onSeeked={(e) => setUploadTime(e.target.currentTime || 0)}
                         className="w-full h-full object-contain"
                         // Uploaded videos are typically already in correct orientation; don't mirror.
                         onEnded={() => stopUploadAnalysis()}
@@ -1282,62 +1466,268 @@ export default function AISportsPage() {
 
                 {/* Analysis Panel */}
                 <div className="p-8 bg-gradient-to-br from-white to-[#C8CDC5]/10">
-                  <h3 className="text-2xl font-bold text-[#354F52] mb-6">Video Analysis</h3>
+                  <div className="mb-5 flex items-center justify-between gap-3">
+                    <h3 className="text-2xl font-bold text-[#354F52]">Video Analysis</h3>
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                        uploadAnalyzing
+                          ? "bg-[#6BB371]/15 text-[#3d7a45]"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          uploadAnalyzing ? "animate-pulse bg-[#6BB371]" : "bg-gray-400"
+                        }`}
+                      />
+                      {uploadAnalyzing ? "Analysing" : "Paused"}
+                    </span>
+                  </div>
 
-                  {/* Upload mode toggle */}
-                  <div className="mb-4 p-3 bg-white/70 border border-[#C8CDC5]/40 rounded-xl">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <div className="text-sm font-semibold text-[#354F52]">Upload Mode</div>
-                        <div className="text-xs text-gray-600">
-                          {uploadSyncMode
-                            ? "Frame-by-frame review (steps through the clip as it analyses)"
-                            : "Normal playback (analysed as it plays)"}
-                        </div>
+                  {/* Step 1 -- the choice everything else depends on. Picking the
+                      wrong exercise measures the wrong joints, so it leads. */}
+                  <div className="mb-6">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#354F52] text-xs font-bold text-white">
+                        1
+                      </span>
+                      <h4 className="text-sm font-semibold text-[#354F52]">
+                        Which exercise is in this video?
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {exercises.map((exercise) => {
+                        const active = selectedExercise === exercise.id;
+                        return (
+                          <button
+                            key={exercise.id}
+                            onClick={() => setSelectedExercise(exercise.id)}
+                            disabled={uploadAnalyzing}
+                            className={`flex items-center gap-2.5 rounded-xl p-3 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+                              active
+                                ? "bg-[#6BB371] text-white shadow-md"
+                                : "border-2 border-[#C8CDC5] bg-white text-[#354F52] hover:border-[#6BB371]"
+                            }`}
+                          >
+                            <exercise.icon className="h-4 w-4 shrink-0" />
+                            {exercise.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {uploadAnalyzing && (
+                      <p className="mt-2 text-[11px] text-gray-500">
+                        Stop the analysis to switch exercise.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Step 2 -- what good looks like, for the exercise just chosen. */}
+                  <div className="mb-6">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#354F52] text-xs font-bold text-white">
+                        2
+                      </span>
+                      <h4 className="text-sm font-semibold text-[#354F52]">
+                        Learn the movement
+                      </h4>
+                    </div>
+                    <ExerciseGuide exercise={selectedExercise} angle={uploadAngle} />
+                  </div>
+
+                  {/* Step 3 -- run it. */}
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#354F52] text-xs font-bold text-white">
+                      3
+                    </span>
+                    <h4 className="text-sm font-semibold text-[#354F52]">Analyse the clip</h4>
+                  </div>
+
+                  {/* Progress through the clip. In step mode the video never
+                      plays, so this is the only indication that it is moving. */}
+                  {uploadDuration > 0 && (
+                    <div className="mb-5">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#C8CDC5]/50">
+                        <div
+                          className="h-full rounded-full bg-[#6BB371] transition-[width] duration-150"
+                          style={{
+                            width: `${Math.min(100, (uploadTime / uploadDuration) * 100)}%`,
+                          }}
+                        />
                       </div>
-                      <button
-                        type="button"
-                        disabled={uploadAnalyzing}
-                        onClick={() => setUploadSyncMode((v) => !v)}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                          uploadSyncMode
-                            ? "bg-[#354F52] text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        } ${uploadAnalyzing ? "opacity-50 cursor-not-allowed" : ""}`}
-                        title={uploadAnalyzing ? "Stop analysis to change mode" : "Toggle upload mode"}
-                      >
-                        {uploadSyncMode ? "Step: ON" : "Step: OFF"}
-                      </button>
+                      <div className="mt-1 flex justify-between text-[11px] tabular-nums text-gray-500">
+                        <span>{formatTime(Math.floor(uploadTime))}</span>
+                        <span>{formatTime(Math.floor(uploadDuration))}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mode. A two-option segmented control reads as a choice;
+                      the old single button did not say what the other state was. */}
+                  <div className="mb-5">
+                    <div className="mb-1.5 flex items-baseline justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Analysis mode
+                      </span>
+                      {uploadAnalyzing && (
+                        <span className="text-[11px] text-gray-400">stop to change</span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 rounded-xl bg-[#C8CDC5]/30 p-1">
+                      {[
+                        { on: true, label: "Step", hint: "frame by frame" },
+                        { on: false, label: "Play", hint: "at normal speed" },
+                      ].map((mode) => (
+                        <button
+                          key={mode.label}
+                          type="button"
+                          disabled={uploadAnalyzing}
+                          onClick={() => setUploadSyncMode(mode.on)}
+                          className={`rounded-lg px-3 py-2 text-sm font-semibold transition-all disabled:cursor-not-allowed ${
+                            uploadSyncMode === mode.on
+                              ? "bg-white text-[#354F52] shadow-sm"
+                              : "text-gray-600 hover:text-[#354F52]"
+                          } ${uploadAnalyzing ? "opacity-60" : ""}`}
+                        >
+                          {mode.label}
+                          <span className="block text-[11px] font-normal opacity-70">
+                            {mode.hint}
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-gradient-to-br from-[#6BB371] to-[#52796F] rounded-xl p-4 text-white">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Activity className="w-4 h-4" />
+                  {uploadUrl && (
+                    <button
+                      onClick={uploadAnalyzing ? stopUploadAnalysis : startUploadAnalysis}
+                      className={`mb-5 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-4 font-semibold shadow-lg transition-all ${
+                        uploadAnalyzing
+                          ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                          : "bg-gradient-to-r from-[#354F52] to-[#52796F] text-white hover:from-[#52796F] hover:to-[#6BB371]"
+                      }`}
+                    >
+                      {uploadAnalyzing ? (
+                        <>
+                          <div className="h-4 w-4 rounded-sm bg-white" />
+                          Stop Analysis
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-5 w-5" fill="white" />
+                          Start Analysis
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Reps and the live score are instantaneous; the rep scores
+                      are the ones that say whether the set was any good. */}
+                  <div className="mb-5 grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-gradient-to-br from-[#6BB371] to-[#52796F] p-4 text-white">
+                      <div className="mb-1 flex items-center gap-2">
+                        <Activity className="h-4 w-4" />
                         <span className="text-xs font-medium opacity-90">Reps</span>
                       </div>
-                      <div className="text-3xl font-bold">{uploadReps}</div>
+                      <div className="text-3xl font-bold tabular-nums">{uploadReps}</div>
                     </div>
-                    <div className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-xl p-4 text-white">
-                      <div className="flex items-center gap-2 mb-1">
-                        <BarChart3 className="w-4 h-4" />
-                        <span className="text-xs font-medium opacity-90">Score</span>
+
+                    <div className="rounded-xl bg-gradient-to-br from-[#354F52] to-[#52796F] p-4 text-white">
+                      <div className="mb-1 flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        <span className="text-xs font-medium opacity-90">Live score</span>
                       </div>
-                      <div className="text-3xl font-bold">{uploadFormScore}</div>
+                      <div className="text-3xl font-bold tabular-nums">{uploadFormScore}</div>
+                      <div className="mt-0.5 text-[11px] opacity-80">this frame</div>
                     </div>
                   </div>
 
+                  <div className="mb-5 grid grid-cols-3 gap-2 text-center">
+                    {[
+                      ["Last rep", uploadRepScores.last],
+                      ["Average", uploadRepScores.average],
+                      ["Best", uploadRepScores.best],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-xl border-2 border-[#C8CDC5] py-2.5">
+                        <div
+                          className={`text-xl font-bold tabular-nums ${
+                            value == null
+                              ? "text-gray-300"
+                              : value >= 88
+                                ? "text-[#6BB371]"
+                                : "text-amber-600"
+                          }`}
+                        >
+                          {value ?? "—"}
+                        </div>
+                        <div className="text-[11px] text-gray-500">{label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Model status for the upload flow. Without this, a failure to
+                      start the pose model shows up as nothing happening at all:
+                      no skeleton, no feedback, no explanation. */}
+                  {useMediaPipe && uploadUrl && aiStatus.state !== "ready" && (
+                    <div
+                      className={`border-2 rounded-xl p-4 mb-4 ${
+                        aiStatus.state === "error"
+                          ? "bg-red-50 border-red-200"
+                          : "bg-amber-50 border-amber-200"
+                      }`}
+                    >
+                      {aiStatus.state === "error" ? (
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                          <div>
+                            <p className="text-sm font-semibold text-red-900">
+                              Pose detection could not start
+                            </p>
+                            <p className="text-sm text-red-800">{aiStatus.error}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600" />
+                          <span className="text-sm font-semibold text-amber-900">
+                            Loading the pose model…
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {uploadFeedback.length > 0 && (
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Zap className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-semibold text-blue-900">AI Feedback</span>
+                    <div
+                      className={`mb-5 rounded-xl border-2 p-4 ${
+                        uploadFormScore >= 88
+                          ? "border-[#6BB371]/40 bg-[#6BB371]/10"
+                          : "border-amber-200 bg-amber-50"
+                      }`}
+                    >
+                      <div className="mb-2 flex items-center gap-2">
+                        <Zap
+                          className={`h-4 w-4 ${
+                            uploadFormScore >= 88 ? "text-[#6BB371]" : "text-amber-600"
+                          }`}
+                        />
+                        <span
+                          className={`text-sm font-semibold ${
+                            uploadFormScore >= 88 ? "text-[#2f6b39]" : "text-amber-900"
+                          }`}
+                        >
+                          Coaching cue
+                        </span>
                       </div>
                       <div className="space-y-1">
                         {uploadFeedback.map((fb, index) => (
-                          <p key={index} className="text-sm text-blue-800">
-                            • {fb}
+                          <p
+                            key={index}
+                            className={`text-sm ${
+                              uploadFormScore >= 88 ? "text-[#354F52]" : "text-amber-900"
+                            }`}
+                          >
+                            {fb}
                           </p>
                         ))}
                       </div>
@@ -1350,37 +1740,27 @@ export default function AISportsPage() {
                     ) : (
                       <>
                         <button
-                          onClick={uploadAnalyzing ? stopUploadAnalysis : startUploadAnalysis}
-                          className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold transition-all shadow-lg ${
-                            uploadAnalyzing
-                              ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
-                              : "bg-gradient-to-r from-[#354F52] to-[#52796F] text-white"
-                          }`}
-                        >
-                          {uploadAnalyzing ? (
-                            <>
-                              <div className="w-4 h-4 bg-white rounded-sm" />
-                              Stop Analysis
-                            </>
-                          ) : (
-                            <>
-                              <Play className="w-5 h-5" fill="white" />
-                              Start Analysis
-                            </>
-                          )}
-                        </button>
-                        <button
                           onClick={() => {
                             stopUploadAnalysis();
                             if (uploadUrl) URL.revokeObjectURL(uploadUrl);
                             setUploadUrl(null);
                           }}
-                          className="w-full px-6 py-3 rounded-xl font-semibold bg-gray-100 hover:bg-gray-200 transition-all"
+                          className="w-full rounded-xl px-6 py-2.5 text-sm font-semibold text-gray-600 transition-all hover:bg-gray-100 hover:text-[#354F52]"
                         >
-                          Remove Video
+                          Choose a different video
                         </button>
-                        <p className="text-xs text-gray-500">
-                          Tip: press Play (if needed) then Start Analysis. The AI analyzes while the video is playing.
+
+                        {/* Replaces the old tip, which described the removed
+                            server-analysis flow ("press Play, the AI analyzes
+                            while the video is playing"). */}
+                        <p className="flex items-start gap-1.5 text-xs text-gray-500">
+                          <Lock className="mt-0.5 h-3 w-3 shrink-0" />
+                          <span>
+                            Analysed in your browser — this video is never uploaded.
+                            {uploadSyncMode
+                              ? " Step mode advances one analysed frame at a time, so it runs slower than real time."
+                              : " Play mode analyses the clip as it plays."}
+                          </span>
                         </p>
                       </>
                     )}

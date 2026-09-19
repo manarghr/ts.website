@@ -19,6 +19,51 @@ import { useEffect, useRef } from "react";
 // else's CDN did.
 const ASSET_PATH = "/mediapipe/pose";
 
+// Loading the library via `import("@mediapipe/pose")` does NOT work here.
+// Its package.json lists only the .data/.wasm asset files under "sideEffects",
+// so pose.js is treated as side-effect-free -- and because the import's bindings
+// are never used (the library registers itself globally instead), the bundler is
+// free to drop the module entirely. The result is an import that resolves while
+// window.Pose never appears.
+//
+// Loading it as a classic <script> sidesteps the bundler completely, and gives
+// the bundle the `this === window` it expects when it registers its globals.
+let poseScriptPromise = null;
+
+function loadPoseScript() {
+  if (poseScriptPromise) return poseScriptPromise;
+
+  poseScriptPromise = new Promise((resolve, reject) => {
+    // Already there: a previous mount loaded it, or it was server-rendered in.
+    if (window.Pose) return resolve();
+
+    const src = `${ASSET_PATH}/pose.js`;
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("pose.js failed to load")), {
+        once: true,
+      });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    script.onload = () => resolve();
+    script.onerror = () => {
+      // Let a later attempt retry rather than caching the failure forever.
+      poseScriptPromise = null;
+      script.remove();
+      reject(new Error("Could not load the pose model script"));
+    };
+    document.head.appendChild(script);
+  });
+
+  return poseScriptPromise;
+}
+
 /**
  * @param {object} props
  * @param {React.RefObject<HTMLVideoElement>} props.videoRef - video to read frames from
@@ -27,8 +72,10 @@ const ASSET_PATH = "/mediapipe/pose";
  *        called once per analysed frame; null when no pose was found
  * @param {(status: {state:"loading"|"ready"|"error", error?:string}) => void} [props.onStatus]
  * @param {number} [props.fps=15] - analysis rate cap; detection is the expensive part
- * @param {0|1|2} [props.modelComplexity=1] - 0 lite, 1 full, 2 heavy.
+ * @param {0|1|2} [props.modelComplexity=0] - 0 lite, 1 full, 2 heavy.
  *        Only 0 and 1 are available: the heavy model is not copied into public/.
+ *        Lite by default: in step mode each detection gates the next frame, so a
+ *        slower model shows up directly as slower playback.
  */
 export default function PoseEngine({
   videoRef,
@@ -36,7 +83,7 @@ export default function PoseEngine({
   onLandmarks,
   onStatus,
   fps = 15,
-  modelComplexity = 1,
+  modelComplexity = 0,
 }) {
   // Callbacks live in refs, not in the dependency array. A parent that passes an
   // inline arrow function re-renders with a new identity every time, and if that
@@ -59,6 +106,16 @@ export default function PoseEngine({
     // MediaPipe rejects overlapping send() calls, so only one frame is ever in flight.
     let inFlight = false;
     let lastFrameAt = 0;
+
+    // Frames are copied through this canvas rather than handing the <video>
+    // straight to MediaPipe. A paused, seeked video does not present new frames,
+    // and uploading its texture can yield a blank image -- which comes back as
+    // "no pose detected" on every frame, with no error. drawImage always gives a
+    // real decoded frame. It also lets us downscale: detection cost scales with
+    // pixels, and pose does not need more than this.
+    const frameCanvas = document.createElement("canvas");
+    const frameCtx = frameCanvas.getContext("2d", { willReadFrequently: true });
+    const MAX_FRAME_WIDTH = 640;
     // "ready" is reported on the first actual result, not when the loop starts:
     // the first send() is what fetches and compiles the WASM, so the wait the
     // viewer feels ends when landmarks appear, not before.
@@ -73,16 +130,7 @@ export default function PoseEngine({
       report({ state: "loading" });
 
       try {
-        // Imported here, never at module scope: the package is a UMD bundle that
-        // touches `window` as it loads, which would break server rendering.
-        await import("@mediapipe/pose");
-
-        // The bundle registers the constructor on window as a side effect, which
-        // is not synchronous with the import resolving.
-        for (let attempt = 0; attempt < 20 && !window.Pose; attempt += 1) {
-          // eslint-disable-next-line no-await-in-loop
-          await new Promise((resolve) => setTimeout(resolve, 25));
-        }
+        await loadPoseScript();
         if (cancelled) return;
 
         if (!window.Pose) {
@@ -125,13 +173,24 @@ export default function PoseEngine({
             due &&
             !inFlight &&
             video &&
+            !video.seeking &&
             video.readyState >= 2 &&
             video.videoWidth > 0
           ) {
             lastFrameAt = now;
             inFlight = true;
             try {
-              await pose.send({ image: video });
+              const scale = Math.min(1, MAX_FRAME_WIDTH / video.videoWidth);
+              const width = Math.max(1, Math.round(video.videoWidth * scale));
+              const height = Math.max(1, Math.round(video.videoHeight * scale));
+
+              if (frameCanvas.width !== width || frameCanvas.height !== height) {
+                frameCanvas.width = width;
+                frameCanvas.height = height;
+              }
+
+              frameCtx.drawImage(video, 0, 0, width, height);
+              await pose.send({ image: frameCanvas });
             } catch (error) {
               // A send can reject while we are tearing down; that is not a fault.
               if (!cancelled) console.error("Pose detection frame failed:", error);

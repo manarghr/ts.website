@@ -18,6 +18,29 @@
 
 import { LM, calculateAngle } from "./posture-utils";
 
+/**
+ * The angle band each exercise is trying to hit, in degrees.
+ *
+ * Single source of truth: the analysers below grade against these, and the
+ * on-screen guide (lib/ai/exercise-guide.js) draws its target band from the
+ * same numbers. Hardcoding them in both places means the app eventually
+ * demonstrates one range while scoring another.
+ *
+ * `min`/`max` are the edges of good form; `null` means that side is unbounded.
+ */
+export const FORM_RANGES = {
+  squat: { min: 90, max: 140 },
+  pushup: { min: 60, max: 160 },
+  lunge: { min: 80, max: 120 },
+  plank: { min: 160, max: 180 },
+  deadlift: { min: 150, max: null },
+  pullup: { min: 70, max: 160 },
+  shoulder_press: { min: 70, max: 180 },
+  biceps_curl: { min: 40, max: 160 },
+  dips: { min: 70, max: 160 },
+  hip_thrust: { min: 150, max: 180 },
+};
+
 /** Landmark -> [x, y]. Normalised 0..1 coordinates, which is what the angles need. */
 const at = (landmarks, index) => [landmarks[index].x, landmarks[index].y];
 
@@ -32,8 +55,8 @@ export function analyseSquat(landmarks) {
     at(landmarks, LM.RIGHT_ANKLE)
   );
 
-  if (angle < 90) return { feedback: ["Squat too deep — come up a little."], angle, status: "warn" };
-  if (angle > 140) return { feedback: ["Go a little lower for a full squat."], angle, status: "warn" };
+  if (angle < FORM_RANGES.squat.min) return { feedback: ["Squat too deep — come up a little."], angle, status: "warn" };
+  if (angle > FORM_RANGES.squat.max) return { feedback: ["Go a little lower for a full squat."], angle, status: "warn" };
   return { feedback: ["Good squat depth!"], angle, status: "good" };
 }
 
@@ -44,8 +67,8 @@ export function analysePushup(landmarks) {
     at(landmarks, LM.RIGHT_WRIST)
   );
 
-  if (angle < 60) return { feedback: ["Too low — hard on the shoulders."], angle, status: "warn" };
-  if (angle > 160) return { feedback: ["Go lower for a full push-up."], angle, status: "warn" };
+  if (angle < FORM_RANGES.pushup.min) return { feedback: ["Too low — hard on the shoulders."], angle, status: "warn" };
+  if (angle > FORM_RANGES.pushup.max) return { feedback: ["Go lower for a full push-up."], angle, status: "warn" };
   return { feedback: ["Good range of motion!"], angle, status: "good" };
 }
 
@@ -56,8 +79,8 @@ export function analyseLunge(landmarks) {
     at(landmarks, LM.RIGHT_ANKLE)
   );
 
-  if (angle < 80) return { feedback: ["Lunge too deep."], angle, status: "warn" };
-  if (angle > 120) return { feedback: ["Go a little lower."], angle, status: "warn" };
+  if (angle < FORM_RANGES.lunge.min) return { feedback: ["Lunge too deep."], angle, status: "warn" };
+  if (angle > FORM_RANGES.lunge.max) return { feedback: ["Go a little lower."], angle, status: "warn" };
   return { feedback: ["Good lunge."], angle, status: "good" };
 }
 
@@ -68,10 +91,10 @@ export function analysePlank(landmarks) {
     at(landmarks, LM.RIGHT_ANKLE)
   );
 
-  if (angle < 160) return { feedback: ["Body not aligned — flatten your back."], angle, status: "warn" };
+  if (angle < FORM_RANGES.plank.min) return { feedback: ["Body not aligned — flatten your back."], angle, status: "warn" };
   // Unreachable: calculateAngle caps at 180. Mirrors the reference branch; a real
   // sag/arch test needs the sign of the hip's offset from the shoulder-ankle line.
-  if (angle > 180) return { feedback: ["Hips sagging — lift slightly."], angle, status: "warn" };
+  if (angle > FORM_RANGES.plank.max) return { feedback: ["Hips sagging — lift slightly."], angle, status: "warn" };
   return { feedback: ["Good plank."], angle, status: "good" };
 }
 
@@ -82,7 +105,7 @@ export function analyseDeadlift(landmarks) {
     at(landmarks, LM.RIGHT_KNEE)
   );
 
-  if (angle < 150) return { feedback: ["Back leaning too far — lift your chest."], angle, status: "warn" };
+  if (angle < FORM_RANGES.deadlift.min) return { feedback: ["Back leaning too far — lift your chest."], angle, status: "warn" };
   return { feedback: ["Good back position!"], angle, status: "good" };
 }
 
@@ -93,8 +116,8 @@ export function analysePullup(landmarks) {
     at(landmarks, LM.RIGHT_WRIST)
   );
 
-  if (angle < 70) return { feedback: ["Too low — pull a little higher."], angle, status: "warn" };
-  if (angle > 160) return { feedback: ["Lower yourself slightly."], angle, status: "warn" };
+  if (angle < FORM_RANGES.pullup.min) return { feedback: ["Too low — pull a little higher."], angle, status: "warn" };
+  if (angle > FORM_RANGES.pullup.max) return { feedback: ["Lower yourself slightly."], angle, status: "warn" };
   return { feedback: ["Good pull-up."], angle, status: "good" };
 }
 
@@ -105,9 +128,9 @@ export function analyseShoulderPress(landmarks) {
     at(landmarks, LM.RIGHT_WRIST)
   );
 
-  if (angle < 70) return { feedback: ["Arms too low — press up."], angle, status: "warn" };
+  if (angle < FORM_RANGES.shoulder_press.min) return { feedback: ["Arms too low — press up."], angle, status: "warn" };
   // Unreachable, as in analysePlank: a locked-out arm measures 180, never more.
-  if (angle > 180) return { feedback: ["Arms over-extended — ease off."], angle, status: "warn" };
+  if (angle > FORM_RANGES.shoulder_press.max) return { feedback: ["Arms over-extended — ease off."], angle, status: "warn" };
   return { feedback: ["Good shoulder press."], angle, status: "good" };
 }
 
@@ -118,8 +141,8 @@ export function analyseBicepsCurl(landmarks) {
     at(landmarks, LM.RIGHT_WRIST)
   );
 
-  if (angle > 160) return { feedback: ["Curl your arm up."], angle, status: "warn" };
-  if (angle < 40) return { feedback: ["Lower your arm."], angle, status: "warn" };
+  if (angle > FORM_RANGES.biceps_curl.max) return { feedback: ["Curl your arm up."], angle, status: "warn" };
+  if (angle < FORM_RANGES.biceps_curl.min) return { feedback: ["Lower your arm."], angle, status: "warn" };
   return { feedback: ["Good biceps curl."], angle, status: "good" };
 }
 
@@ -130,8 +153,8 @@ export function analyseDips(landmarks) {
     at(landmarks, LM.RIGHT_WRIST)
   );
 
-  if (angle < 70) return { feedback: ["Dropping too low — mind your shoulders."], angle, status: "warn" };
-  if (angle > 160) return { feedback: ["Press up a little further."], angle, status: "warn" };
+  if (angle < FORM_RANGES.dips.min) return { feedback: ["Dropping too low — mind your shoulders."], angle, status: "warn" };
+  if (angle > FORM_RANGES.dips.max) return { feedback: ["Press up a little further."], angle, status: "warn" };
   return { feedback: ["Good dip."], angle, status: "good" };
 }
 
@@ -142,9 +165,9 @@ export function analyseHipThrust(landmarks) {
     at(landmarks, LM.RIGHT_KNEE)
   );
 
-  if (angle < 150) return { feedback: ["Drive your hips higher."], angle, status: "warn" };
+  if (angle < FORM_RANGES.hip_thrust.min) return { feedback: ["Drive your hips higher."], angle, status: "warn" };
   // Unreachable, as in analysePlank.
-  if (angle > 180) return { feedback: ["Over-arching — flatten your back."], angle, status: "warn" };
+  if (angle > FORM_RANGES.hip_thrust.max) return { feedback: ["Over-arching — flatten your back."], angle, status: "warn" };
   return { feedback: ["Good hip thrust."], angle, status: "good" };
 }
 

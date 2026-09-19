@@ -54,3 +54,6 @@ mongo.guide.md
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Scratch build dir used by NEXT_DIST_DIR
+/.next-*

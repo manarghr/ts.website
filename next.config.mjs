@@ -69,6 +69,15 @@ if (!isDev) {
 }
 
 const nextConfig = {
+  // Lets a production build run without disturbing a dev server.
+  //
+  // `next build` and `next dev` both write to .next by default, so building
+  // while the dev server is up replaces the assets it is serving and the running
+  // page starts 404ing its own CSS. Setting NEXT_DIST_DIR sends a build
+  // somewhere else instead. Unset -- which is how Vercel runs it -- nothing
+  // changes.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+
   images: {
     // Only hosts we actually load images from.
     //

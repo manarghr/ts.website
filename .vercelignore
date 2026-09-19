@@ -1,0 +1,26 @@
+# What NOT to upload to Vercel.
+#
+# These stay in the repository -- they are part of the project and worth showing
+# on GitHub -- but none of them run in production, and together they are ~48MB
+# uploaded on every single deploy.
+
+# The Python reference implementation. The pose analysis it defines was ported
+# to JavaScript (src/lib/ai/) and runs in the browser, so Vercel never executes
+# any of this. See AI/README.md.
+AI/
+
+# Python bytecode.
+__pycache__/
+*.pyc
+
+# Personal working notes, already gitignored but listed for completeness.
+BACKEND_GUIDE.md
+BACKEND_PROGRESS.md
+mongo.guide.md
+
+# Spec documents.
+document/
+
+# Local env backups. .env* files are never uploaded by Vercel anyway --
+# environment variables are configured in the project settings instead.
+.env.local.bak

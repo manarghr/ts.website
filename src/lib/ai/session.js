@@ -16,7 +16,8 @@ import {
   DEFAULT_REP_WINDOW,
   RepetitionCounter,
 } from "./posture-utils";
-import { ANALYSERS, DEFAULT_EXERCISE, isSupportedExercise } from "./analysers";
+import { ANALYSERS, DEFAULT_EXERCISE, isSupportedExercise, FORM_RANGES } from "./analysers";
+import { scoreAngle, RepScorer } from "./scoring";
 
 // A landmark below this confidence is treated as guesswork, not a measurement.
 const VISIBILITY_THRESHOLD = 0.6;
@@ -27,10 +28,10 @@ const MIN_CONFIDENT_POINTS = 12;
 const MIN_BOX_WIDTH = 0.12;
 const MIN_BOX_HEIGHT = 0.18;
 
-// The Python scored by grepping its own French feedback for keywords. Here the
-// analyser states its verdict outright; these two numbers are what that
-// keyword search produced (90 base, +5 for praise, -25 for a correction).
-const SCORE_BY_STATUS = { good: 95, warn: 65 };
+// Kept only for frames with no measurable angle, where there is nothing to
+// score continuously. Live scoring is in scoring.js -- see the note there on
+// why the Python's two-value score was replaced.
+const FALLBACK_SCORE_BY_STATUS = { good: 95, warn: 65 };
 
 const NO_POSE = "Place your full body in frame (more light / step back).";
 const LOW_CONFIDENCE =
@@ -59,6 +60,10 @@ export function createAnalysisSession(exercise = DEFAULT_EXERCISE) {
     windowFor(currentExercise).maxAngle
   );
 
+  // Scores the turning point of each completed rep, which is the only honest
+  // per-rep quality measure -- see scoring.js.
+  let repScorer = new RepScorer(FORM_RANGES[currentExercise]);
+
   /** Frames where we decline to judge form still report the running rep count. */
   const rejected = (feedback) => ({
     ok: true,
@@ -67,6 +72,9 @@ export function createAnalysisSession(exercise = DEFAULT_EXERCISE) {
     formScore: 0,
     reps: counter.count,
     angle: null,
+    lastRepScore: repScorer.lastScore,
+    averageRepScore: repScorer.average,
+    bestRepScore: repScorer.best,
   });
 
   return {
@@ -80,11 +88,13 @@ export function createAnalysisSession(exercise = DEFAULT_EXERCISE) {
       if (id === currentExercise) return;
       currentExercise = id;
       counter = new RepetitionCounter(windowFor(id).minAngle, windowFor(id).maxAngle);
+      repScorer = new RepScorer(FORM_RANGES[id]);
     },
 
     /** Back to zero reps, same exercise. */
     reset() {
       counter.reset();
+      repScorer.reset();
     },
 
     /**
@@ -108,15 +118,25 @@ export function createAnalysisSession(exercise = DEFAULT_EXERCISE) {
       const { feedback, angle, status } = ANALYSERS[currentExercise](landmarks);
 
       // One counter update per frame, from the same angle the feedback was based on.
+      const before = counter.count;
       const reps = Number.isFinite(angle) ? counter.update(angle) : counter.count;
+      repScorer.update(angle, reps > before);
 
       return {
         ok: true,
         hasPose: true,
         feedback,
-        formScore: feedback.length ? (SCORE_BY_STATUS[status] ?? 0) : 0,
+        // Continuous, so the number tracks the movement instead of flipping
+        // between two values. Falls back to the status only when there is no
+        // angle to measure.
+        formScore: Number.isFinite(angle)
+          ? scoreAngle(angle, FORM_RANGES[currentExercise])
+          : (FALLBACK_SCORE_BY_STATUS[status] ?? 0),
         reps,
         angle,
+        lastRepScore: repScorer.lastScore,
+        averageRepScore: repScorer.average,
+        bestRepScore: repScorer.best,
       };
     },
   };
