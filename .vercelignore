@@ -2,25 +2,32 @@
 #
 # These stay in the repository -- they are part of the project and worth showing
 # on GitHub -- but none of them run in production, and together they are ~48MB
-# uploaded on every single deploy.
+# uploaded on every deploy.
+#
+# NOTE ON THE LEADING SLASHES. This file uses .gitignore pattern syntax, where a
+# pattern without a leading slash matches a directory of that name AT ANY DEPTH.
+# Writing `AI/` here excluded the Python folder AND src/components/AI,
+# src/lib/ai and src/app/api/ai, which failed the build with
+# "Module not found: Can't resolve '@/components/AI/PoseEngine'".
+# Anchor anything meant to match only the repository root.
 
 # The Python reference implementation. The pose analysis it defines was ported
 # to JavaScript (src/lib/ai/) and runs in the browser, so Vercel never executes
 # any of this. See AI/README.md.
-AI/
-
-# Python bytecode.
-__pycache__/
-*.pyc
-
-# Personal working notes, already gitignored but listed for completeness.
-BACKEND_GUIDE.md
-BACKEND_PROGRESS.md
-mongo.guide.md
+/AI/
 
 # Spec documents.
-document/
+/document/
 
-# Local env backups. .env* files are never uploaded by Vercel anyway --
+# Personal working notes, already gitignored but listed for completeness.
+/BACKEND_GUIDE.md
+/BACKEND_PROGRESS.md
+/mongo.guide.md
+
+# Local env backup. .env* files are never uploaded by Vercel anyway --
 # environment variables are configured in the project settings instead.
-.env.local.bak
+/.env.local.bak
+
+# Python bytecode. Unanchored on purpose: these should go wherever they appear.
+__pycache__/
+*.pyc
