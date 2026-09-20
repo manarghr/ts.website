@@ -6,18 +6,19 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { 
-  FaDumbbell, 
-  FaRunning, 
-  FaHeartbeat, 
-  FaCheckCircle,
+import {
   FaArrowLeft,
+  FaArrowRight,
   FaCalendar,
-  FaTools,
-  FaUser,
-  FaDollarSign,
+  FaCheckCircle,
   FaClock,
-  FaLock
+  FaDollarSign,
+  FaDumbbell,
+  FaHeartbeat,
+  FaLock,
+  FaRunning,
+  FaTools,
+  FaUser
 } from "react-icons/fa";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useConfirm } from "@/components/ui/ConfirmProvider";
@@ -40,6 +41,7 @@ export default function ProgramDetail({ programId }) {
   const [quote, setQuote] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [coach, setCoach] = useState(null);
+  const [teachers, setTeachers] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
@@ -142,6 +144,35 @@ export default function ProgramDetail({ programId }) {
       cancelled = true;
     };
   }, [program?.coach_id]);
+
+  // The coaches who teach this programme. Fetched in parallel and filtered,
+  // so one missing coach costs a card rather than the whole section.
+  useEffect(() => {
+    const ids = program?.coachIds;
+    if (!ids?.length) return;
+    let cancelled = false;
+
+    (async () => {
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const res = await fetch(`/api/coaches/${id}`, { cache: "no-store" });
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.coach || data || null;
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      if (!cancelled) setTeachers(results.filter(Boolean));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [program?.coachIds]);
 
   const handleEnroll = async () => {
     if (!isLoggedIn || !currentUser) {
@@ -616,6 +647,92 @@ export default function ProgramDetail({ programId }) {
           </div>
         </div>
       </section>
+
+        {/* Who it suits and what it leaves you with.
+            ----------------------------------------------------------------
+            Two plain lists rather than a grid of cards. Someone deciding
+            whether to start is comparing themselves against the first column
+            and the result against the second; boxing each line would slow
+            that down, not help it. */}
+        {(program.whoFor?.length > 0 || program.outcomes?.length > 0) && (
+          <section className="bg-bone py-16 md:py-20">
+            <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+              <div className="grid gap-14 md:grid-cols-2 md:gap-20">
+                {program.whoFor?.length > 0 && (
+                  <div>
+                    <p className="eyebrow text-moss">Who this is for</p>
+                    <ul className="mt-8 divide-y divide-ink/10 border-y border-ink/10">
+                      {program.whoFor.map((line) => (
+                        <li key={line} className="py-4 leading-relaxed text-ink-soft">
+                          {line}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {program.outcomes?.length > 0 && (
+                  <div>
+                    <p className="eyebrow text-moss">What you finish with</p>
+                    <ul className="mt-8 divide-y divide-ink/10 border-y border-ink/10">
+                      {program.outcomes.map((line) => (
+                        <li key={line} className="py-4 leading-relaxed text-ink-soft">
+                          {line}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* The coaches who teach it. Portrait-led, matching the coaches index,
+            so a profile looks the same wherever it appears on the site. */}
+        {teachers.length > 0 && (
+          <section className="bg-white py-16 md:py-20">
+            <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+              <div className="flex items-baseline justify-between border-b border-ink/10 pb-5">
+                <h2 className="font-display text-2xl font-bold text-forest">
+                  Coaches teaching this
+                </h2>
+                <Link
+                  href="/coaches"
+                  className="group inline-flex items-center gap-2 text-sm font-semibold text-forest transition-all duration-300 ease-editorial hover:gap-3"
+                >
+                  All coaches
+                  <FaArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+
+              <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
+                {teachers.map((teacher) => (
+                  <Link key={teacher.id} href={`/coaches/${teacher.id}`} className="group block">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-bone-dark">
+                      <Image
+                        src={teacher.image_url || "/coach-avatar.svg"}
+                        alt={teacher.name}
+                        fill
+                        sizes="(max-width: 640px) 50vw, 25vw"
+                        className="object-cover transition-transform duration-700 ease-editorial group-hover:scale-[1.04]"
+                        unoptimized
+                      />
+                    </div>
+
+                    <p className="eyebrow mt-4 text-ink-muted">{teacher.category}</p>
+                    <h3 className="mt-2 font-display text-lg font-bold text-forest transition-transform duration-300 ease-editorial group-hover:translate-x-0.5">
+                      {teacher.name}
+                    </h3>
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-soft">
+                      {teacher.bio}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* What is in the programme
             ----------------------------------------------------------------
