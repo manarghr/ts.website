@@ -58,7 +58,7 @@ export default function BlogHero() {
         {/* OUR BLOG Text - Above the image */}
         <div className="absolute inset-0 flex items-center justify-center z-[2]">
           <div className="text-[120px] md:text-[200px] lg:text-[280px] font-black text-white opacity-[0.05] select-none" style={{
-            fontFamily: 'var(--font-montserrat), sans-serif',
+            fontFamily: 'var(--font-display), sans-serif',
             letterSpacing: '15px',
             animation: 'heartbeat 4s ease-in-out infinite',
           }}>

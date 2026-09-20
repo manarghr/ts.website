@@ -36,164 +36,175 @@ export default function Home() {
           <Head />
         </div>
 
-        {/* Features Section - Clean & Modern */}
-        <section className="relative py-20 md:py-28 bg-white overflow-hidden z-10">
-          {/* Subtle Background Elements */}
-          <div className="absolute inset-0">
-          </div>
+        {/* Capabilities
+            ------------------------------------------------------------------
+            Was four identical icon-cards in a row. A row of equal cards tells
+            the reader everything here matters the same amount, which is never
+            true -- the form analysis is the reason this product exists and the
+            rest support it. So it is a two-column split: the argument on the
+            left, the features on the right, with the first one given weight
+            and the other three reduced to a list. */}
+        <section className="relative bg-white py-20 md:py-28">
+          <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+            <div className="grid gap-14 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:gap-20">
+              <motion.div variants={fadeInUp} initial="initial" whileInView="whileInView" viewport={{ once: true }}>
+                <p className="eyebrow text-moss">What it does</p>
+                <h2 className="mt-5 font-display text-display font-bold text-forest">
+                  Everything you need to train with intention.
+                </h2>
+                <p className="mt-6 max-w-prose text-lg leading-relaxed text-ink-soft">
+                  Most training apps count what you did. TrainSight looks at how you
+                  did it — then gives you something specific to change on the next rep.
+                </p>
+              </motion.div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
-            <motion.div
-              variants={fadeInUp}
-              initial="initial"
-              whileInView="whileInView"
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#52796F]/10 border border-[#52796F]/20 rounded-full text-[#52796F] text-sm font-semibold mb-6">
-                <FaHeartbeat className="text-[#6BB371]" />
-                <span>Why Choose TrainSight</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-                <span className="text-[#354F52]">Powerful Features</span>{" "}
-                <span className="text-[#52796F]">For Your Success</span>
-              </h2>
-              <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Everything you need to achieve your fitness goals in one powerful platform
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="whileInView"
-              viewport={{ once: true }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-            >
-              {[
-                {
-                  icon: FaDumbbell,
-                  title: "AI Form Analysis",
-                  desc: "Real-time feedback on your technique to perfect every movement",
-                  color: "from-[#354F52] to-[#52796F]"
-                },
-                {
-                  icon: FaChartLine,
-                  title: "Progress Tracking",
-                  desc: "Detailed analytics and insights to monitor your improvement",
-                  color: "from-[#52796F] to-[#6BB371]"
-                },
-                {
-                  icon: FaUsers,
-                  title: "Expert Coaches",
-                  desc: "Connect with certified professionals for personalized guidance",
-                  color: "from-[#6BB371] to-[#52796F]"
-                },
-                {
-                  icon: FaHeartbeat,
-                  title: "Health Monitoring",
-                  desc: "Track your vitals and recovery for optimal performance",
-                  color: "from-[#354F52] to-[#6BB371]"
-                }
-              ].map((feature, index) => (
-                <motion.div
-                  key={index}
+              <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="whileInView"
+                viewport={{ once: true }}
+                className="flex flex-col"
+              >
+                {/* The one feature that earns a panel of its own. */}
+                <motion.article
                   variants={fadeInUp}
-                  className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50"
+                  className="group relative overflow-hidden rounded-2xl bg-forest p-8 text-white md:p-10"
                 >
-                  {/* Icon */}
-                  <div className={`relative mb-4 w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-all duration-300`}>
-                    <feature.icon className="w-7 h-7" />
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="text-xl font-bold text-[#354F52] mb-2 group-hover:text-[#52796F] transition-colors">
-                    {feature.title}
+                  <FaDumbbell className="h-6 w-6 text-moss-light" />
+                  <h3 className="mt-6 font-display text-2xl font-bold md:text-3xl">
+                    AI form analysis
                   </h3>
-                  <p className="text-gray-600 leading-relaxed text-sm">
-                    {feature.desc}
+                  <p className="mt-3 max-w-prose leading-relaxed text-white/65">
+                    A pose model reads 33 joints from your camera and measures the
+                    angles that matter for the lift. It runs entirely in your browser,
+                    so nothing you film is ever uploaded.
                   </p>
-                </motion.div>
-              ))}
-            </motion.div>
+                  <Link
+                    href="/services/ai-sports"
+                    className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-moss-light transition-all duration-300 ease-editorial hover:gap-3"
+                  >
+                    Try it now
+                    <FaArrowRight className="h-3 w-3" />
+                  </Link>
+                </motion.article>
+
+                {/* The supporting three: a list, not cards. Separated by rules
+                    rather than boxes, which is quieter and reads faster. */}
+                <div className="mt-10 divide-y divide-bone-dark border-t border-bone-dark">
+                  {[
+                    {
+                      icon: FaChartLine,
+                      title: "Progress tracking",
+                      desc: "Every finished session is scored and saved — reps, form, duration.",
+                    },
+                    {
+                      icon: FaUsers,
+                      title: "Coach-built programs",
+                      desc: "Structured plans written by the coaches on the platform.",
+                    },
+                    {
+                      icon: FaHeartbeat,
+                      title: "Nutrition plans",
+                      desc: "Recipes and meal plans with the numbers worked out for you.",
+                    },
+                  ].map((feature) => (
+                    <motion.div
+                      key={feature.title}
+                      variants={fadeInUp}
+                      className="group flex gap-5 py-6"
+                    >
+                      <feature.icon className="mt-1 h-5 w-5 shrink-0 text-moss transition-colors duration-300 group-hover:text-moss-light" />
+                      <div>
+                        <h3 className="font-display text-lg font-bold text-forest">
+                          {feature.title}
+                        </h3>
+                        <p className="mt-1 leading-relaxed text-ink-soft">{feature.desc}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
           </div>
         </section>
 
         {/* AI Technology Section */}
-        <section className="relative bg-[#F8F9F7] overflow-hidden z-10">
+        <section className="relative z-10">
           <div className="relative z-10">
             <AIHome />
           </div>
         </section>
 
         {/* Services Section */}
-        <section className="relative bg-white z-10">
+        <section className="relative z-10">
           <div className="relative z-10">
             <Services />
           </div>
         </section>
 
         {/* Coaches Section */}
-        <section className="relative bg-white z-10">
+        <section className="relative z-10">
           <div className="relative z-10">
             <CoachesHome />
           </div>
         </section>
 
         {/* Blog Section */}
-        <section className="relative bg-[#F8F9F7] overflow-hidden z-10">
+        <section className="relative z-10">
           <div className="relative z-10">
             <BlogHome />
           </div>
         </section>
 
-        {/* Final CTA Section - Clean Design */}
-        <section className="relative py-20 md:py-28 bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#354F52] overflow-hidden z-10">
-          {/* Grid Background for CTA - White grid on dark background */}
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:white;stroke-width:0.4;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
-            backgroundSize: '60px 60px'
-          }}></div>
-          
-          {/* Clean Background */}
-          <div className="absolute inset-0">
-          </div>
-
-          <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16 text-center">
+        {/* Closing statement
+            ------------------------------------------------------------------
+            Was a centred pill, a centred headline, a centred paragraph and two
+            centred buttons on a patterned gradient -- the exact shape of every
+            SaaS footer CTA. Now the type is left-aligned and oversized, the
+            pattern is gone, and the claim "join thousands of athletes" is gone
+            with it: there are no thousands of athletes, and inventing them is
+            the fastest way to lose a reader who checks. */}
+        <section className="relative overflow-hidden bg-forest py-24 md:py-32">
+          <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
             <motion.div
               variants={fadeInUp}
               initial="initial"
               whileInView="whileInView"
               viewport={{ once: true }}
+              className="grid gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end lg:gap-20"
             >
-              <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-sm font-semibold mb-8">
-                <FaHeartbeat className="text-[#6BB371]" />
-                <span>Ready to Transform Your Fitness Journey?</span>
+              <div>
+                <p className="eyebrow text-moss-light">Get started</p>
+                <h2 className="mt-6 font-display text-display-lg font-extrabold leading-[0.95] text-white">
+                  Your training.
+                  <span className="block text-white/45">Rethought.</span>
+                </h2>
               </div>
-              
-              <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-white mb-8 leading-tight tracking-tight">
-                Start Your
-                <span className="block text-[#6BB371] mt-2">Transformation Today</span>
-              </h2>
-              
-              <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed font-medium">
-                Join thousands of athletes who are achieving their goals with AI-powered coaching and expert guidance
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <Link
-                  href="#signup"
-                  className="group px-10 py-5 bg-[#6BB371] text-white text-lg font-bold rounded-2xl shadow-xl hover:bg-[#52796F] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-3"
-                >
-                  Get Started Free
-                  <FaArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link
-                  href="/coaches"
-                  className="px-10 py-5 border-2 border-white/30 text-white text-lg font-bold rounded-2xl backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all duration-300"
-                >
-                  Explore Coaches
-                </Link>
+
+              <div className="lg:pb-3">
+                <p className="max-w-prose text-lg leading-relaxed text-white/70">
+                  Turn on your camera and get feedback on the next rep. No equipment
+                  beyond what you already train with, and nothing you film leaves
+                  your device.
+                </p>
+
+                <div className="mt-9 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+                  <Link
+                    href="/services/ai-sports"
+                    className="group inline-flex items-center gap-3 rounded-full bg-white px-8 py-4 text-base font-semibold text-ink transition-all duration-300 ease-editorial hover:gap-4 hover:bg-moss-light hover:text-white"
+                  >
+                    Try the form analysis
+                    <FaArrowRight className="h-4 w-4" />
+                  </Link>
+
+                  <Link
+                    href="/coaches"
+                    className="group relative text-base font-medium text-white/75 transition-colors duration-300 hover:text-white"
+                  >
+                    Browse coaches
+                    <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-white transition-transform duration-300 ease-editorial group-hover:scale-x-100" />
+                  </Link>
+                </div>
               </div>
             </motion.div>
           </div>

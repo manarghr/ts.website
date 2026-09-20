@@ -17,6 +17,17 @@ export default function Navbar() {
   const [showServicesDropdown, setShowServicesDropdown] = useState(false)
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  // Transparent over the hero, solid once the page moves. The threshold is
+  // small on purpose: the bar should commit to being solid almost immediately
+  // rather than fading through a half-legible middle state.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   // Who is signed in now comes from the server through AuthProvider, not from a
   // localStorage copy that anyone could edit in devtools. `loading` replaces the
@@ -85,8 +96,17 @@ export default function Navbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 w-full h-[var(--nav-h)] flex justify-between items-center px-4 sm:px-6 bg-[#354F52] text-white shadow-md z-50">
-      <div className="flex items-center gap-4 sm:gap-20 flex-1">
+    <header
+      className={`fixed top-0 left-0 z-50 flex h-[var(--nav-h)] w-full items-center text-white transition-colors duration-300 ease-editorial ${
+        pathname === "/" && !scrolled
+          ? "bg-transparent"
+          : "bg-forest/95 backdrop-blur-md"
+      }`}
+    >
+      {/* Same container as every section, so the logo lines up with the page
+          content instead of floating at an arbitrary offset. */}
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-6 md:px-12 lg:px-16">
+      <div className="flex items-center gap-4 lg:gap-12">
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -108,20 +128,20 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation - original position (same gap after logo as before) */}
-        <ul className="hidden lg:flex gap-10 items-center lg:ml-80">
+        <ul className="hidden items-center gap-9 lg:flex">
           {links.map((link, i) => (
             <li key={i}>
               <Link
                 href={link.href}
-                className={`text-white hover:text-[#C1B8AE] transition-colors duration-300 relative pb-1 text-[17px] font-semibold ${
-                  isActive(link.href) ? "text-[#6BB371]" : ""
+                className={`relative pb-1 text-sm font-medium tracking-wide text-white/80 transition-colors duration-300 hover:text-white ${
+                  isActive(link.href) ? "text-white" : ""
                 }`}
               >
                 {link.name}
                 {isActive(link.href) && (
                   <motion.div
                     layoutId="activeNav"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6BB371]"
+                    className="absolute -bottom-1 left-0 right-0 h-px bg-moss-light"
                     initial={false}
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
@@ -138,15 +158,15 @@ export default function Navbar() {
           >
             <Link
               href="/services"
-              className={`text-white hover:text-[#C1B8AE] transition-colors duration-300 relative pb-1 text-[17px] font-semibold ${
-                pathname.startsWith("/services") ? "text-[#6BB371]" : ""
+              className={`relative pb-1 text-sm font-medium tracking-wide text-white/80 transition-colors duration-300 hover:text-white ${
+                pathname.startsWith("/services") ? "text-white" : ""
               }`}
             >
               Services
               {pathname.startsWith("/services") && (
                 <motion.div
                   layoutId="activeNav"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6BB371]"
+                  className="absolute -bottom-1 left-0 right-0 h-px bg-moss-light"
                   initial={false}
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
@@ -413,6 +433,7 @@ export default function Navbar() {
             )}
           </AnimatePresence>
         </div>
+      </div>
       </div>
     </header>
   )

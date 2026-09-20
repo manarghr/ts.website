@@ -125,7 +125,7 @@ export default function TestimonialSection() {
                 <span className="block text-[#6BB371]">Say About Us</span>
               </h2>
               <p className="text-lg text-white/80">
-                Join thousands of satisfied users who have transformed their fitness journey
+                Start with a single set and see what the analyser tells you.
               </p>
             </div>
 

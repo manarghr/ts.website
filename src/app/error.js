@@ -25,7 +25,7 @@ export default function Error({ error, reset }) {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#52796F]/10 to-[#6BB371]/10 px-6">
       <div className="text-center max-w-md">
-        <h1 className="font-montserrat text-3xl sm:text-4xl font-bold text-[#354F52]">
+        <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#354F52]">
           Something went wrong
         </h1>
 

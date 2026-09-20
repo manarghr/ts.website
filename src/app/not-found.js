@@ -19,9 +19,9 @@ export default function NotFound() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#52796F]/10 to-[#6BB371]/10 px-6">
       <div className="text-center max-w-md">
-        <p className="font-montserrat text-7xl font-extrabold text-[#52796F]/30 leading-none">404</p>
+        <p className="font-display text-7xl font-extrabold text-[#52796F]/30 leading-none">404</p>
 
-        <h1 className="font-montserrat mt-4 text-3xl sm:text-4xl font-bold text-[#354F52]">
+        <h1 className="font-display mt-4 text-3xl sm:text-4xl font-bold text-[#354F52]">
           This page doesn&apos;t exist
         </h1>
 

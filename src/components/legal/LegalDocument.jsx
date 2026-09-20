@@ -11,7 +11,7 @@
 export function Section({ id, title, children }) {
   return (
     <section id={id} className="scroll-mt-24">
-      <h2 className="font-montserrat text-xl sm:text-2xl font-bold text-[#354F52] mt-10 mb-3">
+      <h2 className="font-display text-xl sm:text-2xl font-bold text-[#354F52] mt-10 mb-3">
         {title}
       </h2>
       <div className="space-y-3 text-[15px] leading-relaxed text-gray-700">{children}</div>
@@ -72,7 +72,7 @@ export default function LegalDocument({ title, lastUpdated, summary, children })
   return (
     <div className="bg-white">
       <div className="mx-auto max-w-3xl px-6 py-14 sm:py-20">
-        <h1 className="font-montserrat text-3xl sm:text-4xl font-extrabold text-[#354F52]">
+        <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-[#354F52]">
           {title}
         </h1>
         <p className="mt-3 text-sm text-gray-500">Last updated: {lastUpdated}</p>

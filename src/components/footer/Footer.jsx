@@ -1,80 +1,115 @@
 import Link from "next/link";
 
+// Footer
+// File: src/components/footer/Footer.jsx
+//
+// Was four equal columns under a centred blurb -- the default shape. The brand
+// column is now double width and the link groups sit tighter beside it, which
+// gives the block a reading order instead of four interchangeable stacks.
+//
+// Every href points at a route that exists. The previous version linked to
+// "#programs", "#help", "#contact" and similar anchors that went nowhere.
+
+const EXPLORE = [
+  { label: "Programs", href: "/services/programs" },
+  { label: "Coaches", href: "/coaches" },
+  { label: "Nutrition", href: "/services/meals" },
+  { label: "Form analysis", href: "/services/ai-sports" },
+];
+
+const COMPANY = [
+  { label: "About us", href: "/about" },
+  { label: "Blog", href: "/blog" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Service", href: "/terms" },
+];
+
+const SOCIAL = [
+  {
+    label: "Instagram",
+    href: "https://instagram.com",
+    path: "M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1-.4-2.2-.1-1.3-.1-1.7-.1-4.9s0-3.6.1-4.9c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.3 2.2-.4 1.3-.1 1.7-.1 4.9-.1zm0 5.3a4.5 4.5 0 100 9 4.5 4.5 0 000-9zm0 7.4a2.9 2.9 0 110-5.8 2.9 2.9 0 010 5.8zm5.7-7.6a1.05 1.05 0 11-2.1 0 1.05 1.05 0 012.1 0z",
+  },
+  {
+    label: "YouTube",
+    href: "https://youtube.com",
+    path: "M23 12s0-3.2-.4-4.7a2.5 2.5 0 00-1.7-1.8C19.3 5 12 5 12 5s-7.3 0-8.9.5A2.5 2.5 0 001.4 7.3C1 8.8 1 12 1 12s0 3.2.4 4.7a2.5 2.5 0 001.7 1.8c1.6.5 8.9.5 8.9.5s7.3 0 8.9-.5a2.5 2.5 0 001.7-1.8C23 15.2 23 12 23 12zM9.8 15.1V8.9l6 3.1-6 3.1z",
+  },
+  {
+    label: "X",
+    href: "https://x.com",
+    path: "M18.9 2H22l-7 8 8.2 12h-6.4l-5-7.3-5.8 7.3H2.8l7.5-8.6L2.4 2h6.6l4.5 6.7L18.9 2zm-1.1 18h1.8L7.4 3.9H5.5L17.8 20z",
+  },
+];
+
 export default function Footer() {
   return (
-    <footer className="bg-[#354F52] text-white py-12">
-      <div className="w-[90%] max-w-[1200px] mx-auto">
-        {/* Main content */}
-        <div className="flex flex-wrap justify-between gap-8 mb-10">
-          {/* Logo and Description */}
-          <div className="flex-1 min-w-[200px]">
-            <h2 className="text-2xl font-semibold mb-3">TrainSight</h2>
-            <p className="text-gray-300 text-sm leading-relaxed">
-              Empower your body and mind with TrainSight. Track your workouts,
-              stay consistent.
+    <footer className="bg-forest text-white">
+      <div className="mx-auto max-w-7xl px-6 py-20 md:px-12 lg:px-16">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr]">
+          <div>
+            <p className="font-display text-2xl font-bold tracking-tight">TrainSight</p>
+            <p className="mt-4 max-w-prose leading-relaxed text-white/55">
+              Form analysis that runs in your browser, training programmes written by
+              coaches, and the numbers to tell whether any of it is working.
             </p>
           </div>
 
-          {/* Navigation Links */}
-          <div className="flex-1 min-w-[200px]">
-            <h3 className="text-lg font-semibold mb-3">Explore</h3>
-            <ul className="space-y-2">
-              <li><a href="#programs" className="text-gray-300 hover:text-white transition">Programs</a></li>
-              <li><a href="#coaches" className="text-gray-300 hover:text-white transition">Coaches</a></li>
-              <li><a href="#nutrition" className="text-gray-300 hover:text-white transition">Nutrition</a></li>
-              <li><a href="#community" className="text-gray-300 hover:text-white transition">Community</a></li>
+          <nav aria-label="Explore">
+            <p className="eyebrow text-white/40">Explore</p>
+            <ul className="mt-5 space-y-3">
+              {EXPLORE.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="text-white/70 transition-colors duration-300 hover:text-white"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
-          </div>
+          </nav>
 
-          {/* Support Links */}
-          <div className="flex-1 min-w-[200px]">
-            <h3 className="text-lg font-semibold mb-3">Support</h3>
-            <ul className="space-y-2">
-              <li><a href="#help" className="text-gray-300 hover:text-white transition">Help Center</a></li>
-              <li><a href="#contact" className="text-gray-300 hover:text-white transition">Contact Us</a></li>
-              <li><Link href="/terms" className="text-gray-300 hover:text-white transition">Terms of Service</Link></li>
-              <li><Link href="/privacy" className="text-gray-300 hover:text-white transition">Privacy Policy</Link></li>
+          <nav aria-label="Company">
+            <p className="eyebrow text-white/40">Company</p>
+            <ul className="mt-5 space-y-3">
+              {COMPANY.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="text-white/70 transition-colors duration-300 hover:text-white"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
-          </div>
-
-          {/* Social Media */}
-          <div className="flex-1 min-w-[200px]">
-            <h3 className="text-lg font-semibold mb-3">Follow Us</h3>
-            <div className="flex gap-4">
-              {/* Facebook */}
-              <a href="#facebook" className="text-gray-300 hover:text-white transition" aria-label="Facebook">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </a>
-
-              {/* Instagram */}
-              <a href="#instagram" className="text-gray-300 hover:text-white transition" aria-label="Instagram">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162z" />
-                </svg>
-              </a>
-
-              {/* Twitter */}
-              <a href="#twitter" className="text-gray-300 hover:text-white transition" aria-label="Twitter">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                </svg>
-              </a>
-
-              {/* YouTube */}
-              <a href="#youtube" className="text-gray-300 hover:text-white transition" aria-label="YouTube">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23.498 6.186a2.974 2.974 0 00-2.094-2.107C19.217 3.5 12 3.5 12 3.5s-7.217 0-9.404.579A2.974 2.974 0 00.502 6.186 31.67 31.67 0 000 12a31.67 31.67 0 00.502 5.814 2.974 2.974 0 002.094 2.107C4.783 20.5 12 20.5 12 20.5s7.217 0 9.404-.579a2.974 2.974 0 002.094-2.107A31.67 31.67 0 0024 12a31.67 31.67 0 00-.502-5.814zM9.75 15.5v-7l6 3.5-6 3.5z" />
-                </svg>
-              </a>
-            </div>
-          </div>
+          </nav>
         </div>
 
-        {/* Bottom line */}
-        <div className="text-center border-t border-gray-700 pt-4 text-sm text-gray-400">
-          <p>&copy; {new Date().getFullYear()} TrainSight. All rights reserved.</p>
+        <div className="mt-16 flex flex-col gap-6 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-white/40">
+            &copy; {new Date().getFullYear()} TrainSight. All rights reserved.
+          </p>
+
+          <ul className="flex items-center gap-5">
+            {SOCIAL.map((item) => (
+              <li key={item.label}>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={item.label}
+                  className="block text-white/45 transition-colors duration-300 hover:text-white"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                    <path d={item.path} />
+                  </svg>
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </footer>

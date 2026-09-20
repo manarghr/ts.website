@@ -6,16 +6,39 @@
    when these two drift apart the page slides underneath the navbar. */
 :root {
   --nav-h: 80px;
+
+  /* Surfaces and text. Pure white and pure black are the two colours that make
+     a page feel like an unstyled document. */
+  --bone: #F6F5F1;
+  --ink: #16211F;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--ink);
 }
 
 /* Font Variables - These are set by Next.js font loader via CSS variables */
 
-/* Typography Styles - Headings use Montserrat */
+/* Headings use the display face. Tight tracking and line-height are what make
+   large type read as editorial rather than merely big. */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-montserrat), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+/* The small uppercase line that introduces a section. Used instead of a pill:
+   it does the same job with none of the template look. */
+.eyebrow {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 /* Body text uses Inter */

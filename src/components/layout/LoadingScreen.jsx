@@ -18,7 +18,7 @@ export default function LoadingScreen({ label = "Loading", cards = 6 }) {
             aria-hidden="true"
           />
           {/* The only text a screen reader needs; the skeleton below is decorative. */}
-          <p className="font-montserrat text-lg font-semibold text-[#354F52]">{label}…</p>
+          <p className="font-display text-lg font-semibold text-[#354F52]">{label}…</p>
         </div>
 
         <div

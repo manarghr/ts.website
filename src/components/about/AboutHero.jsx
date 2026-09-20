@@ -87,7 +87,7 @@ export default function AboutHero() {
         {/* ABOUT US Text - Above the image */}
         <div className="absolute inset-0 flex items-center justify-center z-[2]">
           <div className="text-[120px] md:text-[200px] lg:text-[280px] font-black text-white opacity-[0.05] select-none" style={{
-            fontFamily: 'var(--font-montserrat), sans-serif',
+            fontFamily: 'var(--font-display), sans-serif',
             letterSpacing: '15px',
             animation: 'heartbeat 4s ease-in-out infinite',
           }}>
@@ -587,7 +587,7 @@ export default function AboutHero() {
           </h2>
           <div className="w-24 h-1.5 bg-white/30 mx-auto mb-8"></div>
           <p className="text-xl mb-10 text-white/90 max-w-2xl mx-auto leading-relaxed">
-            Join thousands of athletes and fitness enthusiasts who are already using TrainSight to perfect their form and prevent injuries.
+            Point your camera at yourself, start a set, and see what the analyser makes of your form.
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <button 
