@@ -180,40 +180,28 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2, ease: "easeInOut" }}
-                  className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-lg py-2 z-50 overflow-hidden border border-gray-100"
+                  className="absolute left-0 z-50 mt-3 w-64 overflow-hidden rounded-xl border border-ink/10 bg-white py-2 shadow-lg"
                 >
+                  {/* Text-led rather than an icon tile per row: the labels are
+                      short and distinct, so a coloured square beside each one
+                      adds weight without adding information. */}
                   {services.map((service, i) => {
-                    const Icon = service.icon
+                    const active = pathname === service.href
                     return (
                       <Link
                         key={i}
                         href={service.href}
-                        className={`flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-all group ${
-                          pathname === service.href ? "bg-gray-50" : ""
-                        }`}
                         onClick={() => setShowServicesDropdown(false)}
+                        className={`group flex items-center justify-between px-5 py-3 text-sm transition-colors duration-200 ${
+                          active ? "bg-bone text-forest" : "text-ink-soft hover:bg-bone hover:text-forest"
+                        }`}
                       >
-                        <div
-                          className="mr-3 p-2 rounded-lg transition-colors"
-                          style={{
-                            backgroundColor: pathname === service.href ? service.color : "#f3f4f6",
-                            color: pathname === service.href ? "white" : service.color,
-                          }}
-                        >
-                          <Icon size={16} />
-                        </div>
-                        <span className={`font-medium ${pathname === service.href ? "text-[#354F52]" : ""}`}>
-                          {service.name}
-                        </span>
-                        {pathname === service.href && (
-                          <motion.div
-                            layoutId="activeService"
-                            className="ml-auto w-1.5 h-1.5 rounded-full"
-                            style={{ backgroundColor: service.color }}
-                            initial={false}
-                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                          />
-                        )}
+                        <span className="font-medium">{service.name}</span>
+                        <span
+                          className={`h-1 w-1 rounded-full bg-moss-light transition-opacity duration-200 ${
+                            active ? "opacity-100" : "opacity-0"
+                          }`}
+                        />
                       </Link>
                     )
                   })}

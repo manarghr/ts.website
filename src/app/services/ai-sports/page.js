@@ -802,43 +802,81 @@ export default function AISportsPage() {
   return (
     <MainLayout>
       <div className="w-full overflow-hidden bg-white">
-        {/* Hero Section */}
-        <section className="relative w-full h-[400px] md:h-[500px] overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: "url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1400')",
-              backgroundSize: "cover",
-              backgroundPosition: "center"
-            }}
+        {/* Masthead
+            ----------------------------------------------------------------
+            The most technical page on the site, so it reads as instrumentation
+            rather than marketing: a dark ground, a measured pipeline, and the
+            numbers the model actually produces.
+
+            Everything below this section is the working analyser and is left
+            exactly as it is. This is a change of frame, not of function. */}
+        <section className="relative overflow-hidden bg-forest pb-16 pt-16 text-white md:pb-20 md:pt-20">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-8 -top-10 select-none font-display text-[20vw] font-extrabold leading-none tracking-tighter text-white/[0.03]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] opacity-90" />
-          </div>
-          <div className="relative h-full flex items-center justify-center px-8 md:px-16">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+            33
+          </span>
+
+          <div className="relative mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center"
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-end"
             >
-              <h1 className="text-white text-4xl md:text-6xl font-bold mb-4">
-                AI-Powered <span className="text-[#6BB371]">Sports Training</span>
-              </h1>
-              <p className="text-white text-lg md:text-xl max-w-2xl mx-auto">
-                Train with real-time AI feedback or follow expert-led workout playlists
+              <div>
+                <p className="eyebrow text-moss-light">Computer vision &times; performance</p>
+                <h1 className="mt-6 font-display text-display font-extrabold">
+                  Your movement.
+                  <span className="block text-white/45">Understood.</span>
+                </h1>
+              </div>
+
+              <p className="max-w-prose leading-relaxed text-white/65 lg:pb-3">
+                A pose model reads your joints from an ordinary camera and measures the
+                angles that define the lift. It runs in this browser tab — nothing you
+                film is uploaded.
               </p>
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: "96px" }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                className="h-1 bg-[#6BB371] mx-auto mt-6 rounded-full"
-              />
             </motion.div>
+
+            {/* The pipeline, stated as a measured process rather than three
+                feature cards. Rules instead of boxes. */}
+            <motion.ol
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="mt-16 grid gap-px overflow-hidden rounded-2xl bg-white/10 md:grid-cols-3"
+            >
+              {[
+                {
+                  step: "01",
+                  title: "Capture",
+                  body: "Frames are read from your camera or an uploaded clip, in this tab.",
+                },
+                {
+                  step: "02",
+                  title: "Analyse",
+                  body: "The model locates 33 landmarks and measures the angle the exercise depends on.",
+                },
+                {
+                  step: "03",
+                  title: "Feedback",
+                  body: "The angle is graded against the target band and each rep is scored at its turning point.",
+                },
+              ].map((item) => (
+                <li key={item.step} className="bg-forest p-8">
+                  <span className="eyebrow text-moss-light">{item.step}</span>
+                  <h2 className="mt-5 font-display text-xl font-bold">{item.title}</h2>
+                  <p className="mt-3 leading-relaxed text-white/60">{item.body}</p>
+                </li>
+              ))}
+            </motion.ol>
           </div>
         </section>
 
         {/* Live Camera Practice Section */}
-        <section className="py-20 px-8 md:px-16 bg-gradient-to-b from-white to-[#C8CDC5]/20">
+        <section className="bg-white py-20 md:py-24">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#6BB371]/10 rounded-full mb-4">
@@ -1388,7 +1426,7 @@ export default function AISportsPage() {
         </section>
 
         {/* Upload Video AI Analysis Section */}
-        <section className="py-16 px-8 md:px-16 bg-gradient-to-b from-white to-[#C8CDC5]/10">
+        <section className="bg-bone py-20 md:py-24">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#354F52]/10 rounded-full mb-4">
@@ -1772,7 +1810,7 @@ export default function AISportsPage() {
         </section>
 
         {/* Pre-Recorded Playlists Section */}
-        <section className="py-20 px-8 md:px-16 bg-gradient-to-b from-[#C8CDC5]/20 to-white">
+        <section className="bg-white py-20 md:py-24">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#52796F]/10 rounded-full mb-4">

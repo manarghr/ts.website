@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import MainLayout from "@/components/layout/MainLayout";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { 
   Search, 
@@ -16,7 +17,8 @@ import {
   Sun,
   Moon,
   Cookie,
-  Heart
+  Heart,
+  ArrowRight
 } from "lucide-react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -209,385 +211,275 @@ useEffect(() => {
     }
   };
 
+  // A meal card is one of the few places on the site where a card is the right
+  // component: the image, the name and the macros are a single unit you scan
+  // and compare against its neighbours.
   const MealCard = ({ meal, index }) => (
-    <motion.div
-      key={meal.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
+    <motion.article
+      initial={{ opacity: 0, y: 22 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, delay: (index % 3) * 0.07, ease: [0.22, 1, 0.36, 1] }}
+      className="group"
     >
-      <div className="relative h-48 overflow-hidden">
+      <Link href={`/services/meals/${meal.id}`} className="block">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-bone-dark">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={meal.image || "/images/placeholder-blur.svg"}
-            alt={meal.name || "Meal image"}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-            loading="lazy"
-            onError={(e) => {
-              e.currentTarget.src = "/images/placeholder-blur.svg";
-            }}
+            src={meal.image || "/blog-covers/nutrition.svg"}
+            alt={meal.name || "Meal"}
+            className="h-full w-full object-cover transition-transform duration-700 ease-editorial group-hover:scale-[1.04]"
           />
 
-        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-[#354F52] flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          {meal.prepTime}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              toggleFavorite(meal);
+            }}
+            aria-label={`Save ${meal.name}`}
+            className="absolute right-3 top-3 rounded-full bg-white/90 p-2.5 text-ink transition-colors duration-300 hover:bg-white"
+          >
+            <Heart
+              className={`h-4 w-4 ${
+                favoriteMeals.some((f) => f.id === meal.id) ? "fill-current text-moss-light" : ""
+              }`}
+            />
+          </button>
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(meal);
-          }}
-          className={`absolute top-3 left-3 p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
-            isFavorite(meal.id)
-              ? "bg-red-500/90 text-white shadow-lg"
-              : "bg-white/90 text-gray-600 hover:bg-white"
-          }`}
-        >
-          <Heart 
-            className={`w-4 h-4 ${isFavorite(meal.id) ? "fill-current" : ""}`}
-          />
-        </button>
-      </div>
-      
-      <div className="p-5">
-        <h3 className="text-xl font-bold text-[#354F52] mb-2">{meal.name}</h3>
-        <p className="text-sm text-gray-600 mb-4">{meal.description}</p>
-        
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="bg-gradient-to-r from-[#6BB371]/10 to-[#6BB371]/5 p-2 rounded-lg">
-            <div className="text-xs text-gray-600">Calories</div>
-            <div className="text-lg font-bold text-[#354F52]">{meal.calories}</div>
-          </div>
-          <div className="bg-gradient-to-r from-[#6BB371]/10 to-[#6BB371]/5 p-2 rounded-lg">
-            <div className="text-xs text-gray-600">Protein</div>
-            <div className="text-lg font-bold text-[#354F52]">{meal.protein}g</div>
-          </div>
-          <div className="bg-gradient-to-r from-[#6BB371]/10 to-[#6BB371]/5 p-2 rounded-lg">
-            <div className="text-xs text-gray-600">Carbs</div>
-            <div className="text-lg font-bold text-[#354F52]">{meal.carbs}g</div>
-          </div>
-          <div className="bg-gradient-to-r from-[#6BB371]/10 to-[#6BB371]/5 p-2 rounded-lg">
-            <div className="text-xs text-gray-600">Fats</div>
-            <div className="text-lg font-bold text-[#354F52]">{meal.fats}g</div>
-          </div>
-        </div>
-        
-        <div className="mb-4">
-          <div className="text-xs font-semibold text-gray-700 mb-2">Ingredients:</div>
-          <div className="flex flex-wrap gap-1">
-            {meal.ingredients.slice(0, 4).map((ingredient, idx) => (
-              <span key={idx} className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700">
-                {ingredient}
-              </span>
+
+        <h3 className="mt-4 font-display text-lg font-bold text-forest transition-colors duration-300 group-hover:text-moss">
+          {meal.name}
+        </h3>
+
+        {/* Macros as a data row rather than four coloured chips. */}
+        <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 border-t border-ink/10 pt-3 text-xs">
+          {[
+            ["kcal", meal.calories],
+            ["P", meal.protein ? `${meal.protein}g` : null],
+            ["C", meal.carbs ? `${meal.carbs}g` : null],
+            ["F", meal.fats ? `${meal.fats}g` : null],
+          ]
+            .filter(([, value]) => value)
+            .map(([label, value]) => (
+              <div key={label} className="flex items-baseline gap-1">
+                <dt className="text-ink-muted">{label}</dt>
+                <dd className="font-semibold text-forest">{value}</dd>
+              </div>
             ))}
-            {meal.ingredients.length > 4 && (
-              <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">
-                +{meal.ingredients.length - 4} more
-              </span>
-            )}
-          </div>
-        </div>
-        
-        <button 
-        onClick={() => router.push(`/services/meals/${meal.id}`)}
-        className="w-full bg-gradient-to-r from-[#6BB371] to-[#52796F] text-white py-2 rounded-lg font-semibold hover:from-[#52796F] hover:to-[#6BB371] transition-all duration-300"
-      >
-        View Recipe
-      </button>
-      </div>
-    </motion.div>
+        </dl>
+      </Link>
+    </motion.article>
   );
 
+  const MEAL_SECTIONS = [
+    { id: "breakfast", label: "Breakfast" },
+    { id: "lunch", label: "Lunch" },
+    { id: "dinner", label: "Dinner" },
+    { id: "snacks", label: "Snacks" },
+  ];
 
-  const PaginationControls = ({ mealType, currentPage, totalPages }) => {
-  if (totalPages < 1) return null;
-  
-  return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="flex justify-center items-center gap-8 mt-8"
-        >
-          {/* Previous Button */}
-          <button
-            onClick={() => handlePageChange(mealType, Math.max(currentPage - 1, 1))}
-            disabled={currentPage === 1}
-            aria-label="Previous page"
-            className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
-          >
-            <IoIosArrowBack size={24} className="group-hover:-translate-x-1 transition-transform" />
-          </button>
-
-          {/* Page Dots Indicator */}
-          <div className="flex gap-3 items-center">
-            {Array.from({ length: totalPages }).map((_, index) => {
-              const page = index + 1;
-              return (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(mealType, page)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    currentPage === page
-                      ? "bg-[#354F52] w-12 shadow-lg"
-                      : "bg-[#C8CDC5] w-2 hover:bg-[#52796F] hover:w-4"
-                  }`}
-                  aria-label={`Go to page ${page}`}
-                />
-              );
-            })}
-      </div>
-
-            {/* Next Button */}
-            <button
-              onClick={() => handlePageChange(mealType, Math.min(currentPage + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              aria-label="Next page"
-              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
-            >
-              <IoIosArrowForward size={24} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-          </motion.div>
-        );
-    };
+  const [heroMeal] = filteredMeals;
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <div className="relative h-[500px] md:h-[600px] bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] overflow-hidden">
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: "url('https://plus.unsplash.com/premium_photo-1700760417057-bea54a42503c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            filter: "brightness(1.1) contrast(0.85)"
-          }}
-        />
-        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-4">
-            Meal <span className="text-[#FF8C42]">Preparation</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-8 font-medium">
-            Discover delicious, nutritious meals tailored to your fitness goals
-          </p>
-          <div className="flex items-center gap-4 text-white/70">
-            <UtensilsCrossed className="w-6 h-6" />
-            <span className="text-lg">Fresh Ingredients</span>
-            <span className="text-2xl">•</span>
-            <span className="text-lg">Expert Recipes</span>
-            <span className="text-2xl">•</span>
-            <span className="text-lg">Customized Plans</span>
-          </div>
-        </div>
-      </div>
+      <div className="w-full bg-white">
+        {/* Masthead
+            ----------------------------------------------------------------
+            Off-white and warm rather than the deep teal used by Programs and
+            the analyser. This is the lifestyle corner of the product and it
+            should feel like a different room in the same building. */}
+        <section className="bg-bone pb-16 pt-16 md:pb-20 md:pt-20">
+          <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="grid items-end gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]"
+            >
+              <div>
+                <p className="eyebrow text-moss">Fuel your training</p>
+                <h1 className="mt-6 font-display text-display font-extrabold text-forest">
+                  Eat well.
+                  <span className="block text-ink-muted">Train better.</span>
+                </h1>
+              </div>
 
-      {/* Search and Filter Section */}
-      <div className="bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] py-10 px-4 relative overflow-hidden">
-        {/* Floating Food Icons */}
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          {/* Search Bar */}
-          <div className="mb-8">
-            <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5 z-10" />
-              <input
-                type="text"
-                placeholder="Search meals or ingredients..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#6BB371] focus:border-[#6BB371] transition-all duration-300 text-lg"
-              />
-            </div>
+              <p className="max-w-prose leading-relaxed text-ink-soft lg:pb-3">
+                Meals with the macros already worked out, filterable by what you are
+                training for. Prep time and method included, because a plan has to
+                survive a weekday evening.
+              </p>
+            </motion.div>
           </div>
+        </section>
 
-          {/* Goal Filters */}
-          <div className="mb-6">
-            <div className="flex flex-wrap justify-center gap-3">
-              {goals.map((goal) => {
-                const Icon = goal.icon;
-                return (
+        {/* Controls: search, goal, meal type. */}
+        <section className="sticky top-[var(--nav-h)] z-30 border-b border-ink/10 bg-white/90 backdrop-blur-md">
+          <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+            <div className="flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="relative w-full lg:max-w-xs">
+                <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-muted" />
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search meals or ingredients"
+                  aria-label="Search meals"
+                  className="w-full border-0 border-b border-ink/15 bg-transparent py-2 pl-6 text-sm text-ink placeholder:text-ink-muted focus:border-moss focus:outline-none focus:ring-0"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                {goals.map((goal) => (
                   <button
                     key={goal.id}
                     onClick={() => setSelectedGoal(goal.id)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
+                    className={`relative pb-1 text-sm font-semibold transition-colors duration-300 ${
                       selectedGoal === goal.id
-                        ? "bg-[#6BB371] text-white shadow-lg shadow-[#6BB371]/30 scale-105"
-                        : "bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 border border-white/20"
+                        ? "text-forest"
+                        : "text-ink-muted hover:text-forest"
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
                     {goal.label}
+                    <span
+                      className={`absolute -bottom-[9px] left-0 h-px w-full bg-forest transition-transform duration-300 ease-editorial ${
+                        selectedGoal === goal.id ? "scale-x-100" : "scale-x-0"
+                      }`}
+                    />
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
+        </section>
 
-          {/* Meal Type Filters */}
-          <div>
-            <div className="flex flex-wrap justify-center gap-3">
-              {mealTypes.map((type) => {
-                const Icon = type.icon;
-                return (
-                  <button
-                    key={type.id}
-                    onClick={() => setSelectedMealType(type.id)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                      selectedMealType === type.id
-                        ? "bg-[#6BB371] text-white shadow-lg shadow-[#6BB371]/30 scale-105"
-                        : "bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 border border-white/20"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {type.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Meals Timeline Section */}
-      <div className="bg-white py-12 px-4 relative overflow-hidden">
-        {/* Grid Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/5 via-transparent to-[#6BB371]/5"></div>
-        <div className="absolute inset-0 opacity-35" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.4;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px'
-        }}></div>
-        <div className="absolute inset-0 opacity-25" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.3;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q-1 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 -1 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px',
-          backgroundPosition: '1px 1px'
-        }}></div>
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-        {selectedMealType === "all" ? (
-          // Timeline View - Show all meal types
-          <>
-            {/* Breakfast Section */}
-            {mealsByType.breakfast.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <Coffee className="w-8 h-8 text-[#FF8C42]" />
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-[#FF8C42] to-[#FFB347] bg-clip-text text-transparent">Breakfast</h2>
-                  <div className="flex-1 h-0.5 bg-gradient-to-r from-[#FF8C42] via-[#FFB347]/70 to-transparent"></div>
-                </div>
-                <p className="text-gray-600 mb-6">Start your day with nutritious breakfast options</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {paginatedMealsByType.breakfast.meals.map((meal, index) => (
-                    <MealCard key={meal.id} meal={meal} index={index} />
-                  ))}
-                </div>
-                {/*PAGINATION */}
-                <PaginationControls 
-                  mealType="breakfast" 
-                  currentPage={currentPages.breakfast} 
-                  totalPages={paginatedMealsByType.breakfast.totalPages} 
+        {/* Featured meal: a full editorial split with the numbers spelled out. */}
+        {heroMeal && (
+          <section className="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20 lg:px-16">
+            <motion.div
+              initial={{ opacity: 0, y: 26 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="group grid gap-10 lg:grid-cols-2 lg:gap-16"
+            >
+              <Link
+                href={`/services/meals/${heroMeal.id}`}
+                className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-bone-dark"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={heroMeal.image || "/blog-covers/nutrition.svg"}
+                  alt={heroMeal.name}
+                  className="h-full w-full object-cover transition-transform duration-700 ease-editorial group-hover:scale-[1.03]"
                 />
-              </div>
-            )}
+              </Link>
 
-            {/* Lunch Section */}
-            {mealsByType.lunch.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <Sun className="w-8 h-8 text-[#FFD93D]" />
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-[#FFD93D] to-[#FFA500] bg-clip-text text-transparent">Lunch</h2>
-                  <div className="flex-1 h-0.5 bg-gradient-to-r from-[#FFD93D] via-[#FFA500]/70 to-transparent"></div>
-                </div>
-                <p className="text-gray-600 mb-6">Fuel your afternoon with balanced lunch meals</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {paginatedMealsByType.lunch.meals.map((meal, index) => (
-                    <MealCard key={meal.id} meal={meal} index={index} />
-                  ))}
-                </div>
-                {/*PAGINATION */}
-                <PaginationControls 
-                  mealType="lunch" 
-                  currentPage={currentPages.lunch} 
-                  totalPages={paginatedMealsByType.lunch.totalPages} 
-                />
-              </div>
-            )}
+              <div className="flex flex-col justify-center">
+                <p className="eyebrow text-moss">This week&apos;s pick</p>
 
-            {/* Dinner Section */}
-            {mealsByType.dinner.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <Moon className="w-8 h-8 text-[#8B5CF6]" />
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-[#8B5CF6] to-[#A78BFA] bg-clip-text text-transparent">Dinner</h2>
-                  <div className="flex-1 h-0.5 bg-gradient-to-r from-[#8B5CF6] via-[#A78BFA]/70 to-transparent"></div>
-                </div>
-                <p className="text-gray-600 mb-6">End your day with satisfying dinner options</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {paginatedMealsByType.dinner.meals.map((meal, index) => (
-                    <MealCard key={meal.id} meal={meal} index={index} />
-                  ))}
-                </div>
-                {/* ADD PAGINATION */}
-                <PaginationControls 
-                  mealType="dinner" 
-                  currentPage={currentPages.dinner} 
-                  totalPages={paginatedMealsByType.dinner.totalPages} 
-                />
-              </div>
-            )}
+                <h2 className="mt-5 font-display text-display-sm font-extrabold text-forest">
+                  {heroMeal.name}
+                </h2>
 
-            {/* Snacks Section */}
-            {mealsByType.snacks.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <Cookie className="w-8 h-8 text-[#EC4899]" />
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-[#EC4899] to-[#F472B6] bg-clip-text text-transparent">Snacks</h2>
-                  <div className="flex-1 h-0.5 bg-gradient-to-r from-[#EC4899] via-[#F472B6]/70 to-transparent"></div>
-                </div>
-                <p className="text-gray-600 mb-6">Healthy snacks to keep you energized throughout the day</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {paginatedMealsByType.snacks.meals.map((meal, index) => (
-                    <MealCard key={meal.id} meal={meal} index={index} />
+                <p className="mt-5 max-w-prose text-lg leading-relaxed text-ink-soft">
+                  {heroMeal.description}
+                </p>
+
+                <dl className="mt-8 grid grid-cols-4 gap-px overflow-hidden rounded-2xl bg-ink/10">
+                  {[
+                    ["Calories", heroMeal.calories],
+                    ["Protein", heroMeal.protein ? `${heroMeal.protein}g` : "—"],
+                    ["Carbs", heroMeal.carbs ? `${heroMeal.carbs}g` : "—"],
+                    ["Fats", heroMeal.fats ? `${heroMeal.fats}g` : "—"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="bg-white px-4 py-5 text-center">
+                      <dd className="font-display text-2xl font-bold text-forest">{value}</dd>
+                      <dt className="eyebrow mt-1.5 text-ink-muted">{label}</dt>
+                    </div>
                   ))}
+                </dl>
+
+                <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-ink-muted">
+                  {heroMeal.prepTime && <span>{heroMeal.prepTime}</span>}
+                  {heroMeal.servings && <span>Serves {heroMeal.servings}</span>}
+                  {heroMeal.difficulty && <span>{heroMeal.difficulty}</span>}
                 </div>
-                {/* ADD PAGINATION */}
-                <PaginationControls 
-                  mealType="snacks" 
-                  currentPage={currentPages.snacks} 
-                  totalPages={paginatedMealsByType.snacks.totalPages} 
-                />
+
+                <Link
+                  href={`/services/meals/${heroMeal.id}`}
+                  className="group/cta mt-9 inline-flex w-fit items-center gap-3 rounded-full bg-forest px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 ease-editorial hover:gap-4 hover:bg-moss"
+                >
+                  View meal
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
-            )}
-          </>
-        ) : (
-          // Filtered View - Show only selected meal type
-          <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {(() => {
-              const currentPage = currentPages[selectedMealType] || 1;
-              const totalPages = Math.ceil(filteredMeals.length / MEALS_PER_PAGE);
-              const paginatedMeals = filteredMeals.slice(
-                (currentPage - 1) * MEALS_PER_PAGE,
-                currentPage * MEALS_PER_PAGE
-              );
-              
-              return paginatedMeals.map((meal, index) => (
-                <MealCard key={meal.id} meal={meal} index={index} />
-              ));
-            })()}
-          </div>
-          {selectedMealType !== "all" && (
-            <PaginationControls 
-              mealType={selectedMealType} 
-              currentPage={currentPages[selectedMealType] || 1} 
-              totalPages={Math.ceil(filteredMeals.length / MEALS_PER_PAGE)} 
-            />
-          )}
-        </>
+            </motion.div>
+          </section>
         )}
-        </div>
-      </div>
+
+        {/* By meal type. Each section keeps its own pagination. */}
+        {MEAL_SECTIONS.map(({ id, label }) => {
+          const section = paginatedMealsByType[id];
+          if (!section || section.meals.length === 0) return null;
+
+          return (
+            <section key={id} className="mx-auto max-w-7xl px-6 pb-16 md:px-12 lg:px-16">
+              <div className="flex items-baseline justify-between border-b border-ink/10 pb-5">
+                <h2 className="font-display text-2xl font-bold text-forest">{label}</h2>
+                <span className="eyebrow text-ink-muted">
+                  {mealsByType[id].length} {mealsByType[id].length === 1 ? "meal" : "meals"}
+                </span>
+              </div>
+
+              <div className="mt-10 grid grid-cols-1 gap-x-7 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+                {section.meals.map((meal, index) => (
+                  <MealCard key={meal.id} meal={meal} index={index} />
+                ))}
+              </div>
+
+              {section.totalPages > 1 && (
+                <div className="mt-10 flex items-center justify-center gap-8">
+                  <button
+                    onClick={() => handlePageChange(id, Math.max(currentPages[id] - 1, 1))}
+                    disabled={currentPages[id] === 1}
+                    className="text-sm font-semibold text-forest transition-opacity duration-300 disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    Previous
+                  </button>
+                  <span className="eyebrow text-ink-muted">
+                    {currentPages[id]} / {section.totalPages}
+                  </span>
+                  <button
+                    onClick={() =>
+                      handlePageChange(id, Math.min(currentPages[id] + 1, section.totalPages))
+                    }
+                    disabled={currentPages[id] === section.totalPages}
+                    className="text-sm font-semibold text-forest transition-opacity duration-300 disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </section>
+          );
+        })}
+
+        {filteredMeals.length === 0 && (
+          <section className="mx-auto max-w-7xl px-6 py-24 text-center md:px-12 lg:px-16">
+            <h2 className="font-display text-2xl font-bold text-forest">No meals match that</h2>
+            <p className="mt-3 text-ink-soft">Try a different goal, or clear the search.</p>
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedGoal("all");
+                setSelectedMealType("all");
+              }}
+              className="mt-7 rounded-full bg-forest px-7 py-3 text-sm font-semibold text-white transition-colors duration-300 hover:bg-moss"
+            >
+              Clear filters
+            </button>
+          </section>
+        )}
       </div>
     </MainLayout>
   );
