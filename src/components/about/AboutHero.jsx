@@ -207,7 +207,7 @@ export default function AboutHero() {
             initial={{ opacity: 0, y: 30 }}
             animate={isVisible["mission"] ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.2, duration: 0.8 }}
-            className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-3xl p-10 md:p-16 shadow-2xl text-white relative overflow-hidden"
+            className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-2xl p-10 md:p-16 shadow-lg text-white relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full -ml-48 -mb-48 blur-3xl"></div>
@@ -334,12 +334,12 @@ export default function AboutHero() {
                       clickedCard === index ? 'scale-110 shadow-lg shadow-[#6F8676]/70' : ''
                     }`}>
                       <value.icon className={`w-10 h-10 text-white transition-all duration-300 ${
-                        clickedCard === index ? 'drop-shadow-[0_0_12px_rgba(111,134,118,0.9)]' : ''
+                        clickedCard === index ? 'drop-shadow-lg' : ''
                       }`} />
                     </div>
                   </div>
                   <h3 className={`text-2xl font-bold mb-4 text-center transition-colors ${
-                    clickedCard === index ? 'text-[#6F8676] drop-shadow-[0_0_8px_rgba(111,134,118,0.6)]' : 'text-[#354F52] group-hover:text-[#52796F]'
+                    clickedCard === index ? 'text-[#6F8676] drop-shadow-lg' : 'text-[#354F52] group-hover:text-[#52796F]'
                   }`}>{value.title}</h3>
                   <p className="text-slate-600 text-center leading-relaxed">{value.desc}</p>
                 </div>
@@ -413,7 +413,7 @@ export default function AboutHero() {
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              <div className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+              <div className="bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-2xl p-8 shadow-lg relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
                 <div 
                   className="w-full h-96 bg-slate-900/50 rounded-xl flex items-center justify-center relative overflow-hidden border border-white/10"
@@ -423,7 +423,7 @@ export default function AboutHero() {
                     backgroundPosition: "center"
                   }}
                 >
-                  <div className="bg-black/70 backdrop-blur-md rounded-xl p-10 text-center text-white border border-white/20 shadow-2xl">
+                  <div className="bg-black/70 backdrop-blur-md rounded-xl p-10 text-center text-white border border-white/20 shadow-lg">
                     <div className="text-7xl font-bold mb-3 bg-gradient-to-r from-white to-[#6BB371] bg-clip-text text-transparent">95/100</div>
                     <div className="text-sm uppercase tracking-wider font-semibold">Form Score</div>
                   </div>
@@ -542,7 +542,7 @@ export default function AboutHero() {
               >
                 <div className={`flex flex-col md:flex-row items-center ${index % 2 === 0 ? "md:flex-row-reverse" : ""}`}>
                   <div className={`w-full md:w-5/12 ${index % 2 === 0 ? "md:text-right" : "md:text-left"} mb-6 md:mb-0 px-4`}>
-                    <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-[#52796F]/20 hover:border-[#52796F]/40 transition-all hover:shadow-2xl">
+                    <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-[#52796F]/20 hover:border-[#52796F]/40 transition-all hover:shadow-lg">
                       <div className="flex items-center gap-4 mb-4">
                         <div className="bg-gradient-to-br from-[#52796F] to-[#6BB371] rounded-xl p-3">
                           <item.icon className="w-6 h-6 text-white" />
@@ -592,7 +592,7 @@ export default function AboutHero() {
           <div className="flex justify-center gap-4 flex-wrap">
             <button 
               onClick={() => setIsAuthModalOpen(true)}
-              className="px-10 py-5 bg-white text-[#354F52] font-bold rounded-xl text-lg hover:bg-[#6BB371] hover:text-white transition-all duration-300 transform hover:scale-105 shadow-2xl"
+              className="px-10 py-5 bg-white text-[#354F52] font-bold rounded-xl text-lg hover:bg-[#6BB371] hover:text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
             >
               Get Started Today
             </button>

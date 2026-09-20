@@ -314,7 +314,7 @@ useEffect(() => {
             onClick={() => handlePageChange(mealType, Math.max(currentPage - 1, 1))}
             disabled={currentPage === 1}
             aria-label="Previous page"
-            className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+            className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
           >
             <IoIosArrowBack size={24} className="group-hover:-translate-x-1 transition-transform" />
           </button>
@@ -343,7 +343,7 @@ useEffect(() => {
               onClick={() => handlePageChange(mealType, Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
               aria-label="Next page"
-              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
             >
               <IoIosArrowForward size={24} className="group-hover:translate-x-1 transition-transform" />
             </button>
@@ -386,16 +386,6 @@ useEffect(() => {
       {/* Search and Filter Section */}
       <div className="bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] py-10 px-4 relative overflow-hidden">
         {/* Floating Food Icons */}
-        <div className="absolute inset-0 pointer-events-none">
-          <span className="absolute top-16 left-10 text-4xl opacity-10 animate-float" style={{ animationDelay: '0s', animationDuration: '6s' }}>🍎</span>
-          <span className="absolute top-24 right-16 text-3xl opacity-10 animate-float" style={{ animationDelay: '1s', animationDuration: '7s' }}>🥗</span>
-          <span className="absolute bottom-20 left-1/4 text-5xl opacity-10 animate-float" style={{ animationDelay: '2s', animationDuration: '8s' }}>🍳</span>
-          <span className="absolute bottom-16 right-1/3 text-4xl opacity-10 animate-float" style={{ animationDelay: '3s', animationDuration: '6.5s' }}>🥑</span>
-          <span className="absolute top-1/2 left-20 text-3xl opacity-10 animate-float" style={{ animationDelay: '1.5s', animationDuration: '7.5s' }}>🥕</span>
-          <span className="absolute top-1/3 right-24 text-4xl opacity-10 animate-float" style={{ animationDelay: '2.5s', animationDuration: '6.5s' }}>🍌</span>
-          <span className="absolute bottom-1/3 left-1/3 text-3xl opacity-10 animate-float" style={{ animationDelay: '0.5s', animationDuration: '8s' }}>🥝</span>
-          <span className="absolute top-20 right-1/4 text-4xl opacity-10 animate-float" style={{ animationDelay: '3.5s', animationDuration: '7s' }}>🍇</span>
-        </div>
         
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Search Bar */}

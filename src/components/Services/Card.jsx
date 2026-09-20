@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 export default function Card({ image, title, para, isActive, icon: Icon, gradient }) {
   return (
     <motion.div
-      className={`group relative overflow-hidden transition-all duration-500 rounded-3xl ${
+      className={`group relative overflow-hidden transition-all duration-500 rounded-2xl ${
         isActive 
-          ? "bg-gradient-to-br from-[#354F52] to-[#52796F] text-white shadow-2xl" 
-          : "bg-white text-[#354F52] shadow-lg hover:shadow-2xl border border-[#C8CDC5]/50 hover:border-[#52796F]/50"
+          ? "bg-gradient-to-br from-[#354F52] to-[#52796F] text-white shadow-lg" 
+          : "bg-white text-[#354F52] shadow-lg hover:shadow-lg border border-[#C8CDC5]/50 hover:border-[#52796F]/50"
       }`}
       whileHover={{ y: -8 }}
       transition={{ duration: 0.3 }}
@@ -23,14 +23,14 @@ export default function Card({ image, title, para, isActive, icon: Icon, gradien
       {/* Icon Section */}
       <div className="relative w-full h-[180px] flex justify-center items-center p-8">
         {Icon ? (
-          <div className={`relative w-24 h-24 rounded-3xl flex items-center justify-center transition-all duration-500 ${
+          <div className={`relative w-24 h-24 rounded-2xl flex items-center justify-center transition-all duration-500 ${
             isActive 
               ? `bg-white/20 backdrop-blur-md shadow-xl group-hover:scale-110 group-hover:rotate-6`
               : `bg-gradient-to-br ${gradient} text-white shadow-lg group-hover:scale-110 group-hover:rotate-6`
           }`}>
             <Icon className="w-12 h-12" />
             {isActive && (
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/30 to-transparent"></div>
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/30 to-transparent"></div>
             )}
           </div>
         ) : (
@@ -83,7 +83,7 @@ export default function Card({ image, title, para, isActive, icon: Icon, gradien
 
       {/* Hover Effect Border */}
       {!isActive && (
-        <div className="absolute inset-0 rounded-3xl border-2 border-[#52796F]/0 group-hover:border-[#52796F]/30 transition-all duration-500 pointer-events-none"></div>
+        <div className="absolute inset-0 rounded-2xl border-2 border-[#52796F]/0 group-hover:border-[#52796F]/30 transition-all duration-500 pointer-events-none"></div>
       )}
     </motion.div>
   );

@@ -146,7 +146,7 @@ export default function TestimonialSection() {
           </div>
 
           {/* Right Side - Testimonial Card */}
-          <div className={`bg-white/10 backdrop-blur-lg rounded-3xl p-8 md:p-10 relative shadow-2xl border border-white/20 fade-in-on-scroll ${isVisible ? 'visible' : ''}`} style={{ transitionDelay: '0.3s' }}>
+          <div className={`bg-white/10 backdrop-blur-lg rounded-2xl p-8 md:p-10 relative shadow-lg border border-white/20 fade-in-on-scroll ${isVisible ? 'visible' : ''}`} style={{ transitionDelay: '0.3s' }}>
             {/* Quote Icon */}
             <div className="absolute top-6 right-6 text-[#6BB371]/30">
               <FaQuoteLeft size={60} />

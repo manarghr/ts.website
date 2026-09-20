@@ -137,7 +137,6 @@ export default function CoachesHome() {
     return (
       <section ref={sectionRef} className="text-center bg-gradient-to-b from-white to-[#C8CDC5]/30 py-20 md:py-28">
         <div className="text-center py-16">
-          <div className="text-4xl mb-4">⏳</div>
           <p className="text-gray-600">Loading coaches...</p>
         </div>
       </section>
@@ -149,7 +148,6 @@ export default function CoachesHome() {
     return (
       <section ref={sectionRef} className="text-center bg-gradient-to-b from-white to-[#C8CDC5]/30 py-20 md:py-28">
         <div className="text-center py-16">
-          <div className="text-6xl mb-4">👥</div>
           <h3 className="text-2xl font-bold text-[#354F52] mb-2">No coaches available</h3>
           <p className="text-gray-600">Check back soon for our expert trainers!</p>
         </div>
@@ -236,7 +234,7 @@ export default function CoachesHome() {
                 whileHover={{ y: -10 }}
                 className="group relative"
               >
-                <div className="relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 overflow-hidden">
+                <div className="relative bg-white rounded-2xl p-8 shadow-xl hover:shadow-lg transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 overflow-hidden">
                   {/* Gradient Background on Hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/5 to-[#6BB371]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   

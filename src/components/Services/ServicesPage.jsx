@@ -214,7 +214,7 @@ export default function ServicesPage() {
                   >
                     <div className="relative">
                       <div className="absolute inset-0 bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-full blur-lg opacity-50"></div>
-                      <div className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] text-white rounded-full w-16 h-16 flex items-center justify-center font-bold text-xl shadow-2xl border-4 border-white">
+                      <div className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] text-white rounded-full w-16 h-16 flex items-center justify-center font-bold text-xl shadow-lg border-4 border-white">
                         {item.step}
                       </div>
                     </div>
@@ -234,7 +234,7 @@ export default function ServicesPage() {
                   
                   {/* Enhanced Card */}
                   <motion.div 
-                    className="bg-white rounded-3xl p-10 pt-16 shadow-xl hover:shadow-2xl transition-all duration-500 border border-[#C8CDC5]/30 hover:border-[#52796F]/40 group mt-10 relative overflow-hidden"
+                    className="bg-white rounded-2xl p-10 pt-16 shadow-xl hover:shadow-lg transition-all duration-500 border border-[#C8CDC5]/30 hover:border-[#52796F]/40 group mt-10 relative overflow-hidden"
                     whileHover={{ y: -8 }}
                   >
                     {/* Animated Gradient Overlay */}
@@ -247,7 +247,7 @@ export default function ServicesPage() {
 
                     <div className="relative z-10">
                       <motion.div 
-                        className={`bg-gradient-to-br ${item.color} rounded-2xl p-8 w-28 h-28 flex items-center justify-center text-white mb-8 mx-auto shadow-xl group-hover:shadow-2xl`}
+                        className={`bg-gradient-to-br ${item.color} rounded-2xl p-8 w-28 h-28 flex items-center justify-center text-white mb-8 mx-auto shadow-xl group-hover:shadow-lg`}
                         whileHover={{ scale: 1.15, rotate: 8 }}
                         transition={{ type: "spring", stiffness: 300 }}
                       >
@@ -292,7 +292,7 @@ export default function ServicesPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
               whileHover={{ scale: 1.03, y: -5 }}
-              className="group relative cursor-pointer bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-3xl p-10 md:p-14 text-white overflow-hidden shadow-2xl hover:shadow-[#354F52]/50 transition-all duration-500"
+              className="group relative cursor-pointer bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-2xl p-10 md:p-14 text-white overflow-hidden shadow-lg hover:shadow-[#354F52]/50 transition-all duration-500"
             >
               {/* Animated Background Image */}
               <div 
@@ -308,8 +308,8 @@ export default function ServicesPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-[#354F52]/90 via-[#354F52]/70 to-transparent"></div>
               
               {/* Animated Border Glow */}
-              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#6BB371]/20 via-transparent to-[#6BB371]/20 blur-xl"></div>
+              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#6BB371]/20 via-transparent to-[#6BB371]/20 blur-xl"></div>
               </div>
               
               <div className="relative z-10">
@@ -344,7 +344,7 @@ export default function ServicesPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
               whileHover={{ scale: 1.03, y: -5 }}
-              className="group relative cursor-pointer bg-gradient-to-br from-[#52796F] to-[#6BB371] rounded-3xl p-10 md:p-14 text-white overflow-hidden shadow-2xl hover:shadow-[#52796F]/50 transition-all duration-500"
+              className="group relative cursor-pointer bg-gradient-to-br from-[#52796F] to-[#6BB371] rounded-2xl p-10 md:p-14 text-white overflow-hidden shadow-lg hover:shadow-[#52796F]/50 transition-all duration-500"
             >
               <div 
                 className="absolute inset-0 bg-cover bg-center opacity-20 group-hover:opacity-30 transition-all duration-700 group-hover:scale-110"
@@ -355,8 +355,8 @@ export default function ServicesPage() {
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#52796F]/90 via-[#52796F]/70 to-transparent"></div>
-              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#354F52]/20 via-transparent to-[#354F52]/20 blur-xl"></div>
+              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#354F52]/20 via-transparent to-[#354F52]/20 blur-xl"></div>
               </div>
               <div className="relative z-10">
                 <motion.div 
@@ -390,7 +390,7 @@ export default function ServicesPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
               whileHover={{ scale: 1.03, y: -5 }}
-              className="group relative cursor-pointer bg-gradient-to-br from-[#6BB371] to-[#52796F] rounded-3xl p-10 md:p-14 text-white overflow-hidden shadow-2xl hover:shadow-[#6BB371]/50 transition-all duration-500"
+              className="group relative cursor-pointer bg-gradient-to-br from-[#6BB371] to-[#52796F] rounded-2xl p-10 md:p-14 text-white overflow-hidden shadow-lg hover:shadow-[#6BB371]/50 transition-all duration-500"
             >
               <div 
                 className="absolute inset-0 bg-cover bg-center opacity-20 group-hover:opacity-30 transition-all duration-700 group-hover:scale-110"
@@ -401,8 +401,8 @@ export default function ServicesPage() {
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#6BB371]/90 via-[#6BB371]/70 to-transparent"></div>
-              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#52796F]/20 via-transparent to-[#52796F]/20 blur-xl"></div>
+              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#52796F]/20 via-transparent to-[#52796F]/20 blur-xl"></div>
               </div>
               <div className="relative z-10">
                 <motion.div 
@@ -521,13 +521,13 @@ export default function ServicesPage() {
                 animate={isVisible[`included-${index}`] ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, delay: index * 0.1 }}
                 whileHover={{ y: -8 }}
-                className="bg-white rounded-3xl p-10 shadow-xl hover:shadow-2xl transition-all duration-500 border border-[#C8CDC5]/40 hover:border-[#52796F]/60 group relative overflow-hidden z-10"
+                className="bg-white rounded-2xl p-10 shadow-xl hover:shadow-lg transition-all duration-500 border border-[#C8CDC5]/40 hover:border-[#52796F]/60 group relative overflow-hidden z-10"
               >
                 {/* Animated Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/0 via-transparent to-[#6BB371]/0 group-hover:from-[#52796F]/8 group-hover:via-transparent group-hover:to-[#6BB371]/8 transition-all duration-700 rounded-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/0 via-transparent to-[#6BB371]/0 group-hover:from-[#52796F]/8 group-hover:via-transparent group-hover:to-[#6BB371]/8 transition-all duration-700 rounded-2xl"></div>
                 
                 {/* Shine Effect */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl overflow-hidden">
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-2xl overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 transform translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
                 </div>
                 

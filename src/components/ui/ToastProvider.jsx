@@ -119,7 +119,7 @@ export function ToastProvider({ children }) {
                 exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 24, scale: 0.97 }}
                 transition={{ duration: reduceMotion ? 0.12 : 0.24, ease: [0.22, 1, 0.36, 1] }}
                 role={t.type === "error" ? "alert" : "status"}
-                className="pointer-events-auto flex w-full max-w-md items-start gap-3 overflow-hidden rounded-xl border border-black/5 bg-white py-3 pl-3 pr-2.5 shadow-[0_8px_30px_rgba(47,62,70,0.16)] sm:w-auto sm:min-w-[19rem]"
+                className="pointer-events-auto flex w-full max-w-md items-start gap-3 overflow-hidden rounded-xl border border-black/5 bg-white py-3 pl-3 pr-2.5 shadow-lg sm:w-auto sm:min-w-[19rem]"
               >
                 <span
                   className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full"

@@ -40,8 +40,6 @@ export default function Home() {
         <section className="relative py-20 md:py-28 bg-white overflow-hidden z-10">
           {/* Subtle Background Elements */}
           <div className="absolute inset-0">
-            <div className="absolute top-0 right-0 w-[500px] h-[500px]" style={{ background: "radial-gradient(circle, rgba(82,121,111,0.03) 0%, transparent 70%)" }}></div>
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px]" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.03) 0%, transparent 70%)" }}></div>
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
@@ -159,8 +157,6 @@ export default function Home() {
           
           {/* Clean Background */}
           <div className="absolute inset-0">
-            <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px]" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.1) 0%, transparent 70%)" }}></div>
-            <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px]"></div>
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16 text-center">
@@ -187,7 +183,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 <Link
                   href="#signup"
-                  className="group px-10 py-5 bg-[#6BB371] text-white text-lg font-bold rounded-2xl shadow-xl hover:bg-[#52796F] hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center gap-3"
+                  className="group px-10 py-5 bg-[#6BB371] text-white text-lg font-bold rounded-2xl shadow-xl hover:bg-[#52796F] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-3"
                 >
                   Get Started Free
                   <FaArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

@@ -94,7 +94,7 @@ export default function Cardes({
   // Original format (for home page) - image-based card
   return (
     <div
-      className={`relative w-[280px] md:w-[300px] h-[480px] overflow-hidden rounded-2xl shadow-2xl transition-all duration-300 hover:shadow-[#6BB371]/50 ${className}`}
+      className={`relative w-[280px] md:w-[300px] h-[480px] overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:shadow-[#6BB371]/50 ${className}`}
     >
       {/* Background image */}
       <Image

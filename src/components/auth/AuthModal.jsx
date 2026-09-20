@@ -365,7 +365,7 @@ export default function AuthModal({ isOpen, onClose }) {
       
       {/* overflow-hidden is what keeps the top bar inside the rounded corners. Without
           it the 8px bar could not follow a 24px radius and poked out at both ends. */}
-      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl overflow-hidden shadow-2xl w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col animate-in zoom-in-95 duration-300 border border-white/20 flex-shrink-0">
+      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-2xl overflow-hidden shadow-lg w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col animate-in zoom-in-95 duration-300 border border-white/20 flex-shrink-0">
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371] z-20"></div>
         
         <button
@@ -1196,7 +1196,7 @@ export default function AuthModal({ isOpen, onClose }) {
                     /* Also blocked while the picture uploads, so the account isn't
                        created before we have the image URL to attach to it. */
                     disabled={isSubmitting || isUploadingPicture}
-                    className="w-full mt-8 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+                    className="w-full mt-8 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
                   >
                     {/* Animated background */}
                     <div className="absolute inset-0 bg-gradient-to-r from-[#52796F] via-[#354F52] to-[#52796F] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -1301,7 +1301,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full mt-6 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+                    className="w-full mt-6 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#354F52] text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
                   >
                     {/* Animated background */}
                     <div className="absolute inset-0 bg-gradient-to-r from-[#52796F] via-[#354F52] to-[#52796F] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

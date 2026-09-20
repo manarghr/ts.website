@@ -372,16 +372,6 @@ export default function Coaches() {
 
       {/* Filter Section - styled like Meals */}
       <div className="relative bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] py-10 px-4 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <span className="absolute top-16 left-10 text-4xl opacity-10 animate-float" style={{ animationDelay: '0s', animationDuration: '6s' }}>🏋️</span>
-          <span className="absolute top-24 right-16 text-3xl opacity-10 animate-float" style={{ animationDelay: '1s', animationDuration: '7s' }}>💪</span>
-          <span className="absolute bottom-20 left-1/4 text-5xl opacity-10 animate-float" style={{ animationDelay: '2s', animationDuration: '8s' }}>🎯</span>
-          <span className="absolute bottom-16 right-1/3 text-4xl opacity-10 animate-float" style={{ animationDelay: '3s', animationDuration: '6.5s' }}>🧠</span>
-          <span className="absolute top-1/2 left-20 text-3xl opacity-10 animate-float" style={{ animationDelay: '1.5s', animationDuration: '7.5s' }}>🔥</span>
-          <span className="absolute top-1/3 right-24 text-4xl opacity-10 animate-float" style={{ animationDelay: '2.5s', animationDuration: '6.5s' }}>🚀</span>
-          <span className="absolute bottom-1/3 left-1/3 text-3xl opacity-10 animate-float" style={{ animationDelay: '0.5s', animationDuration: '8s' }}>⚡</span>
-          <span className="absolute top-20 right-1/4 text-4xl opacity-10 animate-float" style={{ animationDelay: '3.5s', animationDuration: '7s' }}>🤸</span>
-        </div>
 
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
@@ -512,7 +502,7 @@ export default function Coaches() {
                 
                 <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
                   {categoryCoaches.length === 0 ? (
-                    <div className="flex justify-center items-center py-20 bg-white/60 backdrop-blur-sm rounded-3xl shadow-lg border border-[#C8CDC5]/30">
+                    <div className="flex justify-center items-center py-20 bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-[#C8CDC5]/30">
                       <div className="text-gray-500 text-lg">No {categoryName} coaches available</div>
                     </div>
                   ) : (
@@ -552,7 +542,7 @@ export default function Coaches() {
                           <button
                             onClick={() => scrollCarousel(categoryName, "left")}
                             disabled={(carouselIndices[categoryName] || 0) === 0}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 w-16 h-16 text-white rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 hover:shadow-3xl transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-md border-2 border-white/20"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 w-16 h-16 text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-3xl transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-md border-2 border-white/20"
                             style={{ backgroundColor: categoryColor }}
                           >
                             <IoIosArrowBack size={28} />
@@ -560,7 +550,7 @@ export default function Coaches() {
                           <button
                             onClick={() => scrollCarousel(categoryName, "right")}
                             disabled={(carouselIndices[categoryName] || 0) === categoryCoaches.length - 1}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 w-16 h-16 text-white rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 hover:shadow-3xl transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-md border-2 border-white/20"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 w-16 h-16 text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-3xl transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-md border-2 border-white/20"
                             style={{ backgroundColor: categoryColor }}
                           >
                             <IoIosArrowForward size={28} />
@@ -610,12 +600,12 @@ export default function Coaches() {
               <input
                 type="email"
                 placeholder="Enter your email address"
-                className="flex-1 px-6 py-4 rounded-xl border-2 border-white/20 focus:outline-none focus:border-white/40 text-gray-900 bg-white/95 backdrop-blur-sm shadow-xl transition-all hover:shadow-2xl placeholder-gray-500"
+                className="flex-1 px-6 py-4 rounded-xl border-2 border-white/20 focus:outline-none focus:border-white/40 text-gray-900 bg-white/95 backdrop-blur-sm shadow-xl transition-all hover:shadow-lg placeholder-gray-500"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-10 py-4 bg-[#6BB371] text-white font-bold rounded-xl hover:bg-[#52796F] transition-all shadow-xl hover:shadow-2xl"
+                className="px-10 py-4 bg-[#6BB371] text-white font-bold rounded-xl hover:bg-[#52796F] transition-all shadow-xl hover:shadow-lg"
               >
                 Subscribe
               </motion.button>

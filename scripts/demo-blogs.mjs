@@ -395,6 +395,67 @@ const ARTICLES = {
   ],
 };
 
+// Cover photographs, chosen per article and keyed by title.
+//
+// Every id below was checked to return 200 from images.unsplash.com. That is
+// the part that can be verified from here; whether a given photo suits its
+// headline is a judgement call, so swap any that look wrong -- it is one line,
+// and an article with no entry here simply falls back to its category cover.
+//
+// That fallback is the important part. Hardcoded photo urls have broken twice
+// on this site, and a missing entry should cost a nice photo, not the layout.
+const PHOTOS = {
+  // training -- gym and road
+  "Your easy days are too hard": "photo-1461896836934-ffe607ba8211",
+  "The deload week you keep skipping": "photo-1517836357463-d25dfeac3438",
+  "What to expect in your first month of lifting": "photo-1571019613454-1cb2f99b2d8b",
+  "Why your squat stalls at the same weight every time": "photo-1534438327276-14e5300c3a48",
+  "Two days a week is enough to get stronger": "photo-1552196563-55cd4e45efb3",
+  "Warm-ups worth the ten minutes": "photo-1541534741688-6078c6bfb5c5",
+
+  // nutrition -- food
+  "How much protein do you actually need?": "photo-1490645935967-10de6ba17061",
+  "Eating for a morning workout": "photo-1517673132405-a56a62b18caf",
+  "The supplements you can stop buying": "photo-1498837167922-ddd27525d352",
+  "Hitting protein on a plant-based diet": "photo-1547592166-23ac45744acd",
+  "Why slow fat loss wins": "photo-1512621776951-a57141f2eefd",
+  "Fuelling around Ramadan training": "photo-1490645935967-10de6ba17061",
+
+  // technology -- screens and measurement
+  "What a camera can and cannot tell you about your form": "photo-1534438327276-14e5300c3a48",
+  "How pose estimation actually works": "photo-1483058712412-4245e9b90334",
+  "Running the model in your browser, not on our servers": "photo-1483058712412-4245e9b90334",
+  "Why your smartwatch calorie count is wrong": "photo-1579126038374-6064e9370f0f",
+  "Heart-rate zones, and what they miss": "photo-1499209974431-9dddcece7f88",
+  "Rep counting is harder than it looks": "photo-1550345332-09e3ac987658",
+
+  // wellness -- yoga, breathing, walking
+  "Undoing desk shoulders in fifteen minutes a day": "photo-1544367567-0f2fcb009e0b",
+  "Sleep is the training variable you control least": "photo-1506126613408-eca07ce68773",
+  "Breathing drills that actually calm you down": "photo-1506126613408-eca07ce68773",
+  "Training when you are stressed": "photo-1594381898411-846e7d193883",
+  "The case for walking": "photo-1476480862126-209bfaa8edc8",
+  "Rest days are not days off": "photo-1544367567-0f2fcb009e0b",
+
+  // mindset
+  "Motivation is not the problem": "photo-1518611012118-696072aa579a",
+  "Why you quit in week three": "photo-1540497077202-7c8a3999166f",
+  "Training through a plateau": "photo-1534438327276-14e5300c3a48",
+  "Comparison and the gym": "photo-1517836357463-d25dfeac3438",
+  "How to restart after a long break": "photo-1499209974431-9dddcece7f88",
+  "Discipline is a schedule, not a feeling": "photo-1552196563-55cd4e45efb3",
+
+  // progress
+  "The scale is a bad progress report": "photo-1512621776951-a57141f2eefd",
+  "How to know if a programme is working": "photo-1541534741688-6078c6bfb5c5",
+  "Tracking without obsessing": "photo-1483058712412-4245e9b90334",
+  "Strength gains slow down, and that is fine": "photo-1571019613454-1cb2f99b2d8b",
+  "Photos, measurements, and the numbers that matter": "photo-1579126038374-6064e9370f0f",
+  "Your first year, realistically": "photo-1461896836934-ffe607ba8211",
+};
+
+const photoUrl = (id) => `https://images.unsplash.com/${id}?w=1200&h=675&fit=crop`;
+
 const slug = (title) =>
   title
     .toLowerCase()
@@ -410,7 +471,8 @@ export const blogs = CATEGORIES.flatMap((category) =>
     author,
     category,
     readTime,
-    image: `/blog-covers/${category}.svg`,
+    // A photo where one suits the headline, the category cover otherwise.
+    image: PHOTOS[title] ? photoUrl(PHOTOS[title]) : `/blog-covers/${category}.svg`,
     sections: sections.map(([heading, content]) => ({ heading, content })),
   }))
 );

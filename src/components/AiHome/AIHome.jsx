@@ -131,15 +131,13 @@ export default function AIHome() {
             className="relative group"
           >
             {/* Decorative Elements */}
-            <div className="absolute -top-10 -right-10 w-72 h-72  group-hover:scale-150 transition-transform duration-1000" style={{ background: "radial-gradient(circle, rgba(82,121,111,0.1) 0%, transparent 70%)" }}></div>
-            <div className="absolute -bottom-10 -left-10 w-64 h-64  group-hover:scale-150 transition-transform duration-1000" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.1) 0%, transparent 70%)", transitionDelay: '0.2s' }}></div>
             
             {/* Image Container */}
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-[3rem] blur-2xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-              <div className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-[3rem] p-8 shadow-2xl group-hover:shadow-[0_40px_80px_rgba(53,79,82,0.3)] transition-all duration-500 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-2xl blur-2xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
+              <div className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-2xl p-8 shadow-lg group-hover:shadow-lg transition-all duration-500 overflow-hidden">
                 {/* Animated Border */}
-                <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-r from-[#6BB371]/20 via-transparent to-[#6BB371]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#6BB371]/20 via-transparent to-[#6BB371]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
                 <div className="relative rounded-2xl overflow-hidden">
                   <Image
@@ -165,7 +163,7 @@ export default function AIHome() {
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-[#C8CDC5]/30 hover:border-[#52796F]/50 overflow-hidden"
+                className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-lg transition-all duration-500 border border-[#C8CDC5]/30 hover:border-[#52796F]/50 overflow-hidden"
               >
                 {/* Gradient Background on Hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
@@ -196,12 +194,10 @@ export default function AIHome() {
           initial="initial"
           whileInView="whileInView"
           viewport={{ once: true }}
-          className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-[3rem] p-12 md:p-16 overflow-hidden"
+          className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] rounded-2xl p-12 md:p-16 overflow-hidden"
         >
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-pattern-dots opacity-10"></div>
-          <div className="absolute top-0 right-0 w-96 h-96" style={{ background: "radial-gradient(circle, rgba(107,179,113,0.1) 0%, transparent 70%)" }}></div>
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-[120px]"></div>
 
           <div className="relative z-10 text-center">
             <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-sm font-semibold mb-6">
@@ -218,7 +214,7 @@ export default function AIHome() {
               Join thousands of athletes who are already training smarter with AI-powered feedback
             </p>
             
-            <button className="px-10 py-5 bg-[#6BB371] hover:bg-[#52796F] text-white text-lg font-bold rounded-2xl shadow-2xl hover:shadow-[#6BB371]/50 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden group">
+            <button className="px-10 py-5 bg-[#6BB371] hover:bg-[#52796F] text-white text-lg font-bold rounded-2xl shadow-lg hover:shadow-[#6BB371]/50 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden group">
               <span className="absolute inset-0 bg-gradient-to-r from-[#52796F] to-[#6BB371] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
               <span className="relative z-10">Start Free Trial</span>
             </button>

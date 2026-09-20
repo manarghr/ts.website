@@ -85,7 +85,7 @@ export default function Head() {
               <div className={`flex flex-col sm:flex-row gap-4 mb-12 animate-fadeInUp`} style={{ animationDelay: '0.8s' }}>
                 <button 
                   onClick={() => setIsAuthModalOpen(true)}
-                  className="group px-8 py-4 text-lg font-semibold text-white bg-[#354F52] rounded-lg shadow-xl transition-all duration-300 hover:bg-[#52796F] hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2 relative overflow-hidden"
+                  className="group px-8 py-4 text-lg font-semibold text-white bg-[#354F52] rounded-lg shadow-xl transition-all duration-300 hover:bg-[#52796F] hover:shadow-lg hover:-translate-y-1 flex items-center justify-center gap-2 relative overflow-hidden"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-[#52796F] to-[#6BB371] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                   <span className="relative z-10 flex items-center gap-2">

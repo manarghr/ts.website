@@ -241,7 +241,7 @@ export default function AdminPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative z-10 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 border border-[#52796F]/20"
+          className="relative z-10 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-8 w-full max-w-md mx-4 border border-[#52796F]/20"
         >
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full mb-4">

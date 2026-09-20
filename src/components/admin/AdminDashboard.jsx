@@ -1522,7 +1522,7 @@ const updateSection = (index, field, value) => {
                     {/* Coach Form Modal */}
                     {showCoachForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold">{editingItem ? "Edit Coach" : "Add New Coach"}</h3>
                             <button
@@ -1743,7 +1743,7 @@ const updateSection = (index, field, value) => {
                     {/* Video Form Modal */}
                     {showVideoForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold">{editingItem ? "Edit Video" : "Add New Video"}</h3>
                             <button
@@ -2035,7 +2035,7 @@ const updateSection = (index, field, value) => {
                     {/* Meal Form Modal*/}
                     {showMealForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold text-[#354F52]">
                               {editingItem ? "Edit Meal" : "Add New Meal"}
@@ -2700,7 +2700,7 @@ const updateSection = (index, field, value) => {
                     {/* Blog Form Modal */}
                     {showBlogForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-lg max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold text-[#354F52]">
                               {editingItem ? "Edit Blog" : "Add New Blog"}
@@ -3118,7 +3118,7 @@ const updateSection = (index, field, value) => {
                     {/* Program Form Modal */}
                     {showProgramForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold">{editingItem ? "Edit Program" : "Add New Program"}</h3>
                             <button

@@ -124,7 +124,7 @@ export function ConfirmProvider({ children }) {
               transition={{ duration: reduceMotion ? 0.1 : 0.22, ease: [0.22, 1, 0.36, 1] }}
               // Clicking the panel must not reach the backdrop's cancel handler.
               onClick={(event) => event.stopPropagation()}
-              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_24px_60px_rgba(47,62,70,0.3)]"
+              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg"
             >
               <div className="flex items-start gap-4">
                 <span

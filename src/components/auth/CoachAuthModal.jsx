@@ -218,7 +218,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
       {/* Decorative blurred blobs removed: they were animate-pulse + blur-3xl,
           repainting a large blur every frame behind an opaque overlay. */}
       
-      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20 flex-shrink-0">
+      <div className="relative my-auto bg-gradient-to-br from-white via-white to-slate-50/50 rounded-2xl shadow-lg w-full max-w-4xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20 flex-shrink-0">
         {/* Sporty decorative elements */}
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371]"></div>
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#6BB371]/5 to-transparent rounded-bl-full"></div>
@@ -235,7 +235,7 @@ export default function CoachAuthModal({ isOpen, onClose }) {
         </button>
 
         {showSuccess && (
-          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white rounded-3xl px-8 py-10 text-center animate-in zoom-in-95 duration-300">
+          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white rounded-2xl px-8 py-10 text-center animate-in zoom-in-95 duration-300">
             <div className="w-20 h-20 bg-gradient-to-r from-[#354F52] to-[#52796F] rounded-full flex items-center justify-center mb-5 shadow-lg">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

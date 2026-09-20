@@ -1071,7 +1071,7 @@ export default function CoachDashboardPage() {
               <div className="bg-white rounded-xl border border-[#d9e2dc] shadow-sm p-6 md:p-8">
                 {tab === "profile" && (
                   <div>
-                    <div className="mb-6 rounded-3xl overflow-hidden border border-white/60 shadow-xl">
+                    <div className="mb-6 rounded-2xl overflow-hidden border border-white/60 shadow-xl">
                       <div className="relative bg-gradient-to-r from-[#354F52] via-[#52796F] to-[#6BB371] text-white p-6">
                         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,#fff,transparent_28%),radial-gradient(circle_at_80%_0%,#fff,transparent_22%)]" />
                         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
@@ -1983,7 +1983,7 @@ export default function CoachDashboardPage() {
                     {/* Program Form Modal */}
                     {showProgramForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold text-[#354F52]">
                               {programEditingId ? "Edit Program" : "Add New Program"}
@@ -2412,7 +2412,7 @@ export default function CoachDashboardPage() {
                     {/* Blog Form Modal */}
                     {showBlogForm && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-lg max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold text-[#354F52]">Add New Blog</h3>
                             <button

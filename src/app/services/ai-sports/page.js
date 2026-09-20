@@ -853,7 +853,7 @@ export default function AISportsPage() {
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#C8CDC5]/30">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#C8CDC5]/30">
               <div className="grid md:grid-cols-2 gap-0">
                 {/* Camera Feed */}
                 <div className="relative bg-gradient-to-br from-[#2F3E46] to-[#354F52] min-h-[400px] md:min-h-[600px]">
@@ -1259,9 +1259,9 @@ export default function AISportsPage() {
                         </div>
                         {formScore > 0 && (
                           <p className="text-xs text-gray-600 mt-2">
-                            {formScore >= 90 ? "🎉 Excellent form!" :
-                             formScore >= 80 ? "👍 Good form, keep it up!" :
-                             "💪 Focus on your form"}
+                            {formScore >= 90 ? "Excellent form" :
+                             formScore >= 80 ? "Good form — keep it up" :
+                             "Focus on your form"}
                           </p>
                         )}
                       </div>
@@ -1403,7 +1403,7 @@ export default function AISportsPage() {
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-[#C8CDC5]/30">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#C8CDC5]/30">
               <div className="grid md:grid-cols-2 gap-0">
                 {/* Video Preview */}
                 <div className="relative bg-black min-h-[320px] md:min-h-[520px] flex items-center justify-center">
@@ -1859,7 +1859,7 @@ export default function AISportsPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-[#C8CDC5]/30 cursor-pointer"
+                  className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-lg transition-all duration-300 border border-[#C8CDC5]/30 cursor-pointer"
                   onClick={() => handlePlaylistClick(playlist)}
                 >
                   {/* Thumbnail */}
@@ -1947,7 +1947,7 @@ export default function AISportsPage() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className="mt-16 bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#6BB371] rounded-3xl p-8 md:p-12 text-white text-center relative overflow-hidden"
+              className="mt-16 bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#6BB371] rounded-2xl p-8 md:p-12 text-white text-center relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full -ml-32 -mb-32" />

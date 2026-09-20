@@ -160,7 +160,7 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2, ease: "easeInOut" }}
-                  className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-2xl py-2 z-50 overflow-hidden border border-gray-100"
+                  className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-lg py-2 z-50 overflow-hidden border border-gray-100"
                 >
                   {services.map((service, i) => {
                     const Icon = service.icon
@@ -222,7 +222,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-[var(--nav-h)] left-0 w-80 max-w-[85vw] h-[calc(100vh-var(--nav-h))] bg-[#354F52] shadow-2xl z-50 overflow-y-auto lg:hidden"
+              className="fixed top-[var(--nav-h)] left-0 w-80 max-w-[85vw] h-[calc(100vh-var(--nav-h))] bg-[#354F52] shadow-lg z-50 overflow-y-auto lg:hidden"
             >
               <div className="p-6 space-y-4">
                 {/* Mobile Links */}

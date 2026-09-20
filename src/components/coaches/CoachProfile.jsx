@@ -464,7 +464,7 @@ export default function CoachProfile({ coachId }) {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
             <div className="relative">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg">
                 <Image
                   src={coach.image_url || coach.image || "/coach-avatar.svg"}
                   alt={coach.name}

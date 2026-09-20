@@ -92,7 +92,6 @@ export default function BlogHome() {
       <section className="relative py-12 bg-white overflow-hidden">
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
           <div className="text-center py-16">
-            <div className="text-4xl mb-4">⏳</div>
             <p className="text-gray-600">Loading articles...</p>
           </div>
         </div>
@@ -262,7 +261,6 @@ export default function BlogHome() {
         ) : (
           // Empty State
           <div className="text-center py-16 mb-12">
-            <div className="text-6xl mb-4">📝</div>
             <h3 className="text-2xl font-bold text-[#354F52] mb-2">No articles yet</h3>
             <p className="text-gray-600">Check back soon for new content!</p>
           </div>

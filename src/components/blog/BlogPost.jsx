@@ -52,7 +52,6 @@ export default function BlogPost({ postId }) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <div className="text-6xl mb-4">⏳</div>
           <h1 className="text-4xl font-bold text-[#354F52] mb-4">Loading Article...</h1>
         </motion.div>
       </div>
@@ -67,7 +66,6 @@ export default function BlogPost({ postId }) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <div className="text-6xl mb-4">😕</div>
           <h1 className="text-4xl font-bold text-[#354F52] mb-4">Blog Post Not Found</h1>
           <p className="text-gray-600 mb-8 text-lg">Sorry, we couldn&apos;t find the article you&apos;re looking for.</p>
           <Link
@@ -209,7 +207,7 @@ export default function BlogPost({ postId }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="bg-white rounded-3xl shadow-xl p-8 md:p-12 lg:p-16 border border-[#C8CDC5]/30"
+            className="bg-white rounded-2xl shadow-xl p-8 md:p-12 lg:p-16 border border-[#C8CDC5]/30"
           >
           <article className="prose prose-lg max-w-none">
             {post.sections?.map((section, index) => (
@@ -314,7 +312,7 @@ export default function BlogPost({ postId }) {
                     transition={{ delay: 1 + index * 0.1, duration: 0.5 }}
                   >
                     <Link href={`/blog/${relatedPost.id}`}>
-                      <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-[#52796F]/30 h-full transform hover:-translate-y-2">
+                      <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-[#52796F]/30 h-full transform hover:-translate-y-2">
                         <div className="relative h-48 overflow-hidden">
                           <Image
                             src={getValidImageUrl(relatedPost.image)}
@@ -369,7 +367,7 @@ export default function BlogPost({ postId }) {
                     onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                     disabled={currentPage === 1}
                     aria-label="Previous page"
-                    className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+                    className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
                   >
                     <FaChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
                   </button>
@@ -398,7 +396,7 @@ export default function BlogPost({ postId }) {
                     onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
                     disabled={currentPage === totalPages}
                     aria-label="Next page"
-                    className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+                    className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
                   >
                     <FaChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
                   </button>

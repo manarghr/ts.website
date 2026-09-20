@@ -853,7 +853,7 @@ export default function ProfilePage({ userId }) {
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="mb-8 flex justify-center"
           >
-            <div className="w-32 h-32 bg-[#52796F]/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-[#52796F]/30 shadow-2xl">
+            <div className="w-32 h-32 bg-[#52796F]/10 backdrop-blur-md rounded-full flex items-center justify-center border-4 border-[#52796F]/30 shadow-lg">
               <Lock className="w-16 h-16 text-[#354F52]" />
             </div>
           </motion.div>
@@ -889,7 +889,7 @@ export default function ProfilePage({ userId }) {
               href="/"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center gap-2"
+              className="px-8 py-4 bg-gradient-to-r from-[#52796F] to-[#354F52] text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-lg transition-all flex items-center gap-2"
             >
               <User className="w-5 h-5" />
             Go to Home
@@ -2412,7 +2412,7 @@ export default function ProfilePage({ userId }) {
               animate={{ opacity: 1 }}
             >
               <motion.div
-                className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border-2 border-white/20"
+                className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg max-w-md w-full overflow-hidden border-2 border-white/20"
                 onClick={(e) => e.stopPropagation()}
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -2495,7 +2495,7 @@ export default function ProfilePage({ userId }) {
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden border-2 border-white/20"
+                className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg max-w-md w-full max-h-[80vh] overflow-hidden border-2 border-white/20"
                 onClick={(e) => e.stopPropagation()}
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -2607,7 +2607,7 @@ export default function ProfilePage({ userId }) {
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}

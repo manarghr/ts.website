@@ -271,7 +271,7 @@ export default function ProgramsPage() {
                             sectionRefs.current[`program-${goal}-${index}`] = el;
                           }
                         }}
-                        className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 cursor-pointer"
+                        className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-lg transition-all duration-500 transform hover:-translate-y-2 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 cursor-pointer"
                         onClick={() => handleProgramClick(program.id)}
                       >
                         <div className="flex justify-center mb-6">

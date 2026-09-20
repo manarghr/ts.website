@@ -219,7 +219,7 @@ export default function Services() {
               onClick={() => scroll("left")}
               aria-label="Scroll left"
               disabled={currentIndex === 0}
-              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
             >
               <IoIosArrowBack size={24} className="group-hover:-translate-x-1 transition-transform" />
             </button>
@@ -256,7 +256,7 @@ export default function Services() {
               onClick={() => scroll("right")}
               aria-label="Scroll right"
               disabled={currentIndex === services.length - 1}
-              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-2xl disabled:hover:scale-100"
+              className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
             >
               <IoIosArrowForward size={24} className="group-hover:translate-x-1 transition-transform" />
             </button>
