@@ -249,10 +249,19 @@ export default function ProgramsPage() {
                   onClick={() => handleProgramClick(featured.id)}
                 >
                   <div className="grid gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-16">
-                    <div className="flex aspect-[4/3] items-end overflow-hidden rounded-2xl bg-forest p-8 lg:aspect-auto lg:min-h-[340px]">
-                      <span className="font-display text-[22vw] font-extrabold leading-none tracking-tighter text-white/10 lg:text-[9rem]">
-                        01
-                      </span>
+                    <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-forest lg:aspect-auto lg:min-h-[340px]">
+                      {featured.image ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={featured.image}
+                          alt={featured.name || featured.title}
+                          className="h-full w-full object-cover transition-transform duration-700 ease-editorial group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <span className="absolute bottom-8 left-8 font-display text-[9rem] font-extrabold leading-none tracking-tighter text-white/10">
+                          01
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex flex-col justify-center">
@@ -303,8 +312,20 @@ export default function ProgramsPage() {
                         onClick={() => handleProgramClick(program.id)}
                         className="group grid w-full gap-3 py-8 text-left md:grid-cols-[auto_minmax(0,1fr)_minmax(0,1.1fr)_auto] md:items-baseline md:gap-10"
                       >
-                        <span className="eyebrow text-ink-muted transition-colors duration-300 group-hover:text-moss-light">
-                          {String(index + 2).padStart(2, "0")}
+                        <span className="flex items-center gap-5">
+                          <span className="eyebrow text-ink-muted transition-colors duration-300 group-hover:text-moss-light">
+                            {String(index + 2).padStart(2, "0")}
+                          </span>
+                          {program.image && (
+                            <span className="hidden aspect-[4/3] w-24 overflow-hidden rounded-lg bg-bone-dark sm:block">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={program.image}
+                                alt=""
+                                className="h-full w-full object-cover transition-transform duration-500 ease-editorial group-hover:scale-105"
+                              />
+                            </span>
+                          )}
                         </span>
 
                         <div>

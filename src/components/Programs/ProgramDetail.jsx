@@ -4,6 +4,8 @@ import { useAuth } from "@/components/auth/AuthProvider"
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { 
   FaDumbbell, 
   FaRunning, 
@@ -37,6 +39,7 @@ export default function ProgramDetail({ programId }) {
   // here as well would eventually disagree with what actually gets charged.
   const [quote, setQuote] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [coach, setCoach] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
@@ -117,6 +120,28 @@ export default function ProgramDetail({ programId }) {
       cancelled = true;
     };
   }, [programId, isLoggedIn]);
+
+  // The programme endpoint returns coach_id but not the coach, so fetch it.
+  // A failure here costs the byline, not the page.
+  useEffect(() => {
+    if (!program?.coach_id) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/coaches/${program.coach_id}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setCoach(data.coach || data);
+      } catch {
+        // byline stays hidden
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [program?.coach_id]);
 
   const handleEnroll = async () => {
     if (!isLoggedIn || !currentUser) {
@@ -210,32 +235,89 @@ export default function ProgramDetail({ programId }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#C8CDC5]/20">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#354F52] to-[#52796F] py-20 md:py-28 px-8 md:px-16 text-white">
-        <div className="max-w-7xl mx-auto">
+      {/* Programme header
+          ------------------------------------------------------------------
+          Cover photograph, the coach's byline, and how many people are on the
+          programme -- the three things someone weighs before starting one.
+          The icon tile that used to sit here repeated the goal label beside
+          it, so it is gone. */}
+      <section className="bg-forest pb-14 pt-10 text-white md:pb-16">
+        <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
           <button
             onClick={() => router.back()}
-            className="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+            className="group inline-flex items-center gap-2 text-sm text-white/60 transition-colors duration-300 hover:text-white"
           >
-            <FaArrowLeft />
-            <span>Back to Programs</span>
+            <FaArrowLeft className="h-3 w-3 transition-transform duration-300 group-hover:-translate-x-0.5" />
+            Back to programs
           </button>
-          
-          <div className="flex items-center gap-4 mb-6">
-            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-              {goalIcons[program.goal] || <FaDumbbell className="text-4xl" />}
-            </div>
-            <div>
-              <div className="text-sm text-white/80 mb-1">
+
+          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-16">
+            <div className="flex flex-col justify-center">
+              <p className="eyebrow text-moss-light">
                 {goalLabels[program.goal] || program.goal}
-              </div>
-              <h1 className="text-4xl md:text-6xl font-bold">
+              </p>
+
+              <h1 className="mt-5 font-display text-display-sm font-extrabold">
                 {program.name}
               </h1>
+
+              {/* Byline. Only rendered once the coach actually resolves. */}
+              {coach && (
+                <Link
+                  href={`/coaches/${coach.id}`}
+                  className="group mt-7 inline-flex items-center gap-3.5"
+                >
+                  <span className="relative h-11 w-11 overflow-hidden rounded-full bg-forest-700">
+                    <Image
+                      src={coach.image_url || "/coach-avatar.svg"}
+                      alt={coach.name}
+                      fill
+                      sizes="44px"
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold transition-colors duration-300 group-hover:text-moss-light">
+                      {coach.name}
+                    </span>
+                    <span className="block text-xs text-white/50">{coach.category} coach</span>
+                  </span>
+                </Link>
+              )}
+
+              <dl className="mt-9 flex flex-wrap gap-x-10 gap-y-4 border-y border-white/10 py-5">
+                {[
+                  ["Level", program.level || "All levels"],
+                  ["Duration", program.duration || "—"],
+                  [
+                    "Enrolled",
+                    program.enrolled ? program.enrolled.toLocaleString() : "—",
+                  ],
+                  ["Lessons", program.lessons?.length || "—"],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <dd className="font-display text-2xl font-bold">{value}</dd>
+                    <dt className="eyebrow mt-1 text-white/40">{label}</dt>
+                  </div>
+                ))}
+              </dl>
             </div>
+
+            {program.image && (
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-forest-700">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={program.image}
+                  alt={program.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
           </div>
-          
-          <p className="text-xl text-white/90 max-w-3xl mb-8">
+
+          <p className="mt-10 max-w-prose leading-relaxed text-white/70">
+
             {program.description}
           </p>
 
@@ -534,6 +616,99 @@ export default function ProgramDetail({ programId }) {
           </div>
         </div>
       </section>
+
+        {/* What is in the programme
+            ----------------------------------------------------------------
+            A lesson list, not a video grid: people scan a curriculum to judge
+            whether it covers what they need, and a row of thumbnails makes
+            that harder rather than easier.
+
+            Videos open on YouTube in a new tab. The site's CSP has no
+            frame-src, so an embedded iframe would be silently blocked --
+            allowing one would mean widening the policy for a demo playlist. */}
+        {program.lessons?.length > 0 && (
+          <section className="border-t border-ink/10 bg-white py-16 md:py-20">
+            <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="eyebrow text-moss">The lessons</p>
+                  <h2 className="mt-4 font-display text-display-sm font-bold text-forest">
+                    What the programme covers
+                  </h2>
+                </div>
+                <p className="text-sm text-ink-muted">
+                  {program.lessons.length} lessons
+                </p>
+              </div>
+
+              <ul className="mt-12 border-t border-ink/10">
+                {program.lessons.map((lesson, index) => (
+                  <li key={lesson.title} className="border-b border-ink/10">
+                    <a
+                      href={
+                        lesson.youtubeId
+                          ? `https://www.youtube.com/watch?v=${lesson.youtubeId}`
+                          : "#"
+                      }
+                      target={lesson.youtubeId ? "_blank" : undefined}
+                      rel={lesson.youtubeId ? "noopener noreferrer" : undefined}
+                      className="group grid items-center gap-5 py-5 md:grid-cols-[auto_minmax(0,140px)_minmax(0,1fr)_auto] md:gap-8"
+                    >
+                      <span className="eyebrow text-ink-muted transition-colors duration-300 group-hover:text-moss-light">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+
+                      <span className="relative hidden aspect-video w-[140px] overflow-hidden rounded-lg bg-bone-dark md:block">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={
+                            lesson.youtubeId
+                              ? `https://img.youtube.com/vi/${lesson.youtubeId}/mqdefault.jpg`
+                              : "/video-placeholder.svg"
+                          }
+                          alt=""
+                          className="h-full w-full object-cover transition-transform duration-500 ease-editorial group-hover:scale-105"
+                        />
+                      </span>
+
+                      <span className="font-display text-lg font-bold text-forest transition-transform duration-300 ease-editorial md:group-hover:translate-x-1">
+                        {lesson.title}
+                      </span>
+
+                      <span className="text-sm tabular-nums text-ink-muted">
+                        {lesson.duration}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
+
+        {/* What people said. Pull quotes rather than avatar cards. */}
+        {program.testimonials?.length > 0 && (
+          <section className="bg-bone py-16 md:py-20">
+            <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+              <p className="eyebrow text-moss">From people on the programme</p>
+
+              <div className="mt-12 grid gap-12 md:grid-cols-2 md:gap-16">
+                {program.testimonials.map((item) => (
+                  <blockquote key={item.name}>
+                    <p className="font-display text-xl font-bold leading-snug text-forest md:text-2xl">
+                      &ldquo;{item.text}&rdquo;
+                    </p>
+                    <footer className="mt-5 flex items-center gap-3 text-sm text-ink-muted">
+                      <span className="font-semibold text-ink-soft">{item.name}</span>
+                      <span className="h-px w-6 bg-ink/20" />
+                      <span>finished in {item.weeks} weeks</span>
+                    </footer>
+                  </blockquote>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
     </div>
   );
 }

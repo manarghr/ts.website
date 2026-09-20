@@ -47,7 +47,9 @@ const SERVICES = [
     body:
       "Each programme states its goal, its level, the equipment it assumes and the schedule it runs to — so you can tell before starting whether it fits the time you actually have.",
     points: ["Strength, endurance and mobility", "Week-by-week schedules", "Written by named coaches"],
-    media: "block",
+    media: "photo",
+    // verified by eye: barbell deadlift setup
+    photo: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1600&h=1200&fit=crop&q=85&auto=format",
   },
   {
     number: "03",
@@ -58,7 +60,9 @@ const SERVICES = [
     body:
       "Meals with macros, prep time, servings and method — filterable by goal and by meal type, so a plan survives contact with a weekday evening.",
     points: ["Macros per serving", "Filter by goal and meal type", "Prep time and method included"],
-    media: "block",
+    media: "photo",
+    // verified by eye: baked salmon on greens
+    photo: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=1600&h=1200&fit=crop&q=85&auto=format",
   },
 ];
 
@@ -154,9 +158,17 @@ export default function ServicesPage() {
                         placeholder="blur"
                       />
                     </div>
+                  ) : service.media === "photo" ? (
+                    <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-bone-dark">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={service.photo}
+                        alt={service.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
                   ) : (
-                    // A colour block carrying the section number at scale. Honest
-                    // about having no photograph, and deliberate rather than empty.
+                    // Colour block fallback, for a service with no photograph.
                     <div
                       className={`flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl ${
                         flipped ? "bg-forest" : "bg-moss"

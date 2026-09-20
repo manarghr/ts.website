@@ -158,11 +158,6 @@ export default function CoachProfile({ coachId }) {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  const categoryIcons = {
-    Strength: <FaDumbbell />,
-    Cardio: <FaRunning />,
-    Yoga: <FaLeaf />,
-  };
 
   // Kept as notify(text, tone) so every existing call site reads the same; the
   // stacking, timing and screen-reader announcement now come from the shared
@@ -416,10 +411,10 @@ export default function CoachProfile({ coachId }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white via-[#C8CDC5]/10 to-white">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#354F52] mx-auto mb-4"></div>
-          <div className="text-2xl font-bold text-[#354F52]">Loading coach profile...</div>
+          <div className="font-display text-xl font-bold text-forest">Loading coach profile...</div>
         </div>
       </div>
     );
@@ -427,9 +422,9 @@ export default function CoachProfile({ coachId }) {
 
   if (!coach) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white via-[#C8CDC5]/10 to-white">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="text-4xl font-bold text-[#354F52] mb-4">
+          <div className="font-display text-3xl font-bold text-forest mb-4">
             {error ? "Could not load this coach" : "Coach not found"}
           </div>
           {error && <p className="text-gray-500 mb-6 max-w-md mx-auto">{error}</p>}
@@ -445,94 +440,90 @@ export default function CoachProfile({ coachId }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-[#C8CDC5]/10 to-white">
-      {/* Header with Back Button */}
-      <div className="bg-[#354F52] text-white py-4">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
+    <div className="min-h-screen bg-white">
+      {/* Profile header
+          ------------------------------------------------------------------
+          A portrait given real size beside the name, rather than a 40px round
+          avatar with a coloured icon badge pinned to it. The badge was doing
+          the job the category line already does in words.
+
+          Stats become a hairline-divided data row; the three equal-weight
+          buttons become one filled action and two quiet text links, so the
+          primary action is obvious. All handlers are unchanged. */}
+      <section className="bg-forest pb-14 pt-10 text-white md:pb-16">
+        <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 hover:text-[#6BB371] transition-colors"
+            className="group inline-flex items-center gap-2 text-sm text-white/60 transition-colors duration-300 hover:text-white"
           >
-            <FaChevronLeft />
-            <span>Back to Coaches</span>
+            <FaChevronLeft className="h-3 w-3 transition-transform duration-300 group-hover:-translate-x-0.5" />
+            Back to coaches
           </button>
-        </div>
-      </div>
 
-      {/* Profile Header */}
-      <section className="bg-gradient-to-br from-[#354F52] to-[#52796F] text-white py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
-            <div className="relative">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                <Image
-                  src={coach.image_url || coach.image || "/coach-avatar.svg"}
-                  alt={coach.name}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              </div>
-              <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-[#6BB371] rounded-full flex items-center justify-center text-white text-xl border-4 border-[#354F52]">
-                {categoryIcons[coach.category] || <FaDumbbell />}
-              </div>
+          <div className="mt-10 grid gap-10 md:grid-cols-[minmax(0,260px)_minmax(0,1fr)] md:gap-14">
+            <div className="relative aspect-[4/5] w-full max-w-[260px] overflow-hidden rounded-2xl bg-forest-700">
+              <Image
+                src={coach.image_url || coach.image || "/coach-avatar.svg"}
+                alt={coach.name}
+                fill
+                sizes="260px"
+                className="object-cover"
+                unoptimized
+              />
             </div>
 
-            <div className="flex-1">
-              <h1 className="text-4xl md:text-5xl font-bold mb-2">{coach.name}</h1>
-              <p className="text-xl text-white/90 mb-4">{coach.category} Coach</p>
+            <div className="flex flex-col justify-center">
+              <p className="eyebrow text-moss-light">{coach.category}</p>
 
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <FaStar
-                      key={i}
-                      className={i < Math.floor(coach.rating || 0) ? "text-yellow-400" : "text-white/30"}
-                      size={20}
-                    />
-                  ))}
-                </div>
-                <span className="text-lg font-semibold">{coach.rating || 0}</span>
-                <span className="text-white/70">({coach.total_ratings || coach.totalRatings || 0} reviews)</span>
-              </div>
+              <h1 className="mt-4 font-display text-display-sm font-extrabold">{coach.name}</h1>
 
-              <div className="flex gap-6 mb-6">
-                <div>
-                  <div className="text-2xl font-bold">{(coach.followers_count || coach.followers || 0).toLocaleString()}</div>
-                  <div className="text-sm text-white/80">Followers</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{coach.following_count || coach.following || 0}</div>
-                  <div className="text-sm text-white/80">Following</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">{coach.videos?.length || 0}</div>
-                  <div className="text-sm text-white/80">Videos</div>
-                </div>
-              </div>
+              {coach.bio && (
+                <p className="mt-5 max-w-prose leading-relaxed text-white/65">{coach.bio}</p>
+              )}
 
-              <div className="flex flex-wrap gap-3">
+              {/* Stats as a measured row. */}
+              <dl className="mt-9 flex flex-wrap gap-x-10 gap-y-4 border-y border-white/10 py-5">
+                {[
+                  ["Rating", coach.rating ? Number(coach.rating).toFixed(1) : "—"],
+                  ["Reviews", coach.total_ratings || coach.totalRatings || 0],
+                  [
+                    "Followers",
+                    (coach.followers_count || coach.followers || 0).toLocaleString(),
+                  ],
+                  ["Videos", coach.videos?.length || 0],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <dd className="font-display text-2xl font-bold">{value}</dd>
+                    <dt className="eyebrow mt-1 text-white/40">{label}</dt>
+                  </div>
+                ))}
+              </dl>
+
+              <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
                 <button
                   onClick={handleFollow}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
-                    isFollowing ? "bg-white text-[#354F52] hover:bg-white/90" : "bg-[#6BB371] text-white hover:bg-[#52796F]"
+                  className={`inline-flex items-center gap-2.5 rounded-full px-7 py-3.5 text-sm font-semibold transition-all duration-300 ease-editorial ${
+                    isFollowing
+                      ? "bg-white/10 text-white hover:bg-white/15"
+                      : "bg-white text-ink hover:bg-moss-light hover:text-white"
                   }`}
                 >
-                  <FaUserPlus />
+                  <FaUserPlus className="h-3.5 w-3.5" />
                   {isFollowing ? "Following" : "Follow"}
                 </button>
+
                 <button
                   onClick={() => setShowMessageModal(true)}
-                  className="px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-lg font-semibold hover:bg-white/20 transition-all flex items-center gap-2 border border-white/30"
+                  className="group relative text-sm font-medium text-white/75 transition-colors duration-300 hover:text-white"
                 >
-                  <FaEnvelope />
-                  Message
+                  Send a message
+                  <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-white transition-transform duration-300 ease-editorial group-hover:scale-x-100" />
                 </button>
+
                 <button
                   onClick={() => setShowReportModal(true)}
-                  className="px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-lg font-semibold hover:bg-white/20 transition-all flex items-center gap-2 border border-white/30"
+                  className="text-sm text-white/40 transition-colors duration-300 hover:text-white/70"
                 >
-                  <FaFlag />
                   Report
                 </button>
               </div>
@@ -541,36 +532,41 @@ export default function CoachProfile({ coachId }) {
         </div>
       </section>
 
-      {/* Tabs */}
-      <div className="bg-white border-b border-gray-200 sticky top-[var(--nav-h)] z-40">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex gap-8 overflow-x-auto">
+      {/* Tabs. Quiet underline markers, matching the coaches index and blog. */}
+      <div className="sticky top-[var(--nav-h)] z-40 border-b border-ink/10 bg-white/90 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+          <div className="flex gap-x-8 overflow-x-auto">
             {["overview", "videos", "announcements", "reviews"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-4 px-2 font-semibold capitalize border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab ? "border-[#354F52] text-[#354F52]" : "border-transparent text-gray-600 hover:text-[#354F52]"
+                className={`relative whitespace-nowrap py-5 text-sm font-semibold capitalize transition-colors duration-300 ${
+                  activeTab === tab ? "text-forest" : "text-ink-muted hover:text-forest"
                 }`}
               >
                 {tab}
+                <span
+                  className={`absolute bottom-0 left-0 h-px w-full bg-forest transition-transform duration-300 ease-editorial ${
+                    activeTab === tab ? "scale-x-100" : "scale-x-0"
+                  }`}
+                />
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
+      <div className="mx-auto max-w-7xl px-6 py-14 md:px-12 lg:px-16">
         {activeTab === "overview" && (
           <div className="grid md:grid-cols-3 gap-8">
             <div className="md:col-span-2">
-              <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 mb-6">
-                <h2 className="text-2xl font-bold text-[#354F52] mb-4">About</h2>
+              <div className="mb-8 rounded-2xl border border-ink/10 p-7">
+                <h2 className="font-display text-xl font-bold text-forest mb-5">About</h2>
                 <p className="text-gray-700 leading-relaxed">{coach.bio}</p>
               </div>
 
-              <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50">
-                <h2 className="text-2xl font-bold text-[#354F52] mb-4 flex items-center gap-2">
+              <div className="rounded-2xl border border-ink/10 p-7">
+                <h2 className="font-display text-xl font-bold text-forest mb-5 flex items-center gap-2">
                   <FaCertificate className="text-[#52796F]" />
                   Certifications
                 </h2>
@@ -581,7 +577,7 @@ export default function CoachProfile({ coachId }) {
                         <FaCertificate />
                       </div>
                       <div>
-                        <div className="font-semibold text-[#354F52]">{cert.name}</div>
+                        <div className="font-semibold text-forest">{cert.name}</div>
                         <div className="text-sm text-gray-600">Certified in {cert.year}</div>
                       </div>
                     </div>
@@ -591,8 +587,8 @@ export default function CoachProfile({ coachId }) {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50">
-                <h3 className="text-xl font-bold text-[#354F52] mb-4">Statistics</h3>
+              <div className="rounded-2xl border border-ink/10 p-7">
+                <h3 className="font-display text-lg font-bold text-forest mb-5">Statistics</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Total Videos</span>
@@ -623,9 +619,9 @@ export default function CoachProfile({ coachId }) {
                   <div
                     key={video.id}
                     onClick={() => setSelectedVideo(video)}
-                    className="bg-white rounded-xl overflow-hidden shadow-lg border border-[#C8CDC5]/50 hover:shadow-xl transition-all group cursor-pointer"
+                    className="overflow-hidden rounded-2xl border border-ink/10 hover:shadow-xl transition-all group cursor-pointer"
                   >
-                    <div className="relative h-48 bg-gradient-to-br from-[#354F52] to-[#52796F]">
+                    <div className="relative h-48 bg-forest">
                       <Image
                         src={video.thumbnail || video.thumbnail_url || VIDEO_PLACEHOLDER}
                         alt={video.title}
@@ -656,7 +652,7 @@ export default function CoachProfile({ coachId }) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 bg-white rounded-xl shadow-lg border border-[#C8CDC5]/50">
+              <div className="border-t border-ink/10 py-16 text-center">
                 <FaVideo className="text-gray-400 mx-auto mb-4" size={48} />
                 <p className="text-gray-600">No videos uploaded yet</p>
               </div>
@@ -675,7 +671,7 @@ export default function CoachProfile({ coachId }) {
                 {coach.announcements.map((a) => (
                   <div
                     key={a.id}
-                    className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 hover:shadow-xl transition-all"
+                    className="rounded-2xl border border-ink/10 p-7 hover:shadow-xl transition-all"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="text-xl font-bold text-[#354F52]">{a.title}</h3>
@@ -686,7 +682,7 @@ export default function CoachProfile({ coachId }) {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 bg-white rounded-xl shadow-lg border border-[#C8CDC5]/50">
+              <div className="border-t border-ink/10 py-16 text-center">
                 <FaBell className="text-gray-400 mx-auto mb-4" size={48} />
                 <p className="text-gray-600">No announcements at the moment</p>
               </div>
@@ -700,8 +696,8 @@ export default function CoachProfile({ coachId }) {
 
             {/* Add Review Form - Always show if logged in */}
             {currentUser ? (
-              <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 mb-8">
-                <h3 className="text-xl font-bold text-[#354F52] mb-4">Leave a Review</h3>
+              <div className="rounded-2xl border border-ink/10 p-7 mb-8">
+                <h3 className="font-display text-lg font-bold text-forest mb-5">Leave a Review</h3>
                 <form onSubmit={handleSubmitReview}>
                   {/* Star Rating */}
                   <div className="mb-4">
@@ -754,7 +750,7 @@ export default function CoachProfile({ coachId }) {
                 </form>
               </div>
             ) : (
-              <div className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50 mb-8 text-center">
+              <div className="rounded-2xl border border-ink/10 p-7 mb-8 text-center">
                 <p className="text-gray-600 mb-4">Please log in to leave a review</p>
                 <button
                   onClick={() => router.push("/signin")}
@@ -766,7 +762,7 @@ export default function CoachProfile({ coachId }) {
             )}
 
             {/* Display Reviews */}
-            <h3 className="text-2xl font-bold text-[#354F52] mb-4">
+            <h3 className="font-display text-xl font-bold text-forest mb-5">
               All Reviews ({coach.comments?.length || 0})
             </h3>
             {coach.comments?.length ? (
@@ -775,15 +771,15 @@ export default function CoachProfile({ coachId }) {
                   const isOwnReview = currentUser && String(c.userId) === String(currentUser.id);
                   
                   return (
-                    <div key={c.id} className="bg-white rounded-xl p-6 shadow-lg border border-[#C8CDC5]/50">
+                    <div key={c.id} className="rounded-2xl border border-ink/10 p-7">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-[#52796F] to-[#354F52] rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          <div className="w-12 h-12 bg-moss rounded-full flex items-center justify-center text-white font-bold text-lg">
                             {(c.user || "A")[0].toUpperCase()}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-[#354F52] text-lg">{c.user || "Anonymous"}</span>
+                              <span className="font-semibold text-forest text-lg">{c.user || "Anonymous"}</span>
                               {isOwnReview && (
                                 <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">You</span>
                               )}
@@ -819,7 +815,7 @@ export default function CoachProfile({ coachId }) {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 bg-white rounded-xl shadow-lg border border-[#C8CDC5]/50">
+              <div className="border-t border-ink/10 py-16 text-center">
                 <FaStar className="text-gray-400 mx-auto mb-4" size={48} />
                 <p className="text-gray-600">No reviews yet. Be the first to review!</p>
               </div>
@@ -832,7 +828,7 @@ export default function CoachProfile({ coachId }) {
       {showMessageModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-2xl font-bold text-[#354F52] mb-4">Send Message</h3>
+            <h3 className="font-display text-xl font-bold text-forest mb-5">Send Message</h3>
             <MessageModalContent
               onSend={handleSendMessage}
               onClose={() => setShowMessageModal(false)}
@@ -846,7 +842,7 @@ export default function CoachProfile({ coachId }) {
       {showReportModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-2xl font-bold text-[#354F52] mb-4">Report Coach</h3>
+            <h3 className="font-display text-xl font-bold text-forest mb-5">Report Coach</h3>
             <ReportModalContent
               onSubmit={handleSubmitReport}
               onClose={() => setShowReportModal(false)}

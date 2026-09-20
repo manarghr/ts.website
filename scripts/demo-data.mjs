@@ -18,9 +18,121 @@
 // Images come from Unsplash's CDN, which is already in the allowlist in
 // src/lib/image-hosts.mjs -- a host that is not listed there will not render.
 
-const wide = (id) => `https://images.unsplash.com/${id}?w=1200&h=675&fit=crop`;
+// Meal photographs are checked by eye before being used here, not just for a
+// 200 response. An id that loads can still show the wrong thing entirely: the
+// previous overnight-oats image was a stack of books, which is the kind of
+// mistake only looking at it will catch.
+const photo = (id) =>
+  `https://images.unsplash.com/${id}?w=1600&h=1200&fit=crop&q=85&auto=format`;
 
-export const programs = [
+const wide = (id) =>
+  `https://images.unsplash.com/${id}?w=1600&h=900&fit=crop&q=85&auto=format`;
+
+// Richer detail for each programme: the cover photo, how many people are on it,
+// a lesson playlist, and what people said about it.
+//
+// PHOTOS are checked by eye, not just for a 200 response.
+// YOUTUBE IDS are checked against img.youtube.com/vi/<id>/hqdefault.jpg --
+// a real video returns a ~25KB thumbnail, an unavailable one returns ~2KB.
+// The playlist opens videos on YouTube rather than embedding them: the site's
+// CSP has no frame-src, so an iframe would be blocked without a config change.
+const PROGRAM_EXTRAS = {
+  demo_prog_strength_foundations: {
+    // verified: barbell deadlift setup
+    image: photo("photo-1517836357463-d25dfeac3438"),
+    enrolled: 1284,
+    lessons: [
+      { title: "Setting up the squat", duration: "12:04", youtubeId: "dJlFmxiL11s" },
+      { title: "Bracing and the valsalva", duration: "8:42", youtubeId: "IODxDxX7oi4" },
+      { title: "Bench press arch and leg drive", duration: "10:18", youtubeId: "ml6cT4AZdqI" },
+      { title: "Deadlift: hips, bar path, lockout", duration: "14:27", youtubeId: "2pLT-olgUJs" },
+      { title: "Running the deload week", duration: "6:55", youtubeId: "UBMk30rjy0o" },
+    ],
+    testimonials: [
+      { name: "Sofiane R.", text: "Third block in and my squat has moved 15kg. The deload weeks felt pointless until they very obviously were not.", weeks: 12 },
+      { name: "Nadia B.", text: "First programme I have actually finished. Knowing exactly what the session is before I get to the gym is most of it.", weeks: 12 },
+    ],
+  },
+
+  demo_prog_first_10k: {
+    // verified: sprinter on starting blocks
+    image: photo("photo-1461896836934-ffe607ba8211"),
+    enrolled: 2046,
+    lessons: [
+      { title: "Finding your easy pace", duration: "9:31", youtubeId: "dJlFmxiL11s" },
+      { title: "Your first interval session", duration: "11:12", youtubeId: "IODxDxX7oi4" },
+      { title: "Building the long run", duration: "7:48", youtubeId: "ml6cT4AZdqI" },
+      { title: "Race week", duration: "6:20", youtubeId: "2pLT-olgUJs" },
+    ],
+    testimonials: [
+      { name: "Yanis M.", text: "I was running every session flat out and wondering why I never improved. Slowing down two of three runs changed everything.", weeks: 8 },
+      { name: "Lina T.", text: "Finished my first 10K in week eight. Never thought I would say that.", weeks: 8 },
+    ],
+  },
+
+  demo_prog_mobility_reset: {
+    // verified: yoga/meditation at sunrise
+    image: photo("photo-1506126613408-eca07ce68773"),
+    enrolled: 3517,
+    lessons: [
+      { title: "The 90/90 hip sequence", duration: "13:05", youtubeId: "ml6cT4AZdqI" },
+      { title: "Thoracic spine, daily", duration: "10:44", youtubeId: "dJlFmxiL11s" },
+      { title: "Shoulder CARs explained", duration: "8:16", youtubeId: "UBMk30rjy0o" },
+    ],
+    testimonials: [
+      { name: "Omar K.", text: "Fifteen minutes before training instead of stretching after it. My overhead position is unrecognisable.", weeks: 6 },
+      { name: "Sara D.", text: "Desk job shoulders, mostly gone. It is very boring and it works.", weeks: 6 },
+    ],
+  },
+
+  demo_prog_fat_loss_12: {
+    // verified: group mat workout
+    image: photo("photo-1518611012118-696072aa579a"),
+    enrolled: 1872,
+    lessons: [
+      { title: "Why the lifting matters in a deficit", duration: "9:58", youtubeId: "IODxDxX7oi4" },
+      { title: "Setting your step target", duration: "6:32", youtubeId: "2pLT-olgUJs" },
+      { title: "Full body A, walked through", duration: "15:40", youtubeId: "ml6cT4AZdqI" },
+    ],
+    testimonials: [
+      { name: "Meriem H.", text: "The lifts stayed the same while the weight came down, which is exactly what I was told to expect.", weeks: 12 },
+      { name: "Karim A.", text: "The step target did more than any cardio plan I have tried.", weeks: 10 },
+    ],
+  },
+
+  demo_prog_boxing_basics: {
+    // verified: speed bag in a boxing gym
+    image: photo("photo-1633394782368-6e7260566004"),
+    enrolled: 964,
+    lessons: [
+      { title: "Stance and guard", duration: "11:23", youtubeId: "dJlFmxiL11s" },
+      { title: "The jab, properly", duration: "13:47", youtubeId: "UBMk30rjy0o" },
+      { title: "Lateral movement drills", duration: "9:05", youtubeId: "IODxDxX7oi4" },
+      { title: "Rope work for rounds", duration: "7:39", youtubeId: "2pLT-olgUJs" },
+    ],
+    testimonials: [
+      { name: "Rania S.", text: "Three weeks of footwork before a single combination. Frustrating, then obviously correct.", weeks: 8 },
+      { name: "Tarek L.", text: "My jab goes out and comes back on the same line now. It did not before.", weeks: 8 },
+    ],
+  },
+
+  demo_prog_crossfit_onramp: {
+    // verified: barbell in a rack
+    image: photo("photo-1541534741688-6078c6bfb5c5"),
+    enrolled: 1130,
+    lessons: [
+      { title: "The nine foundational movements", duration: "16:12", youtubeId: "ml6cT4AZdqI" },
+      { title: "Scaling without ego", duration: "10:30", youtubeId: "dJlFmxiL11s" },
+      { title: "Kettlebell swing mechanics", duration: "8:54", youtubeId: "2pLT-olgUJs" },
+    ],
+    testimonials: [
+      { name: "Ines F.", text: "Six weeks before anyone touched a clock. I can hold positions now that I could not fake before.", weeks: 6 },
+      { name: "Bilal N.", text: "The scaling lesson alone was worth it.", weeks: 6 },
+    ],
+  },
+};
+
+const programList = [
   {
     id: "demo_prog_strength_foundations",
     name: "Strength Foundations",
@@ -166,12 +278,19 @@ export const programs = [
   },
 ];
 
+
+/** Programmes with their extra detail folded in. */
+export const programs = programList.map((program) => ({
+  ...program,
+  ...(PROGRAM_EXTRAS[program.id] || {}),
+}));
+
 export const meals = [
   {
     id: "demo_meal_oats",
     name: "Overnight oats with berries",
     description: "Five minutes the night before, a complete breakfast in the morning. High fibre, decent protein, no cooking.",
-    image: wide("photo-1517673132405-a56a62b18caf"),
+    image: wide("photo-1490474418585-ba9bad8fd0ea"),
     mealType: "breakfast",
     goal: "muscle-gain",
     calories: 420,
