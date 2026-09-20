@@ -92,179 +92,154 @@ export default function BlogGrid({ searchTerm, selectedCategory, onClearFilters 
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
+  // The first result leads the page; the rest sit in a secondary grid. On a
+  // filtered or searched view the lead is still the most recent match, which
+  // keeps the page's shape stable rather than collapsing to a plain grid.
+  const [lead, ...rest] = paginatedPosts;
+
   return (
-    <section className="relative py-12 bg-white overflow-hidden">
-      {/* Grid Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#52796F]/5 via-transparent to-[#6BB371]/5"></div>
-      <div
-        className="absolute inset-0 opacity-35"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.grid-line%7Bstroke:%2352796F;stroke-width:0.4;fill:none;stroke-linecap:round%7D%3C/style%3E%3C/defs%3E%3Cpath class='grid-line' d='M0 0 Q2 1 0 2 T0 4 T0 6 T0 8 T0 10 T0 12 T0 14 T0 16 T0 18 T0 20 T0 22 T0 24 T0 26 T0 28 T0 30 T0 32 T0 34 T0 36 T0 38 T0 40 T0 42 T0 44 T0 46 T0 48 T0 50 T0 52 T0 54 T0 56 T0 58 T0 60'/%3E%3Cpath class='grid-line' d='M0 0 Q1 2 2 0 T4 0 T6 0 T8 0 T10 0 T12 0 T14 0 T16 0 T18 0 T20 0 T22 0 T24 0 T26 0 T28 0 T30 0 T32 0 T34 0 T36 0 T38 0 T40 0 T42 0 T44 0 T46 0 T48 0 T50 0 T52 0 T54 0 T56 0 T58 0 T60 0'/%3E%3C/svg%3E")`,
-          backgroundSize: "60px 60px",
-        }}
-      ></div>
+    <section className="bg-white py-16 md:py-20">
+      <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+        <p className="eyebrow border-b border-ink/10 pb-5 text-ink-muted">
+          {filteredPosts.length === 0
+            ? "No articles found"
+            : `${filteredPosts.length} article${filteredPosts.length !== 1 ? "s" : ""}`}
+          {searchTerm ? ` for "${searchTerm}"` : ""}
+          {selectedCategory !== "all" ? ` in ${getCategoryName(selectedCategory)}` : ""}
+        </p>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
-        {/* Results Count */}
-        <div className="mb-8">
-          <p className="text-gray-600 text-lg">
-            {filteredPosts.length === 0 ? (
-              <span>No articles found matching your criteria</span>
-            ) : (
-              <span>
-                Found <strong className="text-[#52796F]">{filteredPosts.length}</strong> article
-                {filteredPosts.length !== 1 ? "s" : ""}
-                {searchTerm && (
-                  <span>
-                    {" "}
-                    for &quot;<strong>{searchTerm}</strong>&quot;
-                  </span>
-                )}
-                {selectedCategory !== "all" && (
-                  <span>
-                    {" "}
-                    in <strong>{getCategoryName(selectedCategory)}</strong>
-                  </span>
-                )}
-              </span>
-            )}
-          </p>
-        </div>
-
-        {/* Blog Posts Grid */}
         {filteredPosts.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <AnimatePresence mode="sync">
-                {paginatedPosts.map((post, index) => (
-                  <motion.article
-                    key={`${post.id}-${selectedCategory}-${searchTerm}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.4, delay: index * 0.05 }}
-                    className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-[#C8CDC5]/50 hover:border-[#52796F]/50 overflow-hidden"
-                  >
-                    {/* Image */}
-                    <div className="relative h-48 overflow-hidden">
-                      <Image
-                        src={post.image || "/placeholder.svg"}
-                        alt={post.title}
-                        fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800"
-                        }}
-                      />
-                      <div className="absolute top-4 left-4 px-3 py-1 bg-[#52796F] text-white text-xs font-semibold rounded-full capitalize">
-                        {getCategoryName(post.category)}
-                      </div>
+            {/* Lead article. Given roughly half the viewport so it reads as an
+                editor's pick rather than the first item in a list. */}
+            {lead && (
+              <motion.article
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                className="group mt-12"
+              >
+                <Link href={`/blog/${lead.id}`} className="grid gap-8 lg:grid-cols-2 lg:gap-14">
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-bone-dark lg:aspect-[4/3]">
+                    <Image
+                      src={lead.image || "/blog-covers/training.svg"}
+                      alt={lead.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      className="object-cover transition-transform duration-700 ease-editorial group-hover:scale-[1.03]"
+                      priority
+                    />
+                  </div>
+
+                  <div className="flex flex-col justify-center">
+                    <div className="flex items-center gap-4">
+                      <span className="eyebrow text-moss">{getCategoryName(lead.category)}</span>
+                      <span className="h-px w-8 bg-ink/15" />
+                      <span className="text-xs text-ink-muted">{lead.readTime}</span>
                     </div>
 
-                    {/* Content */}
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold text-[#354F52] mb-3 group-hover:text-[#52796F] transition-colors line-clamp-2">
+                    <h2 className="mt-5 font-display text-display-sm font-extrabold text-forest transition-colors duration-300 group-hover:text-moss">
+                      {lead.title}
+                    </h2>
+
+                    <p className="mt-5 max-w-prose text-lg leading-relaxed text-ink-soft">
+                      {lead.excerpt}
+                    </p>
+
+                    <p className="mt-7 text-sm text-ink-muted">
+                      {lead.author}
+                      {lead.date ? <span className="text-ink-muted/60"> · {lead.date}</span> : null}
+                    </p>
+                  </div>
+                </Link>
+              </motion.article>
+            )}
+
+            {/* The rest. Typography-led rather than white cards -- the image
+                carries the card's job and a rule separates the rows. */}
+            {rest.length > 0 && (
+              <div className="mt-20 grid gap-x-8 gap-y-14 border-t border-ink/10 pt-14 md:grid-cols-2 lg:grid-cols-3">
+                {rest.map((post, index) => (
+                  <motion.article
+                    key={post.id}
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.5, delay: (index % 3) * 0.07, ease: [0.22, 1, 0.36, 1] }}
+                    className="group"
+                  >
+                    <Link href={`/blog/${post.id}`} className="block">
+                      <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-bone-dark">
+                        <Image
+                          src={post.image || "/blog-covers/training.svg"}
+                          alt={post.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className="object-cover transition-transform duration-700 ease-editorial group-hover:scale-[1.04]"
+                        />
+                      </div>
+
+                      <div className="mt-5 flex items-center gap-3">
+                        <span className="eyebrow text-moss">{getCategoryName(post.category)}</span>
+                        <span className="text-xs text-ink-muted">· {post.readTime}</span>
+                      </div>
+
+                      <h3 className="mt-3 font-display text-xl font-bold leading-snug text-forest transition-colors duration-300 group-hover:text-moss">
                         {post.title}
                       </h3>
-                      <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">{post.excerpt}</p>
 
-                      {/* Meta Info */}
-                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                        <div className="flex items-center gap-1">
-                          <FaUser className="w-3 h-3" />
-                          <span>{post.author}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <FaClock className="w-3 h-3" />
-                          <span>{post.readTime}</span>
-                        </div>
-                      </div>
+                      <p className="mt-2 line-clamp-2 leading-relaxed text-ink-soft">
+                        {post.excerpt}
+                      </p>
 
-                      <Link
-                        href={`/blog/${post.id}`}
-                        className="inline-flex items-center gap-2 text-[#52796F] font-semibold hover:text-[#354F52] transition-colors group-hover:gap-3"
-                      >
-                        Read More
-                        <FaArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </div>
+                      <p className="mt-4 text-sm text-ink-muted">{post.author}</p>
+                    </Link>
                   </motion.article>
                 ))}
-              </AnimatePresence>
-            </div>
+              </div>
+            )}
 
-            {/*Pagination */}
-            {totalPages >= 1 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="flex justify-center items-center gap-8 mt-16"
-              >
-                {/* Previous Button */}
+            {/* Pagination, reduced to what it needs to be. */}
+            {totalPages > 1 && (
+              <div className="mt-20 flex items-center justify-between border-t border-ink/10 pt-8">
                 <button
                   onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                   disabled={currentPage === 1}
-                  aria-label="Previous page"
-                  className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
+                  className="text-sm font-semibold text-forest transition-opacity duration-300 disabled:cursor-not-allowed disabled:opacity-30"
                 >
-                  <IoIosArrowBack size={24} className="group-hover:-translate-x-1 transition-transform" />
+                  Previous
                 </button>
 
-                {/* Page Dots Indicator */}
-                <div className="flex gap-3 items-center">
-                  {Array.from({ length: totalPages }).map((_, index) => {
-                    const page = index + 1
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          currentPage === page
-                            ? "bg-[#354F52] w-12 shadow-lg"
-                            : "bg-[#C8CDC5] w-2 hover:bg-[#52796F] hover:w-4"
-                        }`}
-                        aria-label={`Go to page ${page}`}
-                      />
-                    )
-                  })}
-                </div>
+                <p className="eyebrow text-ink-muted">
+                  {currentPage} / {totalPages}
+                </p>
 
-                {/* Next Button */}
                 <button
                   onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  aria-label="Next page"
-                  className="group p-4 rounded-2xl bg-[#354F52] text-white hover:bg-[#52796F] transition-all duration-300 hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl hover:shadow-lg disabled:hover:scale-100"
+                  className="text-sm font-semibold text-forest transition-opacity duration-300 disabled:cursor-not-allowed disabled:opacity-30"
                 >
-                  <IoIosArrowForward size={24} className="group-hover:translate-x-1 transition-transform" />
+                  Next
                 </button>
-              </motion.div>
+              </div>
             )}
           </>
         ) : (
-          // Empty State
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="text-center py-16"
-          >
-            <h3 className="text-2xl font-bold text-[#354F52] mb-2">No articles found</h3>
-            <p className="text-gray-600 mb-6">
-              Try adjusting your search terms or filters to find what you&apos;re looking for.
+          <div className="py-24 text-center">
+            <h3 className="font-display text-2xl font-bold text-forest">No articles found</h3>
+            <p className="mt-3 text-ink-soft">
+              Try a different search or category.
             </p>
             <button
               onClick={() => {
-                onClearFilters()
-                window.scrollTo({ top: 0, behavior: "smooth" })
+                onClearFilters();
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#52796F] text-white font-semibold rounded-xl hover:bg-[#354F52] transition-all duration-300"
+              className="mt-7 rounded-full bg-forest px-7 py-3 text-sm font-semibold text-white transition-colors duration-300 hover:bg-moss"
             >
-              Clear Filters
+              Clear filters
             </button>
-          </motion.div>
+          </div>
         )}
       </div>
     </section>

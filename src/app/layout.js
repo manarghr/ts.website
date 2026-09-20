@@ -2,25 +2,18 @@ import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { ConfirmProvider } from "@/components/ui/ConfirmProvider";
-import { Sora, Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 
-// Display face. Sora is a geometric grotesk with enough character to carry a
-// hero headline at 100px, where Montserrat -- the previous choice -- reads as
-// the default any template ships with.
-const sora = Sora({
+// One family, six weights.
+//
+// A display face paired with a separate body face is a valid system, but it
+// asks the reader to hold two voices at once and it doubles the font payload.
+// Manrope carries both jobs: tight and confident at 100px for a hero, and
+// genuinely comfortable at 16px for body copy.
+const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-display",
-  display: "swap",
-});
-
-// Body face. Inter stays: it is genuinely excellent for interface text and
-// pairing a characterful display face with a neutral body face is what stops
-// the page shouting in two voices at once.
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-inter",
   display: "swap",
 });
 
@@ -35,8 +28,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${sora.variable} ${inter.variable}`}>
-      <body className="font-inter">
+    <html lang="en" className={manrope.variable}>
+      <body className="font-sans antialiased">
         {/* Feedback sits above AuthProvider so the auth modals can use it too. */}
         <ToastProvider>
           <ConfirmProvider>

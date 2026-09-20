@@ -1,10 +1,9 @@
 "use client";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Card from "./Cardes";
+import { motion } from "framer-motion";
 import Image from "next/image";
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { FaDumbbell, FaRunning, FaLeaf, FaSearch, FaTimes, FaFilter } from "react-icons/fa";
+import Link from "next/link";
+import { FaSearch } from "react-icons/fa";
 
 // Default images array for fallback (using placeholder URLs)
 // A coach without a photo gets a neutral silhouette in the site palette,
@@ -255,19 +254,6 @@ export default function Coaches() {
     });
   };
 
-  // Category icons mapping
-  const getCategoryIcon = (category) => {
-    const cat = category.toLowerCase();
-    if (cat.includes('strength') || cat.includes('fitness') || cat.includes('powerlifting')) {
-      return <FaDumbbell />;
-    } else if (cat.includes('yoga') || cat.includes('meditation') || cat.includes('mindfulness') || cat.includes('pilates')) {
-      return <FaLeaf />;
-    } else if (cat.includes('cardio') || cat.includes('hiit') || cat.includes('endurance') || cat.includes('running') || cat.includes('crossfit')) {
-      return <FaRunning />;
-    } else {
-      return <FaDumbbell />; // Default icon
-    }
-  };
 
   // Category colors mapping
   const getCategoryColor = (category, index) => {
@@ -275,343 +261,154 @@ export default function Coaches() {
     return colors[index % colors.length];
   };
 
+  const allCoaches = filteredCategoryNames.flatMap((cat) => filteredCategories[cat] || []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E8EDEB] via-[#F2F5F3] to-[#E3E8E6] relative">
-      {/* Beautiful Animated Background with more color */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        {/* Main colored gradient overlay - more visible */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#DAE4DF]/60 via-[#E8EDEB]/40 to-[#D4DFD9]/50"></div>
-        
-        {/* Large animated gradient orbs - more colorful and visible */}
-        <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-gradient-to-br from-[#52796F]/20 to-[#6BB371]/15 rounded-full blur-[300px] animate-float"></div>
-        <div className="absolute bottom-0 left-0 w-[900px] h-[900px] bg-gradient-to-tr from-[#354F52]/18 to-[#52796F]/15 rounded-full blur-[280px] animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-[#6BB371]/18 to-[#4A7C59]/12 rounded-full blur-[250px] animate-pulse-glow"></div>
-        <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-[#6BB371]/15 rounded-full blur-[220px] animate-float" style={{ animationDelay: '4s' }}></div>
-        <div className="absolute bottom-1/3 left-1/3 w-[550px] h-[550px] bg-[#52796F]/12 rounded-full blur-[200px] animate-float" style={{ animationDelay: '1s' }}></div>
-        
-        {/* Grid Pattern Overlay - more visible */}
-        <div 
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, #354F52 1px, transparent 1px),
-              linear-gradient(to bottom, #354F52 1px, transparent 1px)
-            `,
-            backgroundSize: '50px 50px'
-          }}
-        ></div>
-        
-        {/* Dot Pattern - more visible */}
-        <div 
-          className="absolute inset-0 opacity-[0.05]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, #52796F 1.5px, transparent 1.5px)',
-            backgroundSize: '35px 35px'
-          }}
-        ></div>
-      </div>
-      {/* Enhanced Banner Section */}
-      <section className="relative bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] text-white py-32 md:py-48 overflow-hidden z-10">
-        {/* Enhanced Animated Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 right-20 w-[500px] h-[500px] bg-[#6BB371]/15 rounded-full blur-[150px] animate-float"></div>
-          <div className="absolute bottom-20 left-20 w-[400px] h-[400px] bg-[#52796F]/15 rounded-full blur-[120px] animate-float" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#6BB371]/10 rounded-full blur-[200px] animate-pulse-glow"></div>
-          
-          {/* Subtle geometric shapes */}
-          <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-white/5 rounded-full"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-24 h-24 border border-white/5 rotate-45"></div>
-        </div>
-
-        {/* Coach Image Background */}
-        <div 
-          className="absolute inset-0 z-[1] opacity-15"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1400')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            filter: 'brightness(1.1) contrast(0.85)'
-          }}
-        />
-        
-        {/* COACHES Text Background */}
-        <div className="absolute inset-0 flex items-center justify-center z-[2]">
-          <div className="text-[200px] md:text-[300px] lg:text-[400px] font-black text-white opacity-[0.04] select-none" style={{
-            fontFamily: 'var(--font-display), sans-serif',
-            letterSpacing: '25px',
-          }}>
-            COACHES
-          </div>
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white text-sm font-semibold mb-8">
-              <span>Expert Trainers</span>
+    <div className="bg-white">
+      {/* Introduction
+          --------------------------------------------------------------------
+          A compact dark band rather than a 48-unit banner stacked with blurred
+          orbs, geometric outlines, a dot grid and a background photograph. The
+          page is a directory: its job is to get you to the list quickly, so the
+          header states what this is and gets out of the way. */}
+      <section className="bg-forest pb-16 pt-16 text-white md:pb-20">
+        <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-end">
+            <div>
+              <p className="eyebrow text-moss-light">Coaches</p>
+              <h1 className="mt-6 font-display text-display font-extrabold">
+                Find someone who
+                <span className="block text-white/45">knows your sport.</span>
+              </h1>
             </div>
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-black text-white mb-6 tracking-tight">
-              Meet Our <span className="block mt-2 bg-gradient-to-r from-[#6BB371] to-[#52796F] bg-clip-text text-transparent">Coaches</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-10 leading-relaxed">
-              Professional trainers dedicated to your fitness journey
+
+            <p className="max-w-prose leading-relaxed text-white/65 lg:pb-3">
+              Every coach here lists the thing they actually specialise in, rather
+              than a general claim to do everything. Filter by discipline, or search
+              for what you are trying to fix.
             </p>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: 120 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="h-1.5 bg-gradient-to-r from-[#6BB371] to-[#52796F] mx-auto rounded-full"
-            />
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Filter Section - styled like Meals */}
-      <div className="relative bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] py-10 px-4 overflow-hidden">
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-6"
-          >
-            <div className="relative max-w-2xl mx-auto mb-8">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 w-5 h-5 z-10" />
+      {/* Controls. A search field and quiet category tabs -- no filled pills. */}
+      <section className="sticky top-[var(--nav-h)] z-30 border-b border-ink/10 bg-white/90 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+          <div className="flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative w-full lg:max-w-xs">
+              <FaSearch className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-muted" />
               <input
-                type="text"
-                placeholder="Search coaches by name or specialty..."
+                type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#6BB371] focus:border-[#6BB371] transition-all duration-300 text-lg"
+                placeholder="Search coaches"
+                aria-label="Search coaches"
+                className="w-full border-0 border-b border-ink/15 bg-transparent py-2 pl-6 text-sm text-ink placeholder:text-ink-muted focus:border-moss focus:outline-none focus:ring-0"
               />
             </div>
 
-            <div className="flex flex-wrap justify-center gap-3">
-              {/* All categories button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            <div className="flex flex-wrap items-center gap-x-7 gap-y-2">
+              <button
                 onClick={() => setSelectedCategory(null)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                  !selectedCategory
-                    ? "bg-[#6BB371] text-white shadow-lg shadow-[#6BB371]/30 scale-105"
-                    : "bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 border border-white/20"
+                className={`relative pb-1 text-sm font-semibold transition-colors duration-300 ${
+                  !selectedCategory ? "text-forest" : "text-ink-muted hover:text-forest"
                 }`}
               >
-                <span>All</span>
-              </motion.button>
-              {categoryNames.map((category) => {
-                const isSelected = selectedCategory === category;
-                return (
-                  <motion.button
-                    key={category}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => toggleCategory(category)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                      isSelected
-                        ? "bg-[#6BB371] text-white shadow-lg shadow-[#6BB371]/30 scale-105"
-                        : "bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 border border-white/20"
+                All
+                <span
+                  className={`absolute -bottom-[9px] left-0 h-px w-full bg-forest transition-transform duration-300 ease-editorial ${
+                    !selectedCategory ? "scale-x-100" : "scale-x-0"
+                  }`}
+                />
+              </button>
+
+              {categoryNames.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => toggleCategory(category)}
+                  className={`relative pb-1 text-sm font-semibold transition-colors duration-300 ${
+                    selectedCategory === category
+                      ? "text-forest"
+                      : "text-ink-muted hover:text-forest"
+                  }`}
+                >
+                  {category}
+                  <span
+                    className={`absolute -bottom-[9px] left-0 h-px w-full bg-forest transition-transform duration-300 ease-editorial ${
+                      selectedCategory === category ? "scale-x-100" : "scale-x-0"
                     }`}
-                  >
-                    {getCategoryIcon(category)}
-                    <span>{category}</span>
-                  </motion.button>
-                );
-              })}
+                  />
+                </button>
+              ))}
             </div>
-          </motion.div>
-        </div>
-
-        <style jsx>{`
-          @keyframes float {
-            0%, 100% {
-              transform: translateY(0px);
-            }
-            50% {
-              transform: translateY(-18px);
-            }
-          }
-          .animate-float {
-            animation: float 6s ease-in-out infinite;
-          }
-        `}</style>
-      </div>
-
-      {/* Coaches Sections - Dynamic */}
-      <div className="py-16 md:py-24 relative">
-        {/* Additional Background Accents */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-[#52796F]/4 rounded-full blur-[120px]"></div>
-          <div className="absolute bottom-1/4 left-0 w-[350px] h-[350px] bg-[#6BB371]/4 rounded-full blur-[100px]"></div>
-        </div>
-        
-        <div className="relative z-10">
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="text-[#354F52] text-lg">Loading coaches...</div>
           </div>
-        ) : coaches.length === 0 ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="text-gray-500 text-lg">No coaches available</div>
-          </div>
-        ) : filteredCategoryNames.length === 0 ? (
-          <div className="flex flex-col justify-center items-center py-20">
-            <div className="text-gray-500 text-lg mb-4">
-              {hasActiveFilters ? "No coaches found matching your filters" : "No categories found. Coaches: " + coaches.length}
-            </div>
+        </div>
+      </section>
+
+      {/* The directory. Portrait-led, no card chrome: the image is the card and
+          a rule underneath carries the metadata. */}
+      <section className="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20 lg:px-16">
+        <p className="eyebrow mb-10 text-ink-muted">
+          {allCoaches.length} {allCoaches.length === 1 ? "coach" : "coaches"}
+          {selectedCategory ? ` in ${selectedCategory}` : ""}
+        </p>
+
+        {allCoaches.length === 0 ? (
+          <div className="border-t border-ink/10 py-20 text-center">
+            <p className="font-display text-2xl font-bold text-forest">No coaches match that</p>
+            <p className="mt-3 text-ink-soft">Try a different discipline, or clear the search.</p>
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="px-6 py-3 bg-[#354F52] text-white font-semibold rounded-xl hover:bg-[#52796F] transition-all shadow-lg hover:shadow-xl"
+                className="mt-7 rounded-full bg-forest px-7 py-3 text-sm font-semibold text-white transition-colors duration-300 hover:bg-moss"
               >
-                Clear Filters
+                Clear filters
               </button>
             )}
           </div>
         ) : (
-          filteredCategoryNames.map((categoryName, categoryIndex) => {
-            const categoryCoaches = filteredCategories[categoryName] || [];
-            const categoryId = categoryName.toLowerCase().replace(/\s+/g, '-');
-            const categoryColor = getCategoryColor(categoryName, categoryIndex);
-            
-            return (
-              <section key={categoryName} data-section id={categoryId} className="mb-16">
-                {/* Simplified Category Header */}
-                <div className="max-w-7xl mx-auto px-6 md:px-12 mb-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg shadow-lg" style={{ backgroundColor: categoryColor }}>
-                      {getCategoryIcon(categoryName)}
-                    </div>
-                    <div className="flex-1">
-                      <h2 className="text-2xl md:text-3xl font-bold text-[#354F52]">
-                        {categoryName}
-                      </h2>
-                      <p className="text-gray-600 text-sm mt-0.5">
-                        {categoryCoaches.length} {categoryCoaches.length === 1 ? 'coach' : 'coaches'} available
-                      </p>
-                    </div>
-                    <div className="h-px bg-gradient-to-r from-[#C8CDC5] to-transparent flex-1 max-w-32"></div>
-                  </div>
-                </div>
-                
-                <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
-                  {categoryCoaches.length === 0 ? (
-                    <div className="flex justify-center items-center py-20 bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-[#C8CDC5]/30">
-                      <div className="text-gray-500 text-lg">No {categoryName} coaches available</div>
-                    </div>
-                  ) : (
-                    <>
-                      <div
-                        ref={(el) => {
-                          if (el) {
-                            scrollRefs.current[categoryName] = el;
-                          }
-                        }}
-                        className="flex gap-6 overflow-x-auto scroll-smooth no-scrollbar snap-x snap-mandatory pb-6"
-                        style={{ minHeight: '520px' }}
-                      >
-                        {categoryCoaches.map((coach, index) => {
-                          if (!coach) return null;
-                          return (
-                            <div 
-                              key={coach.id || coach._id || `coach-${categoryName}-${index}`} 
-                              className="snap-center flex-shrink-0"
-                            >
-                              <Card
-                                id={coach.id}
-                                image={getCoachImage(coach, index)}
-                                name={coach.name || 'Unknown Coach'}
-                                description={coach.bio || coach.description || 'Professional fitness coach'}
-                                followers={coach.followers_count || 0}
-                                rating={coach.rating || 5.0}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Enhanced Navigation Arrows */}
-                      {categoryCoaches.length > 1 && (
-                        <>
-                          <button
-                            onClick={() => scrollCarousel(categoryName, "left")}
-                            disabled={(carouselIndices[categoryName] || 0) === 0}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 w-16 h-16 text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-3xl transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-md border-2 border-white/20"
-                            style={{ backgroundColor: categoryColor }}
-                          >
-                            <IoIosArrowBack size={28} />
-                          </button>
-                          <button
-                            onClick={() => scrollCarousel(categoryName, "right")}
-                            disabled={(carouselIndices[categoryName] || 0) === categoryCoaches.length - 1}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 w-16 h-16 text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-110 hover:shadow-3xl transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 z-10 backdrop-blur-md border-2 border-white/20"
-                            style={{ backgroundColor: categoryColor }}
-                          >
-                            <IoIosArrowForward size={28} />
-                          </button>
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
-              </section>
-            );
-          })
-        )}
-        </div>
-      </div>
-
-      {/* Enhanced Newsletter Section */}
-      <section data-section id="newsletter" className="bg-gradient-to-br from-[#354F52] via-[#52796F] to-[#354F52] py-24 md:py-32 relative overflow-hidden z-10">
-        {/* Enhanced Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-pattern-dots opacity-5"></div>
-          <div className="absolute top-10 right-10 w-96 h-96 bg-[#6BB371]/10 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-10 left-10 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }}></div>
-          
-          {/* Geometric accents */}
-          <div className="absolute top-1/2 right-1/4 w-40 h-40 border border-white/5 rounded-full"></div>
-          <div className="absolute bottom-1/4 left-1/4 w-32 h-32 border border-white/5 rotate-45"></div>
-        </div>
-        
-        <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-12 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white text-sm font-semibold mb-8">
-              <span>Stay Connected</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6">
-              Join Our Fitness <span className="text-[#6BB371]">Community</span>
-            </h2>
-            <p className="text-lg md:text-xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Receive expert insights and exclusive fitness content every week
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                className="flex-1 px-6 py-4 rounded-xl border-2 border-white/20 focus:outline-none focus:border-white/40 text-gray-900 bg-white/95 backdrop-blur-sm shadow-xl transition-all hover:shadow-lg placeholder-gray-500"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-10 py-4 bg-[#6BB371] text-white font-bold rounded-xl hover:bg-[#52796F] transition-all shadow-xl hover:shadow-lg"
+          <div className="grid grid-cols-2 gap-x-6 gap-y-14 lg:grid-cols-4">
+            {allCoaches.map((coach, index) => (
+              <motion.article
+                key={coach.id || index}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.5, delay: (index % 4) * 0.06, ease: [0.22, 1, 0.36, 1] }}
+                className="group"
               >
-                Subscribe
-              </motion.button>
-            </div>
-          </motion.div>
-        </div>
+                <Link href={`/coaches/${coach.id}`} className="block">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-bone-dark">
+                    <Image
+                      src={getCoachImage(coach, index)}
+                      alt={coach.name || "Coach"}
+                      fill
+                      sizes="(max-width: 640px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-700 ease-editorial group-hover:scale-[1.04]"
+                    />
+                  </div>
+
+                  <div className="mt-5 flex items-baseline justify-between gap-3">
+                    <p className="eyebrow text-ink-muted">{coach.category}</p>
+                    {coach.rating > 0 && (
+                      <span className="text-xs font-semibold text-ink-muted">
+                        {Number(coach.rating).toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+
+                  <h2 className="mt-2 font-display text-xl font-bold text-forest transition-transform duration-300 ease-editorial group-hover:translate-x-0.5">
+                    {coach.name || "Unknown coach"}
+                  </h2>
+
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-soft">
+                    {coach.bio || coach.description || "Professional fitness coach"}
+                  </p>
+                </Link>
+              </motion.article>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

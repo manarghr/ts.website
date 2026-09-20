@@ -1,117 +1,51 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+// Blog masthead
+// File: src/components/blog/BlogHero.jsx
+//
+// A publication masthead rather than a hero banner: the name of the thing, a
+// line about what it covers, and then straight into the articles. Magazines do
+// not put a photograph of a magazine above their contents page.
+//
+// The oversized word sitting behind the heading is the one decorative gesture,
+// and it is type rather than an image or a pattern -- which keeps it on the
+// same footing as everything else on the page.
+
 import { motion } from "framer-motion";
 
 export default function BlogHero() {
-  const [isVisible, setIsVisible] = useState({});
-  const sectionRefs = useRef({});
-
-  useEffect(() => {
-    const observers = Object.keys(sectionRefs.current).map((key) => {
-      return new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setIsVisible((prev) => ({ ...prev, [key]: true }));
-          }
-        },
-        { threshold: 0.1, rootMargin: "0px 0px -100px 0px" }
-      );
-    });
-
-    Object.keys(sectionRefs.current).forEach((key, index) => {
-      if (sectionRefs.current[key]) {
-        observers[index].observe(sectionRefs.current[key]);
-      }
-    });
-
-    return () => {
-      observers.forEach((observer) => observer.disconnect());
-    };
-  }, []);
-
   return (
-    <div className="w-full overflow-hidden bg-white">
-      {/* Hero Section with Parallax Effect */}
-      <section className="relative w-full h-[500px] md:h-[600px] overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46]" />
-        
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 right-20 w-96 h-96 bg-[#6BB371]/10 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#52796F]/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
-        </div>
+    <section className="relative overflow-hidden bg-forest pb-16 pt-16 md:pt-20 text-white md:pb-20">
+      {/* Oversized wordmark, clipped by the section. Decoration made of the
+          same material as the content. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-8 -top-6 select-none font-display text-[22vw] font-extrabold leading-none tracking-tighter text-white/[0.035] md:-top-10"
+      >
+        JOURNAL
+      </span>
 
-        {/* Background Image - Horizontal Transparent */}
-        <div 
-          className="absolute inset-0 z-[1] opacity-20"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1456613820599-bfe244172af5?w=1400')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            filter: 'brightness(1.1) contrast(0.85)'
-          }}
-        />
-        
-        {/* OUR BLOG Text - Above the image */}
-        <div className="absolute inset-0 flex items-center justify-center z-[2]">
-          <div className="text-[120px] md:text-[200px] lg:text-[280px] font-black text-white opacity-[0.05] select-none" style={{
-            fontFamily: 'var(--font-display), sans-serif',
-            letterSpacing: '15px',
-            animation: 'heartbeat 4s ease-in-out infinite',
-          }}>
-            OUR BLOG
-          </div>
-        </div>
-
-        <div className="relative z-10 h-full flex items-center justify-center px-8 md:px-16">
-          <div className={`text-center transition-all duration-1000 ${isVisible["hero"] ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
-            <h1 className="text-white text-5xl md:text-7xl font-bold mb-6 tracking-wide uppercase">
-              OUR <span className="text-[#6F8676]">BLOG</span>
+      <div className="relative mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-end"
+        >
+          <div>
+            <p className="eyebrow text-moss-light">The TrainSight journal</p>
+            <h1 className="mt-6 font-display text-display font-extrabold">
+              Training, examined
+              <span className="block text-white/45">rather than advertised.</span>
             </h1>
-            <p className="text-white text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
-              Expert tips, insights, and stories to help you achieve your fitness goals
-            </p>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={isVisible["hero"] ? { width: 96 } : { width: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="h-1 bg-[#6BB371] mx-auto"
-            />
           </div>
-        </div>
-        <div 
-          ref={(el) => (sectionRefs.current["hero"] = el)}
-          className="absolute bottom-0 w-full h-20"
-        />
-      </section>
 
-      {/* Add the keyframe animation style */}
-      <style jsx>{`
-        @keyframes heartbeat {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.02);
-          }
-        }
-        
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-        
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-      `}</style>
-    </div>
+          <p className="max-w-prose leading-relaxed text-white/65 lg:pb-3">
+            Writing on strength, endurance, nutrition and the technology behind the
+            form analysis — including where it works and where it does not.
+          </p>
+        </motion.div>
+      </div>
+    </section>
   );
 }

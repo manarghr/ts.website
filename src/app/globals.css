@@ -33,7 +33,7 @@ h1, h2, h3, h4, h5, h6 {
 /* The small uppercase line that introduces a section. Used instead of a pill:
    it does the same job with none of the template look. */
 .eyebrow {
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-display), sans-serif;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -43,7 +43,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Body text uses Inter */
 body, p, span, div, a, button, input, textarea, select, li {
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.6;
 }
 

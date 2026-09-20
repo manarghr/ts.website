@@ -12,29 +12,30 @@ module.exports = {
         // by role rather than by typeface means changing the face later is one
         // line here instead of a find-and-replace across the app.
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-display)', 'system-ui', 'sans-serif'],
       },
 
       colors: {
-        // The old palette was three greens used interchangeably, which is why
-        // every section looked the same. These have distinct jobs.
+        // Each colour has one job. The old palette was three greens used
+        // interchangeably, which is why every section looked the same.
         ink: {
-          DEFAULT: '#16211F', // near-black with a green cast, for body text
+          DEFAULT: '#17383A', // deep teal-charcoal, body text and dark type
           soft: '#4A5A56',    // secondary text
-          muted: '#7B8A86',   // metadata, captions
+          muted: '#7B8A86',   // metadata and captions
         },
         forest: {
-          DEFAULT: '#1B2D2A', // deep sections, the "dark mode" of the brand
-          700: '#25403B',
-          600: '#354F52',     // the original brand green, now one step in a scale
+          DEFAULT: '#17383A', // the dark sections
+          700: '#24484A',
+          600: '#2F5557',
         },
         moss: {
-          DEFAULT: '#52796F', // mid green, supporting surfaces
-          light: '#6BB371',   // the accent -- used sparingly, for emphasis only
+          DEFAULT: '#2F5557', // supporting surfaces
+          light: '#6FBF73',   // the accent, used sparingly
+          pale: '#83C985',
         },
         bone: {
-          DEFAULT: '#F6F5F1', // warm off-white, replaces pure white sections
-          dark: '#EBE9E3',    // subtle separation without a border
+          DEFAULT: '#F7F8F5', // warm off-white, replaces pure white sections
+          dark: '#E8ECE9',    // soft grey, separation without a border
         },
       },
 

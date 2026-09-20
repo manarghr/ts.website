@@ -25,62 +25,47 @@ export default function BlogFilters({ searchTerm, setSearchTerm, selectedCategor
   ];
 
   return (
-    <div className="bg-gradient-to-br from-[#2F3E46] via-[#354F52] to-[#2F3E46] py-10 px-4 relative overflow-hidden">
-      
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 w-5 h-5 z-10" />
+    // Sticky controls under the masthead. A light bar rather than a second
+    // dark banner: two stacked dark blocks made the page feel like it opened
+    // twice before reaching any articles.
+    <div className="sticky top-[var(--nav-h)] z-30 border-b border-ink/10 bg-white/90 backdrop-blur-md">
+      <div className="mx-auto max-w-7xl px-6 md:px-12 lg:px-16">
+        <div className="flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative w-full lg:max-w-xs">
+            <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-muted" />
             <input
-              type="text"
-              placeholder="Search articles, topics, or keywords..."
+              type="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-xl bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#6BB371] focus:border-[#6BB371] transition-all duration-300 text-lg"
+              placeholder="Search articles"
+              aria-label="Search articles"
+              className="w-full border-0 border-b border-ink/15 bg-transparent py-2 pl-6 text-sm text-ink placeholder:text-ink-muted focus:border-moss focus:outline-none focus:ring-0"
             />
           </div>
-        </div>
 
-        {/* Category Filters */}
-        <div>
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap items-center gap-x-7 gap-y-2">
             {categories.map((category) => {
-              const Icon = category.icon;
+              const active = selectedCategory === category.id;
               return (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${
-                    selectedCategory === category.id
-                      ? "bg-[#6BB371] text-white shadow-lg shadow-[#6BB371]/30 scale-105"
-                      : "bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 border border-white/20"
+                  className={`relative pb-1 text-sm font-semibold transition-colors duration-300 ${
+                    active ? "text-forest" : "text-ink-muted hover:text-forest"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
                   {category.label}
+                  <span
+                    className={`absolute -bottom-[9px] left-0 h-px w-full bg-forest transition-transform duration-300 ease-editorial ${
+                      active ? "scale-x-100" : "scale-x-0"
+                    }`}
+                  />
                 </button>
               );
             })}
           </div>
         </div>
       </div>
-
-      {/* Add animation styles */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-        
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }
